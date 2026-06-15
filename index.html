@@ -1838,7 +1838,14 @@ scrollCap.addEventListener('mousedown', e => {
 // Botones de zoom
 document.getElementById('zoomIn').addEventListener('click', () => applyZoom(currentZoom + ZOOM_STEP * 2));
 document.getElementById('zoomOut').addEventListener('click', () => applyZoom(currentZoom - ZOOM_STEP * 2));
-document.getElementById('zoomReset').addEventListener('click', () => applyZoom(1));
+document.getElementById('zoomReset').addEventListener('click', () => {
+  applyZoom(1);
+  const iframe = document.getElementById('overlayIframe');
+  // Recargar el iframe para restablecer también la orientación/rotación del modelo 3D
+  const src = iframe.src;
+  iframe.src = '';
+  iframe.src = src;
+});
 
 // Cerrar con clic en fondo o Escape
 document.getElementById('viewerOverlay').addEventListener('click', function(e) {
