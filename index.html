@@ -283,8 +283,30 @@
       text-decoration: underline;
       text-decoration-style: dotted;
       text-underline-offset: 3px;
+      position: relative;
     }
     .val-clickable:hover { color: var(--indigo-light); }
+    .val-clickable::after {
+      content: '👆 ¡Tócame para saber más!';
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      padding: 4px 10px;
+      border-radius: 20px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+      z-index: 50;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .val-clickable:hover::after { opacity: 1; }
 
     /* ── Winner section ── */
     .winner-card {
@@ -1089,13 +1111,12 @@ function renderTable() {
 
       const esIP = /IP\d{1,2}[A-Z]*/i.test(v);
       const esPantalla = tipo === 'pantalla';
-
       const esRefresco = tipo === 'refresco';
       const esProcesador = tipo === 'procesador';
-      const esRAM = tipo === 'ram';
+      const esRam = tipo === 'ram';
+      const esCamSistema = tipo === 'camSistema';
       const esBateria = tipo === 'bateria';
-      const esBT = tipo === 'bt';
-      const esCamara = tipo === 'camSistema';
+      const esBt = tipo === 'bt';
 
       if (esIP) {
         const span = document.createElement('span');
@@ -1121,8 +1142,8 @@ function renderTable() {
         span.textContent = v;
         span.setAttribute('tabindex', '0');
         span.setAttribute('role', 'button');
-        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionRefrescoEspecifico(v, n); });
-        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionRefrescoEspecifico(v, n); });
+        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionRefrescoEspecifica(v, v); });
+        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionRefrescoEspecifica(v, v); });
         td.appendChild(span);
       } else if (esProcesador) {
         const span = document.createElement('span');
@@ -1130,17 +1151,27 @@ function renderTable() {
         span.textContent = v;
         span.setAttribute('tabindex', '0');
         span.setAttribute('role', 'button');
-        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionProcesadorEspecifico(v, n); });
-        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionProcesadorEspecifico(v, n); });
+        const antutuVal = (byName(n) || {}).antutu;
+        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionProcesadorEspecifica(v, antutuVal); });
+        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionProcesadorEspecifica(v, antutuVal); });
         td.appendChild(span);
-      } else if (esRAM) {
+      } else if (esRam) {
         const span = document.createElement('span');
         span.className = 'val-clickable';
         span.textContent = v;
         span.setAttribute('tabindex', '0');
         span.setAttribute('role', 'button');
-        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionRAMEspecifica(v, n); });
-        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionRAMEspecifica(v, n); });
+        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionRamEspecifica(v); });
+        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionRamEspecifica(v); });
+        td.appendChild(span);
+      } else if (esCamSistema) {
+        const span = document.createElement('span');
+        span.className = 'val-clickable';
+        span.textContent = v;
+        span.setAttribute('tabindex', '0');
+        span.setAttribute('role', 'button');
+        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionCamaraEspecifica(v); });
+        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionCamaraEspecifica(v); });
         td.appendChild(span);
       } else if (esBateria) {
         const span = document.createElement('span');
@@ -1151,23 +1182,14 @@ function renderTable() {
         span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionBateriaEspecifica(v, n); });
         span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionBateriaEspecifica(v, n); });
         td.appendChild(span);
-      } else if (esBT) {
+      } else if (esBt) {
         const span = document.createElement('span');
         span.className = 'val-clickable';
         span.textContent = v;
         span.setAttribute('tabindex', '0');
         span.setAttribute('role', 'button');
-        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionBTEspecifico(v, n); });
-        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionBTEspecifico(v, n); });
-        td.appendChild(span);
-      } else if (esCamara) {
-        const span = document.createElement('span');
-        span.className = 'val-clickable';
-        span.textContent = v;
-        span.setAttribute('tabindex', '0');
-        span.setAttribute('role', 'button');
-        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionCamaraEspecifica(v, n); });
-        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionCamaraEspecifica(v, n); });
+        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionBluetoothEspecifica(v); });
+        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionBluetoothEspecifica(v); });
         td.appendChild(span);
       } else {
         td.textContent = v;
@@ -1670,304 +1692,453 @@ function mostrarExplicacionPantallaEspecifica(valor, label) {
 // ─────────────────────────────────────────
 // EXPLICACIÓN TASA DE REFRESCO ESPECÍFICA
 // ─────────────────────────────────────────
-function mostrarExplicacionRefrescoEspecifico(valor, nombreCelular) {
+function mostrarExplicacionRefrescoEspecifica(valor, label) {
   const modal = document.getElementById('modalExplicacion');
   const tituloEl = document.getElementById('modalTitulo');
   const contenidoEl = document.getElementById('modalContenido');
+  const txt = String(valor);
 
-  const hzMatch = String(valor).match(/(\d{2,3})\s*Hz/i);
-  const hz = hzMatch ? parseInt(hzMatch[1]) : null;
+  const hzMatch = txt.match(/(\d{2,3})\s*Hz/i);
+  const hzVal = hzMatch ? parseInt(hzMatch[1]) : null;
 
-  if (!hz) {
-    const expl = explicaciones['refresco'];
-    tituloEl.innerHTML = expl.titulo;
-    contenidoEl.innerHTML = expl.contenido;
+  if (!hzVal) {
+    tituloEl.innerHTML = '🔄 Tasa de Refresco';
+    contenidoEl.innerHTML = `<div class="bg-slate-50 rounded-xl p-4"><p class="text-sm text-slate-500">No se detectó un valor en Hz en: <strong>${txt}</strong>.</p></div>`;
     modal.classList.remove('hidden');
     return;
   }
 
-  const configs = {
-    60:  { color:'#94a3b8', emoji:'📱', titulo:'60 Hz — Estándar funcional',
-           desc: `El ${nombreCelular} tiene pantalla de <strong>60 Hz</strong>. Esto significa que la imagen se actualiza 60 veces por segundo, que es el estándar histórico en celulares.`,
-           detalle: `Para llamadas, WhatsApp, redes sociales y ver videos en streaming, 60 Hz funciona perfectamente bien — no notarás nada raro. La diferencia aparece cuando lo pones al lado de un celular con 90 Hz o 120 Hz: al hacer scroll en Instagram o en el navegador, la animación del 60 Hz se ve un poco más "saltada". No es malo, es simplemente el estándar de base. <br><br>A cambio, <strong>consume menos batería</strong> que las pantallas de mayor Hz, lo que puede favorecer la duración del día.`,
-           tags:['✔ Suficiente para uso diario', '✔ Ahorra batería', '✔ Ideal para llamadas y WhatsApp', '✘ Scroll menos suave que 90/120 Hz'] },
-    90:  { color:'#0ea5e9', emoji:'✨', titulo:'90 Hz — Fluido y equilibrado',
-           desc: `El ${nombreCelular} cuenta con <strong>90 Hz</strong> de tasa de refresco, que está un peldaño por encima del estándar de 60 Hz.`,
-           detalle: `La diferencia con 60 Hz la vas a notar desde el primer día: el scroll en Instagram, TikTok o el navegador se siente más suave, casi "deslizante". Las animaciones del sistema son más fluidas y los juegos casuales responden mejor. <br><br>No es el tope máximo del mercado, pero el <strong>90 Hz es el punto dulce</strong> entre suavidad y consumo de batería — no sacrifica tanta autonomía como el 120 Hz y ya ofrece una experiencia claramente mejor que el 60 Hz.`,
-           tags:['✔ Scroll notablemente más suave', '✔ Buen balance batería/rendimiento', '✔ Ideal para redes sociales', '✔ Suficiente para juegos casuales'] },
-    120: { color:'#4f46e5', emoji:'🚀', titulo:'120 Hz — Muy fluido, el estándar premium',
-           desc: `El ${nombreCelular} tiene pantalla de <strong>120 Hz</strong>, que es el estándar actual de los celulares de gama media-alta y alta.`,
-           detalle: `A 120 Hz, la pantalla se actualiza el doble de veces por segundo que a 60 Hz. El resultado lo sientes de inmediato: el scroll parece "pegado al dedo", las animaciones son extremadamente suaves y los juegos se ven y sienten más rápidos. <br><br>La mayoría de celulares con 120 Hz tienen <strong>refresco adaptativo</strong>: baja automáticamente a 60 Hz cuando estás leyendo un texto o viendo una foto estática, y sube a 120 Hz al hacer scroll o jugar — con eso cuidan la batería sin sacrificar fluidez cuando la necesitas.`,
-           tags:['✔ Scroll ultra-suave', '✔ Ideal para juegos y redes sociales', '✔ Refresco adaptativo', '⚠ Algo más de consumo vs 60 Hz'] },
-    144: { color:'#7c3aed', emoji:'🎮', titulo:'144 Hz — Para quienes no negocian fluidez',
-           desc: `El ${nombreCelular} llega a <strong>144 Hz</strong> de tasa de refresco, territorio de los celulares gaming y gama alta premium.`,
-           detalle: `En uso cotidiano, la diferencia entre 120 Hz y 144 Hz es sutil — la mayoría de usuarios no la nota en el día a día. Donde sí se siente es en <strong>juegos competitivos</strong> como PUBG Mobile, Call of Duty Mobile o Genshin Impact: la acción se ve más fluida, los movimientos responden más rápido y tienes una ventaja mínima pero real frente a jugadores con pantallas de 60 o 90 Hz. <br><br>Es ideal si el gaming móvil es parte importante de tu rutina.`,
-           tags:['✔ Fluidez máxima en juegos', '✔ Scrolling como mantequilla', '⚠ La diferencia vs 120 Hz es sutil en uso diario', '⚠ Consume más batería'] },
-  };
-
-  const hzKey = hz >= 165 ? 144 : hz >= 120 ? 120 : hz >= 90 ? 90 : 60;
-  const cfg = configs[hzKey] || configs[60];
+  const info = hzVal >= 144
+    ? { color:'#dc2626', emoji:'🎮', label:'Nivel gamer', nota:`Con ${hzVal}Hz, este celular se mueve a un nivel que normalmente solo ves en equipos pensados para jugar. Cuando deslizas el dedo por la pantalla o juegas algo con mucho movimiento, todo se ve increíblemente suave, sin esos "saltos" que a veces se notan en otros equipos. Si te gusta el gaming o simplemente quieres lo más fluido posible, esto es un plus importante.`, tags:['✔ Máxima fluidez', '✔ Ideal si juegas seguido', '⚠ Usa algo más de batería al estar al máximo'] }
+    : hzVal >= 120 ? { color:'#4f46e5', emoji:'🚀', label:'Muy fluido', nota:`Con ${hzVal}Hz vas a notar que todo se mueve más suave: al deslizar el dedo, al abrir apps, al jugar. Es de los valores más altos que puedes encontrar hoy en celulares, y normalmente viene acompañado de un sistema que ajusta el refresco según lo que estés haciendo, para no gastar batería de más cuando no la necesitas. Es una característica muy valorada porque se nota en el uso diario.`, tags:['✔ Se nota la diferencia al instante', '✔ Excelente para redes sociales y juegos', '✔ Ajuste automático para cuidar batería'] }
+    : hzVal >= 90 ? { color:'#0ea5e9', emoji:'✨', label:'Fluido, buen punto medio', nota:`${hzVal}Hz le da a este celular un plus de suavidad frente a lo más básico del mercado. Vas a notar que al navegar en redes sociales o hacer scroll todo se siente más ligero y agradable. Es un valor que te da una buena experiencia sin que sea lo más exigente con la batería. Un punto a favor sin que sea "lo último" del mercado.`, tags:['✔ Más suave que lo básico', '✔ Buen equilibrio uso/batería', '✔ Cómodo para el día a día'] }
+    : { color:'#64748b', emoji:'📱', label:'Estándar', nota:`${hzVal}Hz es el valor más común y el que ha usado la mayoría de celulares durante años. Funciona perfecto para llamadas, WhatsApp, redes sociales, ver videos y todo el uso cotidiano — no vas a tener ningún problema. Simplemente no tiene ese plus extra de "suavidad" que sí notarías en un equipo con valores más altos, pero para el uso diario cumple sin inconvenientes.`, tags:['✔ Cumple perfecto para uso diario', '✔ Buen rendimiento de batería', '— No tiene el extra de fluidez de los valores más altos'] };
 
   const html = `
-    <p class="mb-4 text-sm text-slate-500">Especificación del celular: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 text-xs font-mono">${valor}</code></p>
+    <p class="mb-4">Este celular tiene una pantalla de <strong style="color:var(--indigo)">${hzVal}Hz</strong>. Te explicamos qué significa esto para tu experiencia diaria:</p>
     <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
-      <div class="px-4 py-3 flex items-center gap-3" style="background:${cfg.color}">
-        <span class="text-3xl">${cfg.emoji}</span>
+      <div class="px-4 py-3 flex items-center gap-3" style="background:${info.color}">
+        <span class="text-2xl">${info.emoji}</span>
         <div>
-          <p class="text-white font-bold text-base leading-tight">${cfg.titulo}</p>
-          <p class="text-white/75 text-xs">Tasa de actualización de la imagen</p>
+          <p class="text-white font-bold text-base leading-tight">${hzVal}Hz — ${info.label}</p>
+          <p class="text-white/75 text-xs">Tasa de refresco de la pantalla</p>
         </div>
       </div>
       <div class="p-4 bg-white">
-        <p class="text-sm text-slate-700 leading-relaxed mb-3">${cfg.desc}</p>
-        <p class="text-sm text-slate-700 leading-relaxed">${cfg.detalle}</p>
+        <p class="text-sm text-slate-700 leading-relaxed">${info.nota}</p>
         <div class="mt-3 flex gap-2 text-xs flex-wrap">
-          ${cfg.tags.map(t=>`<span style="${t.startsWith('✔')?'background:#dcfce7;color:#166534':t.startsWith('⚠')?'background:#fef3c7;color:#92400e':'background:#fee2e2;color:#991b1b'};padding:2px 10px;border-radius:99px">${t}</span>`).join('')}
-        </div>
-        <div class="mt-3 bg-slate-50 rounded-lg p-3">
-          <p class="text-xs font-semibold text-slate-600 mb-2">📊 ¿Cómo se compara con otros?</p>
-          <div class="flex gap-1 text-xs items-center flex-wrap">
-            ${[60,90,120,144].map(h=>`<span style="padding:3px 10px;border-radius:99px;${h===hz?'background:'+cfg.color+';color:#fff;font-weight:700':'background:#f1f5f9;color:#64748b'}">${h} Hz</span>`).join('<span class="text-slate-400">→</span>')}
-          </div>
+          ${info.tags.map(t => `<span style="${t.startsWith('✔')?'background:#dcfce7;color:#166534':t.startsWith('⚠')?'background:#fef3c7;color:#92400e':'background:#f1f5f9;color:#475569'};padding:2px 10px;border-radius:99px">${t}</span>`).join('')}
         </div>
       </div>
     </div>
-    <div class="my-4 bg-slate-100 rounded-xl p-3 text-center"><img src="https://i.makeagif.com/media/3-02-2023/F-VLNS.gif" class="mx-auto rounded-lg w-full max-w-md" alt="Comparativa Hz" loading="lazy"><p class="text-xs text-slate-500 mt-2">Comparativa visual: 60Hz → 120Hz → 144Hz → 240Hz</p></div>
-    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl"><p class="text-sm text-indigo-900"><strong>💡 ¿Vale la pena?</strong> ${hz <= 60 ? 'Para uso diario normal, el 60 Hz es perfectamente válido. Si en el futuro quieres más fluidez, ese sería un punto a considerar en tu próximo celular.' : hz <= 90 ? 'El 90 Hz ya marca una diferencia real respecto al 60 Hz clásico. Para el 80% de usuarios es más que suficiente.' : hz <= 120 ? '120 Hz es el punto donde casi todos los usuarios quedan satisfechos. Una pantalla así se siente premium desde el primer momento.' : 'Con 144 Hz tienes lo mejor del mercado en fluidez. Aprovéchalo especialmente en juegos y apps de contenido rápido.'}</p></div>
-  `;
+    <div class="bg-indigo-50 p-4 rounded-xl mt-2"><p class="text-sm text-indigo-800"><strong>💡 En resumen:</strong> a mayor número de Hz, más suave se ve y se siente la pantalla al usarla. La diferencia se nota más al deslizar el dedo, hacer scroll o jugar.</p></div>`;
 
-  tituloEl.innerHTML = `🔄 Tasa de Refresco: ${hz} Hz`;
+  tituloEl.innerHTML = `🔄 Tasa de Refresco: ${hzVal}Hz`;
   contenidoEl.innerHTML = html;
   modal.classList.remove('hidden');
 }
 
 // ─────────────────────────────────────────
-// EXPLICACIÓN PROCESADOR ESPECÍFICO
+// EXPLICACIÓN PROCESADOR ESPECÍFICA
 // ─────────────────────────────────────────
-async function mostrarExplicacionProcesadorEspecifico(valor, nombreCelular) {
+// arch: { nucleos, frec, gpu, archNota }  — descripción en tono vendedor para el cliente
+const PROCESADORES_DB = {
+  'helio g36':          { nombre:'MediaTek Helio G36',          slug:'MediaTek-Helio-G36',             arch:{ nucleos:'8 núcleos', frec:'2.2 GHz', gpu:'IMG PowerVR GE8320',   nota:'8 núcleos trabajando a 2.2 GHz: suficiente para cubrir el día a día sin complicaciones. Su GPU es modesta pero maneja bien las apps cotidianas.' } },
+  'helio g81 ultra':    { nombre:'MediaTek Helio G81 Ultra',     slug:'MediaTek-Helio-G81-Ultra',        arch:{ nucleos:'8 núcleos', frec:'hasta 2.0 GHz', gpu:'Mali-G52',        nota:'8 núcleos a 2.0 GHz con GPU Mali-G52: un salto respecto al G36, corre apps y juegos ligeros con soltura.' } },
+  'helio g81 extreme':  { nombre:'MediaTek Helio G81 Extreme',   slug:'MediaTek-Helio-G81-Extreme',      arch:{ nucleos:'8 núcleos', frec:'hasta 2.0 GHz', gpu:'Mali-G52',        nota:'Versión mejorada del G81, pensada para sacarte más rendimiento con el mismo consumo eficiente de batería.' } },
+  'g81 extreme':        { nombre:'MediaTek Helio G81 Extreme',   slug:'MediaTek-Helio-G81-Extreme',      arch:{ nucleos:'8 núcleos', frec:'hasta 2.0 GHz', gpu:'Mali-G52',        nota:'Versión mejorada del G81, pensada para sacarte más rendimiento con el mismo consumo eficiente de batería.' } },
+  'helio g81':          { nombre:'MediaTek Helio G81',           slug:'MediaTek-Helio-G81',              arch:{ nucleos:'8 núcleos', frec:'hasta 2.0 GHz', gpu:'Mali-G52',        nota:'8 núcleos a 2.0 GHz: pensado para redes sociales, fotos y el uso cotidiano sin que el celular se sienta lento.' } },
+  'helio g85':          { nombre:'MediaTek Helio G85',           slug:'MediaTek-Helio-G85',              arch:{ nucleos:'8 núcleos', frec:'hasta 2.0 GHz', gpu:'Mali-G52 MC2',    nota:'8 núcleos a 2.0 GHz con GPU Mali-G52 MC2: cubre perfectamente el día a día y juegos populares en resolución media.' } },
+  'helio g99 ultra':    { nombre:'MediaTek Helio G99 Ultra',     slug:'MediaTek-Helio-G99-Ultra',        arch:{ nucleos:'8 núcleos', frec:'hasta 2.2 GHz', gpu:'Mali-G57 MC2',    nota:'La versión "Ultra" del G99 lleva la eficiencia un paso más allá: más fluido en multitarea y con mejor gestión de la batería.' } },
+  'helio g99':          { nombre:'MediaTek Helio G99',           slug:'MediaTek-Helio-G99',              arch:{ nucleos:'8 núcleos', frec:'hasta 2.2 GHz', gpu:'Mali-G57 MC2',    nota:'8 núcleos a 2.2 GHz y GPU Mali-G57: un salto notorio en fluidez y en el procesamiento de fotos. Muy cómodo para el usuario que exige más de su celular.' } },
+  'helio g100 ultra':   { nombre:'MediaTek Helio G100 Ultra',    slug:'MediaTek-Helio-G100-Ultra',       arch:{ nucleos:'8 núcleos', frec:'hasta 2.6 GHz', gpu:'Mali-G57 MC2',    nota:'Versión tope del Helio G-series: 8 núcleos a 2.6 GHz. Notable salto de velocidad para fotos en alta resolución y apps más exigentes.' } },
+  'dimensity 7025':     { nombre:'MediaTek Dimensity 7025',      slug:'MediaTek-Dimensity-7025',         arch:{ nucleos:'8 núcleos', frec:'hasta 2.6 GHz', gpu:'Arm Mali-G610 MC2',nota:'8 núcleos a 2.6 GHz con GPU Mali-G610: nivel de fluidez que se siente en el scroll, los juegos y en el procesamiento de fotos.' } },
+  'dimensity 7060':     { nombre:'MediaTek Dimensity 7060',      slug:'MediaTek-Dimensity-7060',         arch:{ nucleos:'8 núcleos', frec:'hasta 2.8 GHz', gpu:'Arm Mali-G610 MC2',nota:'8 núcleos a 2.8 GHz — un paso más rápido que el 7025 con soporte 5G. Fluidez notable y buen rendimiento en juegos a calidad media-alta.' } },
+  'dimensity 6300':     { nombre:'MediaTek Dimensity 6300',      slug:'MediaTek-Dimensity-6300',         arch:{ nucleos:'8 núcleos', frec:'hasta 2.4 GHz', gpu:'Arm Mali-G57 MC2', nota:'8 núcleos a 2.4 GHz: relación rendimiento-eficiencia muy equilibrada, cuida la batería y mantiene la fluidez para el uso diario.' } },
+  'dimensity 6400':     { nombre:'MediaTek Dimensity 6400',      slug:'MediaTek-Dimensity-6400',         arch:{ nucleos:'8 núcleos', frec:'hasta 2.6 GHz', gpu:'Arm Mali-G57 MC2', nota:'Una generación más que el 6300: más velocidad de CPU para que todo se sienta más ágil, sin sacrificar eficiencia de batería.' } },
+  'dimensity 7300':     { nombre:'MediaTek Dimensity 7300',      slug:'MediaTek-Dimensity-7300',         arch:{ nucleos:'8 núcleos', frec:'hasta 2.5 GHz', gpu:'Arm Mali-G615 MC2',nota:'8 núcleos a 2.5 GHz con GPU Mali-G615: muy capaz en multitarea y en apps de redes sociales que demandan bastante del procesador gráfico.' } },
+  'dimensity 7400 ultra':{ nombre:'MediaTek Dimensity 7400 Ultra',slug:'MediaTek-Dimensity-7400-Ultra',  arch:{ nucleos:'8 núcleos', frec:'hasta 2.6 GHz', gpu:'Arm Mali-G615 MC2',nota:'La versión "Ultra" del 7400 aprieta un poco más la frecuencia para lograr esa fluidez extra que se nota en juegos y en multitarea intensa.' } },
+  'dimensity 8400':     { nombre:'MediaTek Dimensity 8400',      slug:'MediaTek-Dimensity-8400',         arch:{ nucleos:'8 núcleos (Cortex-X4 3.25 GHz + A720 + A520)', frec:'hasta 3.25 GHz', gpu:'Arm Mali-G615 MC4', nota:'Un núcleo principal que roza los 3.3 GHz — lo que se nota claramente en apps pesadas y juegos exigentes. Gama alta de rendimiento.' } },
+  'dimensity 9400+':    { nombre:'MediaTek Dimensity 9400+',     slug:'MediaTek-Dimensity-9400-Plus',    arch:{ nucleos:'9 núcleos (1× Cortex-X925 + 3× X4 + 4× A720 + 1 eficiencia)', frec:'hasta 3.63 GHz', gpu:'Arm Immortalis-G925 MC12', nota:'El tope absoluto de MediaTek: núcleo líder a 3.63 GHz y GPU Immortalis de 12 núcleos. Rendimiento de clase mundial que no encontrarás limitación en ninguna app o juego.' } },
+  'snapdragon 685':     { nombre:'Qualcomm Snapdragon 685',      slug:'Qualcomm-Snapdragon-685',         arch:{ nucleos:'8 núcleos', frec:'hasta 2.8 GHz', gpu:'Adreno 610',        nota:'8 núcleos a 2.8 GHz con GPU Adreno 610 de Qualcomm: fluidez confiable para el uso del día a día, con soporte a cámaras de alta resolución y buena eficiencia de batería.' } },
+  'snapdragon 6 gen1':  { nombre:'Qualcomm Snapdragon 6 Gen 1', slug:'Qualcomm-Snapdragon-6-Gen-1',     arch:{ nucleos:'8 núcleos', frec:'hasta 2.2 GHz', gpu:'Adreno 710',        nota:'8 núcleos a 2.2 GHz con Adreno 710: salto notorio en gráficos respecto a generaciones anteriores. Muy bueno para juegos populares y apps de redes sociales.' } },
+  'snapdragon 6 gen 1': { nombre:'Qualcomm Snapdragon 6 Gen 1', slug:'Qualcomm-Snapdragon-6-Gen-1',     arch:{ nucleos:'8 núcleos', frec:'hasta 2.2 GHz', gpu:'Adreno 710',        nota:'8 núcleos a 2.2 GHz con Adreno 710: salto notorio en gráficos respecto a generaciones anteriores. Muy bueno para juegos populares y apps de redes sociales.' } },
+  'snapdragon 6 gen 3': { nombre:'Qualcomm Snapdragon 6 Gen 3', slug:'Qualcomm-Snapdragon-6-Gen-3',     arch:{ nucleos:'8 núcleos', frec:'hasta 2.3 GHz', gpu:'Adreno 710',        nota:'Versión refinada del 6 Gen 1: mismo núcleo Adreno 710 con mejor eficiencia energética. Fluido y equilibrado para el usuario que usa el celular todo el día.' } },
+  'snapdragon 6 gen 4': { nombre:'Qualcomm Snapdragon 6 Gen 4', slug:'Qualcomm-Snapdragon-6-Gen-4',     arch:{ nucleos:'8 núcleos', frec:'hasta 3.0 GHz', gpu:'Adreno 720',        nota:'8 núcleos con un líder a 3.0 GHz y GPU Adreno 720: gama alta-media muy potente. Las apps se abren rápido y los juegos corren con fluidez envidiable.' } },
+  'snapdragon 6s gen1': { nombre:'Qualcomm Snapdragon 6s Gen 1',slug:'Qualcomm-Snapdragon-6s-Gen-1',    arch:{ nucleos:'8 núcleos', frec:'hasta 2.4 GHz', gpu:'Adreno 619',        nota:'8 núcleos a 2.4 GHz con Adreno 619: perfil más eficiente energéticamente que cuida la batería sin descuidar la fluidez del sistema.' } },
+  'snapdragon 6s gen 1':{ nombre:'Qualcomm Snapdragon 6s Gen 1',slug:'Qualcomm-Snapdragon-6s-Gen-1',    arch:{ nucleos:'8 núcleos', frec:'hasta 2.4 GHz', gpu:'Adreno 619',        nota:'8 núcleos a 2.4 GHz con Adreno 619: perfil más eficiente energéticamente que cuida la batería sin descuidar la fluidez del sistema.' } },
+  'snapdragon 7 gen 3': { nombre:'Qualcomm Snapdragon 7 Gen 3',  slug:'Qualcomm-Snapdragon-7-Gen-3',    arch:{ nucleos:'8 núcleos (1× Cortex-X4 2.63 GHz + 3×A720 + 4×A520)', frec:'hasta 2.63 GHz', gpu:'Adreno 720', nota:'Núcleo líder a 2.63 GHz con GPU Adreno 720: rendimiento de gama alta que se siente en el uso intenso, juegos exigentes y procesamiento de fotos en alta resolución.' } },
+  'snapdragon 7s gen 3':{ nombre:'Qualcomm Snapdragon 7s Gen 3', slug:'Qualcomm-Snapdragon-7s-Gen-3',   arch:{ nucleos:'8 núcleos', frec:'hasta 2.5 GHz', gpu:'Adreno 710',        nota:'La versión "s" del 7 Gen 3: un poco más accesible pero muy capaz, con GPU Adreno 710 que rinde muy bien en juegos y apps gráficamente exigentes.' } },
+  'snapd. 7s gen3':     { nombre:'Qualcomm Snapdragon 7s Gen 3', slug:'Qualcomm-Snapdragon-7s-Gen-3',   arch:{ nucleos:'8 núcleos', frec:'hasta 2.5 GHz', gpu:'Adreno 710',        nota:'La versión "s" del 7 Gen 3: un poco más accesible pero muy capaz, con GPU Adreno 710 que rinde muy bien en juegos y apps gráficamente exigentes.' } },
+  'snapdragon 7s gen3': { nombre:'Qualcomm Snapdragon 7s Gen 3', slug:'Qualcomm-Snapdragon-7s-Gen-3',   arch:{ nucleos:'8 núcleos', frec:'hasta 2.5 GHz', gpu:'Adreno 710',        nota:'La versión "s" del 7 Gen 3: un poco más accesible pero muy capaz, con GPU Adreno 710 que rinde muy bien en juegos y apps gráficamente exigentes.' } },
+  'snapdragon 7s gen4': { nombre:'Qualcomm Snapdragon 7s Gen 4', slug:'Qualcomm-Snapdragon-7s-Gen-4',   arch:{ nucleos:'8 núcleos', frec:'hasta 3.0 GHz', gpu:'Adreno 720',        nota:'8 núcleos con líder a 3.0 GHz y Adreno 720 de última generación: fluidez de gama alta, ideal para quien exige mucho de su celular sin llegar al precio máximo.' } },
+  'snapdragon 7s gen 4':{ nombre:'Qualcomm Snapdragon 7s Gen 4', slug:'Qualcomm-Snapdragon-7s-Gen-4',   arch:{ nucleos:'8 núcleos', frec:'hasta 3.0 GHz', gpu:'Adreno 720',        nota:'8 núcleos con líder a 3.0 GHz y Adreno 720 de última generación: fluidez de gama alta, ideal para quien exige mucho de su celular sin llegar al precio máximo.' } },
+  'exynos 1330':        { nombre:'Samsung Exynos 1330',           slug:'Samsung-Exynos-1330',             arch:{ nucleos:'8 núcleos (2× Cortex-A78 + 6× Cortex-A55)', frec:'hasta 2.4 GHz', gpu:'Mali-G68', nota:'Samsung usa 2 núcleos de alto rendimiento + 6 de eficiencia para cubrir bien la multitarea sin desperdiciar batería cuando no se necesita tanta potencia.' } },
+  'exynos 1380':        { nombre:'Samsung Exynos 1380',           slug:'Samsung-Exynos-1380',             arch:{ nucleos:'8 núcleos (4× Cortex-A78 + 4× Cortex-A55)', frec:'hasta 2.4 GHz', gpu:'Mali-G68 MC5', nota:'El paso superior al 1330: 4 núcleos potentes en lugar de 2. Se nota especialmente en multitarea y en apps que demandan más del procesador.' } },
+  'exynos 1480':        { nombre:'Samsung Exynos 1480',           slug:'Samsung-Exynos-1480',             arch:{ nucleos:'8 núcleos (4× Cortex-A78 + 4× Cortex-A55)', frec:'hasta 2.75 GHz', gpu:'Xclipse 530', nota:'GPU Samsung Xclipse 530 con soporte para ray tracing — efectos de iluminación realistas en juegos. Procesador notoriamente más potente que los Exynos de entrada.' } },
+  'exynos 1580':        { nombre:'Samsung Exynos 1580',           slug:'Samsung-Exynos-1580',             arch:{ nucleos:'8 núcleos (4× Cortex-A715 + 4× Cortex-A53)', frec:'hasta 2.9 GHz', gpu:'Xclipse 540', nota:'GPU Xclipse 540 con ray tracing mejorado: juegos y gráficos se ven notablemente mejor. Procesador de gama alta-media que no decepciona.' } },
+  'exynos 1680':        { nombre:'Samsung Exynos 1680',           slug:'Samsung-Exynos-1680',             arch:{ nucleos:'8 núcleos (3× Cortex-A720 + 5× Cortex-A520)', frec:'hasta 2.9 GHz', gpu:'Xclipse 550', nota:'El Exynos más potente de la serie media: GPU Xclipse 550 de nueva generación. Rendimiento que compite de tú a tú con los mejores chips de la competencia.' } },
+  'unisoc tiger t615':  { nombre:'UNISOC Tiger T615',             slug:'UNISOC-Tiger-T615',               arch:{ nucleos:'8 núcleos (2× Cortex-A75 + 6× Cortex-A55)', frec:'hasta 1.8 GHz', gpu:'Arm Mali-G57 MC1', nota:'8 núcleos con 2 de alto rendimiento para tareas cotidianas. Una propuesta confiable para el segmento de entrada sin gastar de más.' } },
+  'unisoc sc9863a1':    { nombre:'UNISOC SC9863A',                slug:'UNISOC-SC9863A',                  arch:{ nucleos:'8 núcleos (4× Cortex-A55 1.6GHz + 4× Cortex-A55 1.2GHz)', frec:'hasta 1.6 GHz', gpu:'IMG PowerVR GE8322', nota:'Chip de entrada pensado para lo básico: llamadas, mensajes y navegación tranquila. Para uso sencillo y económico.' } },
+  'unisoc t606':        { nombre:'UNISOC T606',                   slug:'UNISOC-T606',                     arch:{ nucleos:'8 núcleos (2× Cortex-A75 + 6× Cortex-A55)', frec:'hasta 1.6 GHz', gpu:'Arm Mali-G57 MC1', nota:'Equilibrio entre precio y desempeño: 8 núcleos con dos de mayor potencia para que las apps corran sin trabas visibles en el día a día.' } },
+  'unisoc t7200':       { nombre:'UNISOC T7200',                  slug:'UNISOC-T7200',                    arch:{ nucleos:'8 núcleos (2× Cortex-A76 + 6× Cortex-A55)', frec:'hasta 2.2 GHz', gpu:'Arm Mali-G57 MC2', nota:'Un paso adelante del T606: núcleos A76 de nueva generación que dan un salto real en rendimiento y fluidez, sin salirse del segmento eficiente.' } },
+  'unisoc t7250':       { nombre:'UNISOC T7250',                  slug:'UNISOC-T7250',                    arch:{ nucleos:'8 núcleos', frec:'hasta 2.2 GHz', gpu:'Arm Mali-G57 MC2', nota:'Similar al T7200 con ajustes en eficiencia. Buen chip de entrada mejorada para usuarios que quieren más fluidez sin pagar gama media.' } },
+  'unisoc t7280':       { nombre:'UNISOC T7280',                  slug:'UNISOC-T7280',                    arch:{ nucleos:'8 núcleos (2× Cortex-A76 + 6× Cortex-A55)', frec:'hasta 2.3 GHz', gpu:'Arm Mali-G57 MC2', nota:'Frecuencias ligeramente más altas que el T7250: todo se siente un poco más ágil, especialmente al navegar y al procesar fotos.' } },
+  'unisoc t8300':       { nombre:'UNISOC T8300',                  slug:'UNISOC-T8300',                    arch:{ nucleos:'8 núcleos (4× Cortex-A76 + 4× Cortex-A55)', frec:'hasta 2.6 GHz', gpu:'Arm Mali-G57 MC4', nota:'El chip de gama media de UNISOC: 4 núcleos potentes y GPU de 4 clusters — un salto claro en rendimiento, listo para exigirle más al celular.' } },
+  // Apple — sin "Bionic" en las entradas con y sin "Bionic" para capturar ambas formas
+  'a15 bionic':         { nombre:'Apple A15 Bionic',              slug:'Apple-A15-Bionic',                arch:{ nucleos:'6 núcleos (2 rendimiento + 4 eficiencia)', frec:'hasta 3.23 GHz', gpu:'GPU Apple de 5 núcleos', nota:'2 núcleos de alto rendimiento a 3.23 GHz + 4 núcleos de eficiencia: Apple diseña sus núcleos completamente a medida, logrando que cada núcleo "rinda" más que el de la competencia. La GPU de 5 núcleos maneja gráficos con una fluidez que pocos Android igualan en su momento.' } },
+  'a15':                { nombre:'Apple A15 Bionic',              slug:'Apple-A15-Bionic',                arch:{ nucleos:'6 núcleos (2 rendimiento + 4 eficiencia)', frec:'hasta 3.23 GHz', gpu:'GPU Apple de 5 núcleos', nota:'2 núcleos de alto rendimiento a 3.23 GHz + 4 núcleos de eficiencia: Apple diseña sus núcleos completamente a medida, logrando que cada núcleo "rinda" más que el de la competencia. La GPU de 5 núcleos maneja gráficos con una fluidez que pocos Android igualan en su momento.' } },
+  'a16 bionic':         { nombre:'Apple A16 Bionic',              slug:'Apple-A16-Bionic',                arch:{ nucleos:'6 núcleos (2 rendimiento Everest + 4 eficiencia Sawtooth)', frec:'hasta 3.46 GHz', gpu:'GPU Apple de 5 núcleos', nota:'El núcleo de rendimiento principal llega a 3.46 GHz — una de las frecuencias más altas de cualquier chip móvil de su época. La GPU de 5 núcleos de Apple es referencia en eficiencia gráfica: fluidez y buena temperatura en uso prolongado.' } },
+  'a16':                { nombre:'Apple A16 Bionic',              slug:'Apple-A16-Bionic',                arch:{ nucleos:'6 núcleos (2 rendimiento Everest + 4 eficiencia Sawtooth)', frec:'hasta 3.46 GHz', gpu:'GPU Apple de 5 núcleos', nota:'El núcleo de rendimiento principal llega a 3.46 GHz — una de las frecuencias más altas de cualquier chip móvil de su época. La GPU de 5 núcleos de Apple es referencia en eficiencia gráfica: fluidez y buena temperatura en uso prolongado.' } },
+  'a18 bionic':         { nombre:'Apple A18',                     slug:'Apple-A18',                       arch:{ nucleos:'6 núcleos (2 rendimiento + 4 eficiencia)', frec:'hasta 4.04 GHz', gpu:'GPU Apple de 5 núcleos', nota:'El A18 marca el salto a los 3 nm: un núcleo líder a 4.04 GHz y GPU Apple de 5 núcleos que soporta hardware de ray tracing. Gráficos de nivel consola en la palma de tu mano.' } },
+  'a18':                { nombre:'Apple A18',                     slug:'Apple-A18',                       arch:{ nucleos:'6 núcleos (2 rendimiento + 4 eficiencia)', frec:'hasta 4.04 GHz', gpu:'GPU Apple de 5 núcleos', nota:'El A18 marca el salto a los 3 nm: un núcleo líder a 4.04 GHz y GPU Apple de 5 núcleos que soporta hardware de ray tracing. Gráficos de nivel consola en la palma de tu mano.' } },
+  'a19 pro':            { nombre:'Apple A19 Pro',                 slug:'Apple-A19-Pro',                   arch:{ nucleos:'6 núcleos (2 rendimiento Everest 4.26 GHz + 4 eficiencia Sawtooth 2.6 GHz)', frec:'hasta 4.26 GHz', gpu:'GPU Apple de 6 núcleos con Neural Accelerators', nota:'El A19 Pro es el chip más rápido que existe hoy en un celular. Frecuencia de 4.26 GHz en los núcleos de rendimiento y GPU de 6 núcleos con Neural Accelerators que dan 4 veces más potencia de IA que el chip anterior. Una bestia discreta que corre lo que le pongas.' } },
+  'a19 bionic':         { nombre:'Apple A19',                     slug:'Apple-A19',                       arch:{ nucleos:'6 núcleos (2 rendimiento 4.26 GHz + 4 eficiencia 2.6 GHz)', frec:'hasta 4.26 GHz', gpu:'GPU Apple de 5 núcleos', nota:'El A19 lleva 4.26 GHz en sus núcleos de rendimiento — sin rival en smartphones. GPU de 5 núcleos con arquitectura Apple10 que ofrece el 20% más de potencia gráfica respecto al A18, sin calentar más.' } },
+  'a19':                { nombre:'Apple A19',                     slug:'Apple-A19',                       arch:{ nucleos:'6 núcleos (2 rendimiento 4.26 GHz + 4 eficiencia 2.6 GHz)', frec:'hasta 4.26 GHz', gpu:'GPU Apple de 5 núcleos', nota:'El A19 lleva 4.26 GHz en sus núcleos de rendimiento — sin rival en smartphones. GPU de 5 núcleos con arquitectura Apple10 que ofrece el 20% más de potencia gráfica respecto al A18, sin calentar más.' } },
+};
+
+function buscarProcesadorDB(texto) {
+  // Normalizar: minúsculas, quitar paréntesis y contenido, trim, espacios simples
+  const s = String(texto || '').toLowerCase()
+    .replace(/\(.*?\)/g, '')   // quita (4 nm), (5 nm), etc.
+    .replace(/bionic/g, 'bionic') // mantener bionic para buscar con él
+    .trim().replace(/\s+/g, ' ');
+
+  // Búsqueda exacta
+  if (PROCESADORES_DB[s]) return PROCESADORES_DB[s];
+
+  // Búsqueda exacta sin "bionic"
+  const sSinBionic = s.replace(/\s*bionic\s*/g, '').trim();
+  if (PROCESADORES_DB[sSinBionic]) return PROCESADORES_DB[sSinBionic];
+
+  // Búsqueda por coincidencia parcial (claves más largas primero)
+  const keys = Object.keys(PROCESADORES_DB).sort((a, b) => b.length - a.length);
+  for (const k of keys) {
+    if (s.includes(k) || k.includes(s) || sSinBionic.includes(k) || k.includes(sSinBionic)) {
+      return PROCESADORES_DB[k];
+    }
+  }
+  return null;
+}
+
+function mostrarExplicacionProcesadorEspecifica(valor, antutuValor) {
   const modal = document.getElementById('modalExplicacion');
   const tituloEl = document.getElementById('modalTitulo');
   const contenidoEl = document.getElementById('modalContenido');
-
-  // Detectar fabricante y chip
   const txt = String(valor);
+
   const nmMatch = txt.match(/(\d+)\s*nm/i);
-  const nm = nmMatch ? parseInt(nmMatch[1]) : null;
+  const nmVal = nmMatch ? parseInt(nmMatch[1]) : null;
+  const found = buscarProcesadorDB(txt);
+  const score = parseAnTuTu(antutuValor);
 
-  // Detectar fabricante
-  let fabricante = 'Desconocido', emoji = '⚙️', fabColor = '#64748b', fabDesc = '';
-  if (/snapdragon|qualcomm/i.test(txt)) {
-    fabricante = 'Qualcomm Snapdragon'; emoji = '🔴'; fabColor = '#dc2626';
-    fabDesc = 'Snapdragon es el procesador más popular del mundo Android. Fabricado por Qualcomm, se destaca por su excelente balance entre potencia y eficiencia energética, y por ofrecer los mejores módems para conectividad (5G, WiFi). Lo usan Samsung, Motorola, Xiaomi, OPPO y prácticamente todas las marcas premium.';
-  } else if (/dimensity/i.test(txt)) {
-    fabricante = 'MediaTek Dimensity'; emoji = '🔵'; fabColor = '#1d4ed8';
-    fabDesc = 'La línea Dimensity de MediaTek es la respuesta de los procesadores económicos que se volvieron competitivos. En los últimos años, MediaTek escaló tanto en rendimiento que sus chips Dimensity compiten de igual a igual con Snapdragon en la misma gama. Ofrecen muy buena relación potencia/precio y soporte 5G en modelos asequibles.';
-  } else if (/helio/i.test(txt)) {
-    fabricante = 'MediaTek Helio'; emoji = '🟡'; fabColor = '#d97706';
-    fabDesc = 'La línea Helio de MediaTek está orientada a gama media y media-baja. Son procesadores confiables para uso cotidiano: redes sociales, fotos, videos y navegación. No están diseñados para juegos exigentes, pero hacen su trabajo eficientemente. La mayoría son de 12 nm, tecnología algo más antigua pero probada.';
-  } else if (/exynos/i.test(txt)) {
-    fabricante = 'Samsung Exynos'; emoji = '🔷'; fabColor = '#1e40af';
-    fabDesc = 'Exynos es el chip que Samsung fabrica para sus propios celulares. Samsung los usa principalmente en los mercados donde no puede usar Snapdragon. En los últimos años, Samsung rediseñó sus Exynos con arquitecturas más modernas para cerrar la brecha con Qualcomm. Son procesadores confiables dentro del ecosistema Samsung.';
-  } else if (/bionic|apple\s*a\d/i.test(txt)) {
-    fabricante = 'Apple Bionic'; emoji = '🍎'; fabColor = '#111827';
-    fabDesc = 'Los chips Apple Bionic son, año tras año, los procesadores móviles más potentes del mercado. Apple los diseña exclusivamente para iPhone y los fabrica con TSMC en nodos de proceso de vanguardia (3-4 nm). Su ventaja es la integración perfecta entre hardware y software iOS, lo que les permite lograr un rendimiento excepcional incluso con menos mAh de batería que Android.';
-  } else if (/unisoc|tiger/i.test(txt)) {
-    fabricante = 'Unisoc'; emoji = '⚪'; fabColor = '#475569';
-    fabDesc = 'Unisoc fabrica procesadores orientados exclusivamente a la gama de entrada. No compiten en rendimiento con Snapdragon o Dimensity, pero cumplen su función en celulares económicos: llamadas, WhatsApp, fotos básicas y apps ligeras. Son procesadores de bajo consumo pero con limitaciones claras para multitarea o juegos.';
-  } else if (/g81|g85|g99|g100/i.test(txt)) {
-    fabricante = 'MediaTek Helio'; emoji = '🟡'; fabColor = '#d97706';
-    fabDesc = 'La línea Helio de MediaTek está orientada a gama media y media-baja. Son procesadores confiables para uso cotidiano: redes sociales, fotos, videos y navegación.';
+  let tier;
+  if (score == null) {
+    tier = { color:'#64748b', emoji:'⚙️', label:'Rendimiento general', nota:'Este procesador está pensado para cubrir las tareas del día a día: llamadas, WhatsApp, redes sociales, fotos y videos.', tags:[] };
+  } else if (score >= 1500000) {
+    tier = { color:'#7c3aed', emoji:'🏆', label:'Gama alta premium', nota:'Estamos hablando de uno de los procesadores más potentes que existen actualmente en celulares. Maneja sin esfuerzo cualquier app, multitarea pesada y juegos exigentes en su máxima calidad gráfica. Es el tipo de chip que hace que el celular se sienta "rápido" durante años, no solo el primer día.', tags:['✔ Potencia de sobra para cualquier app', '✔ Juegos exigentes sin problema', '✔ Larga vida útil sin sentirse lento'] };
+  } else if (score >= 800000) {
+    tier = { color:'#4f46e5', emoji:'🚀', label:'Gama alta', nota:'Es un procesador de gama alta: multitarea fluida, buena cámara con procesamiento de fotos rápido, y corre la gran mayoría de los juegos actuales en buena calidad. Para alguien que usa el celular intensamente todo el día, este chip no se va a quedar corto.', tags:['✔ Muy fluido en el uso diario', '✔ Buen rendimiento en juegos', '✔ Cómodo para varios años de uso'] };
+  } else if (score >= 450000) {
+    tier = { color:'#0ea5e9', emoji:'⚡', label:'Gama media-alta', nota:'Es un procesador de gama media bien equipado: corre con soltura redes sociales, streaming, multitarea y juegos populares en calidad media-alta. Para el uso típico de la mayoría de personas, rinde de manera muy pareja sin cuellos de botella.', tags:['✔ Buen balance rendimiento/precio', '✔ Multitarea sin trabas', '✔ Juegos populares en buena calidad'] };
+  } else if (score >= 250000) {
+    tier = { color:'#f59e0b', emoji:'✅', label:'Gama media', nota:'Es un procesador de gama media orientado al uso cotidiano: WhatsApp, redes sociales, navegación, fotos y videos en buena resolución. Para juegos más exigentes puede que tengas que bajar un poco la calidad gráfica, pero para lo más común se desempeña bien.', tags:['✔ Cumple muy bien lo cotidiano', '✔ Buen rendimiento por su precio', '— En juegos pesados, mejor con gráficos en nivel medio'] };
+  } else {
+    tier = { color:'#94a3b8', emoji:'📱', label:'Gama de entrada', nota:'Es un procesador de entrada, pensado para cubrir lo básico: llamadas, mensajería, redes sociales y navegación. Para juegos más exigentes o multitarea muy pesada puede notarse algo más lento, pero para alguien que busca un equipo funcional y económico para el día a día, hace su trabajo.', tags:['✔ Cubre lo esencial sin problema', '✔ Opción económica', '— No es para juegos exigentes ni multitarea pesada'] };
   }
 
-  // Descripción de nanómetros
-  let nmDesc = '', nmColor = '#64748b';
-  if (nm) {
-    if (nm <= 4) { nmDesc = `<strong>${nm} nm</strong>: tecnología de vanguardia. Más chips en menos espacio = más potente, más eficiente y con menos calor. Lo mejor disponible hoy.`; nmColor = '#16a34a'; }
-    else if (nm <= 6) { nmDesc = `<strong>${nm} nm</strong>: tecnología moderna y eficiente. Buen rendimiento con consumo controlado. Buena relación potencia/batería.`; nmColor = '#0ea5e9'; }
-    else if (nm <= 8) { nmDesc = `<strong>${nm} nm</strong>: tecnología de gama media. Funciona bien para uso diario pero ya no es de última generación.`; nmColor = '#f59e0b'; }
-    else { nmDesc = `<strong>${nm} nm</strong>: tecnología más antigua. El chip ocupa más espacio y puede generar más calor. Efectivo para usos básicos.`; nmColor = '#94a3b8'; }
-  }
+  let html = `<p class="mb-4">Este celular usa el procesador <strong style="color:var(--indigo)">${found ? found.nombre : txt}</strong>. Te contamos qué puedes esperar de él:</p>`;
 
-  // Mostrar loading
-  tituloEl.innerHTML = `⚡ Cargando datos del procesador...`;
-  contenidoEl.innerHTML = `<div class="flex items-center gap-3 p-6 text-slate-500"><div class="loader-ring"></div><p>Consultando información del procesador...</p></div>`;
-  modal.classList.remove('hidden');
-
-  // Intentar obtener datos de la API de Claude para resumir el procesador
-  let cpuData = null;
-  try {
-    const chipName = txt.replace(/\s*\(\d+\s*nm\)/i, '').trim();
-    // Inferir URL de unite4buy
-    let urlSlug = chipName;
-    if (/snapdragon/i.test(chipName)) urlSlug = 'Qualcomm-' + chipName.replace(/snapd\.\s*/i,'Snapdragon ').trim().replace(/\s+/g, '-');
-    else if (/dimensity/i.test(chipName)) urlSlug = 'MediaTek-' + chipName.replace(/\s+/g, '-');
-    else if (/helio/i.test(chipName)) urlSlug = 'MediaTek-' + chipName.replace(/\s+/g, '-');
-    else if (/exynos/i.test(chipName)) urlSlug = 'Samsung-' + chipName.replace(/\s+/g, '-');
-    else if (/bionic|apple\s*a\d/i.test(chipName)) { const am = chipName.match(/(A\d+\s*(?:Pro|Bionic|Plus)?)/i); urlSlug = 'Apple-' + (am?am[1].replace(/\s+/g,'-'):chipName.replace(/\s+/g,'-')); }
-    else if (/unisoc|tiger/i.test(chipName)) urlSlug = 'Unisoc-' + chipName.replace(/unisoc\s*/i,'').replace(/\s+/g,'-');
-    else if (/g81|g85|g99|g100/i.test(chipName)) urlSlug = 'MediaTek-Helio-' + chipName.replace(/helio\s*/i,'').replace(/\s+/g,'-');
-    else urlSlug = chipName.replace(/\s+/g,'-');
-
-    cpuData = { slug: urlSlug.replace(/--+/g,'-'), chip: chipName };
-  } catch(e) {}
-
-  // Construir HTML con toda la info disponible
-  const html = `
-    <p class="mb-4 text-sm text-slate-500">Procesador del ${nombreCelular}: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 text-xs font-mono">${valor}</code></p>
-
+  // Bloque de nivel/tier
+  html += `
     <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
-      <div class="px-4 py-3 flex items-center gap-3" style="background:${fabColor}">
-        <span class="text-3xl">${emoji}</span>
+      <div class="px-4 py-3 flex items-center gap-3" style="background:${tier.color}">
+        <span class="text-2xl">${tier.emoji}</span>
         <div>
-          <p class="text-white font-bold text-base leading-tight">${fabricante}</p>
-          <p class="text-white/75 text-xs">${txt}</p>
+          <p class="text-white font-bold text-base leading-tight">${tier.label}</p>
+          <p class="text-white/75 text-xs">Nivel de rendimiento general</p>
         </div>
       </div>
       <div class="p-4 bg-white">
-        <p class="text-sm text-slate-700 leading-relaxed">${fabDesc}</p>
+        <p class="text-sm text-slate-700 leading-relaxed">${tier.nota}</p>
+        ${tier.tags.length ? `<div class="mt-3 flex gap-2 text-xs flex-wrap">${tier.tags.map(t => `<span style="${t.startsWith('✔')?'background:#dcfce7;color:#166534':'background:#f1f5f9;color:#475569'};padding:2px 10px;border-radius:99px">${t}</span>`).join('')}</div>` : ''}
       </div>
-    </div>
+    </div>`;
 
-    ${nm ? `
+  // Bloque de arquitectura (núcleos, frecuencia, GPU)
+  if (found && found.arch) {
+    const a = found.arch;
+    html += `
     <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
-      <div class="px-4 py-2.5 flex items-center gap-2" style="background:${nmColor}">
-        <span class="text-white font-bold">🔬 Proceso de fabricación</span>
+      <div class="px-4 py-3 flex items-center gap-3" style="background:#0f172a">
+        <span class="text-2xl">🧩</span>
+        <div>
+          <p class="text-white font-bold text-base leading-tight">Por dentro: arquitectura y motor gráfico</p>
+          <p class="text-white/75 text-xs">Núcleos · Frecuencia · GPU</p>
+        </div>
       </div>
       <div class="p-4 bg-white">
-        <p class="text-sm text-slate-700">${nmDesc}</p>
-        <div class="mt-3 bg-slate-50 rounded-lg p-3">
-          <p class="text-xs font-semibold text-slate-600 mb-2">📊 Escala (menor = mejor):</p>
-          <div class="flex gap-1 text-xs flex-wrap items-center">
-            ${[3,4,5,6,8,12,22].map(n=>`<span style="padding:3px 10px;border-radius:99px;${n===nm?'background:'+nmColor+';color:#fff;font-weight:700':'background:#f1f5f9;color:#64748b'}">${n} nm</span>`).join('<span class="text-slate-400">·</span>')}
+        <div class="grid grid-cols-3 gap-3 mb-3">
+          <div class="bg-slate-50 rounded-lg p-3 text-center">
+            <p class="text-xs text-slate-500 mb-1">🔢 Núcleos</p>
+            <p class="font-bold text-sm text-slate-800">${a.nucleos}</p>
+          </div>
+          <div class="bg-slate-50 rounded-lg p-3 text-center">
+            <p class="text-xs text-slate-500 mb-1">⚡ Frecuencia</p>
+            <p class="font-bold text-sm text-slate-800">${a.frec}</p>
+          </div>
+          <div class="bg-slate-50 rounded-lg p-3 text-center">
+            <p class="text-xs text-slate-500 mb-1">🎮 GPU</p>
+            <p class="font-bold text-sm text-slate-800">${a.gpu}</p>
           </div>
         </div>
+        <p class="text-sm text-slate-700 leading-relaxed">${a.nota}</p>
       </div>
-    </div>` : ''}
+    </div>`;
+  }
 
-    ${cpuData ? `
-    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4">
-      <p class="text-sm font-semibold text-blue-800 mb-2">🔗 Ficha técnica completa del procesador</p>
-      <p class="text-sm text-blue-700 mb-3">Puedes ver todas las especificaciones detalladas en la página de referencia:</p>
-      <a href="https://unite4buy.com/es/cpu/${cpuData.slug}/" target="_blank" rel="noopener" 
-         style="display:inline-flex;align-items:center;gap:8px;background:#1d4ed8;color:#fff;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;">
-        Ver ${cpuData.chip} en Unite4Buy ↗
-      </a>
-    </div>` : ''}
+  // Bloque de fabricación (nm)
+  if (nmVal) {
+    const nmNota = nmVal <= 4
+      ? `Fabricado con tecnología de ${nmVal} nm — de lo más moderno y eficiente del mercado. Traduce en mejor duración de batería y menos calentamiento incluso usándolo intensamente.`
+      : nmVal <= 6
+      ? `Fabricado con tecnología de ${nmVal} nm — estándar moderno que ofrece buen equilibrio entre rendimiento y consumo de batería.`
+      : nmVal <= 12
+      ? `Fabricado con tecnología de ${nmVal} nm. Es una tecnología probada y estable; puede consumir algo más de energía que los chips más nuevos, pero cumple bien su función.`
+      : `Fabricado con tecnología de ${nmVal} nm — arquitectura más antigua pero funcional para el segmento al que está destinado.`;
+    html += `<div class="bg-slate-50 rounded-xl p-3 mb-4"><p class="text-sm text-slate-700"><strong>🔧 Proceso de fabricación (${nmVal} nm):</strong> ${nmNota}</p></div>`;
+  }
 
-    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
-      <p class="text-sm text-indigo-900"><strong>💡 En pocas palabras:</strong> ${
-        /bionic|apple/i.test(txt) ? 'Los chips Apple son los más rápidos del mercado móvil, optimizados para iOS. Incluso con batería más pequeña, duran todo el día por su eficiencia extraordinaria.' :
-        /snapdragon.*8\s*gen/i.test(txt) ? 'Un Snapdragon 8 Gen es gama alta de verdad: juegos exigentes, fotos rápidas, apps pesadas sin problema. Es de lo mejor en Android.' :
-        /snapdragon.*7/i.test(txt) ? 'Un Snapdragon 7 Series ofrece rendimiento de gama alta a precio de gama media. Ideal para multitarea, juegos y fotos.' :
-        /snapdragon.*6/i.test(txt) ? 'El Snapdragon 6 Series es una elección sólida de gama media: rápido para el día a día, buena eficiencia y soporte 5G en muchos modelos.' :
-        /dimensity.*9[0-9]{3}/i.test(txt) ? 'Un Dimensity 9000+ es gama alta de MediaTek, competidor directo del Snapdragon 8. Potencia al máximo nivel.' :
-        /dimensity.*8[0-9]{3}/i.test(txt) ? 'El Dimensity 8000 series es gama media-alta. Excelente para juegos y multitarea a precio competitivo.' :
-        /dimensity.*7[0-9]{3}/i.test(txt) ? 'El Dimensity 7000 series es gama media sólida. Buen rendimiento para el día a día y soporte 5G.' :
-        /dimensity.*6[0-9]{3}/i.test(txt) ? 'El Dimensity 6000 series ofrece 5G a precio asequible. Suficiente para redes sociales, fotos y apps cotidianas.' :
-        /helio\s*g1[0-9]{2}/i.test(txt) ? 'El Helio G100 es el tope de la línea Helio de MediaTek: rendimiento de gama media con buena eficiencia.' :
-        /helio\s*g8[0-9]/i.test(txt) ? 'El Helio G80-G99 es un chip confiable para gama media. Funciona bien en juegos casuales, redes sociales y fotos.' :
-        /helio/i.test(txt) ? 'Este Helio de MediaTek es ideal para uso cotidiano: WhatsApp, redes sociales y fotos sin problemas. No está pensado para juegos pesados.' :
-        /exynos\s*1[0-9]{3}/i.test(txt) ? 'Este Exynos es el procesador propio de Samsung para sus celulares. Buen rendimiento en el día a día dentro del ecosistema Samsung.' :
-        /unisoc/i.test(txt) ? 'El Unisoc cumple para lo básico: llamadas, mensajes, redes sociales livianas. No esperes de él rendimiento en juegos o apps pesadas.' :
-        'Este procesador está dimensionado para el segmento de precio del celular. Consulta la ficha técnica para compararlo con otros modelos.'
-      }</p>
-    </div>
-  `;
+  // Puntuación AnTuTu
+  if (score != null) {
+    html += `<div class="bg-blue-50 rounded-xl p-3 mb-4"><p class="text-sm text-blue-800"><strong>📊 Puntuación AnTuTu:</strong> ${formatAnTuTu(antutuValor)} puntos — una prueba estándar que mide velocidad, gráficos y memoria. Más puntos = más capacidad para correr apps exigentes y juegos sin esfuerzo.</p></div>`;
+  }
 
-  tituloEl.innerHTML = `⚡ Procesador: ${txt.replace(/\s*\(\d+\s*nm\)/i,'').trim()}`;
+  // Enlace a ficha técnica
+  if (found) {
+    html += `<div class="bg-indigo-50 p-4 rounded-xl mt-1"><p class="text-sm text-indigo-900">🔗 ¿Quieres ver benchmarks completos, comparativas y más detalles técnicos de este procesador? <a href="https://unite4buy.com/es/cpu/${found.slug}/" target="_blank" rel="noopener" class="font-semibold underline">Ficha técnica completa del procesador →</a></p></div>`;
+  }
+
+  tituloEl.innerHTML = `⚡ Procesador: ${found ? found.nombre : txt}`;
   contenidoEl.innerHTML = html;
+  modal.classList.remove('hidden');
 }
 
 // ─────────────────────────────────────────
 // EXPLICACIÓN RAM ESPECÍFICA
 // ─────────────────────────────────────────
-function mostrarExplicacionRAMEspecifica(valor, nombreCelular) {
+function mostrarExplicacionRamEspecifica(valor) {
   const modal = document.getElementById('modalExplicacion');
   const tituloEl = document.getElementById('modalTitulo');
   const contenidoEl = document.getElementById('modalContenido');
-
   const txt = String(valor);
-  const fisicaMatch = txt.match(/(\d+)\s*GB\s*\(f[ií]sica\)/i);
-  const virtualMatch = txt.match(/hasta\s*(\d+)\s*GB/i);
-  const simpleMatch = txt.match(/^(\d+)\s*GB$/i);
-  const tieneVirtual = /RAM\s*(Plus|Boost|Virtual|Dinámica|Dynamic)/i.test(txt);
-  const nombreVirtual = txt.match(/RAM\s*(Plus|Boost|Virtual|Dinámica|Dynamic)/i)?.[0] || 'RAM virtual';
 
-  const fisicaGB = fisicaMatch ? parseInt(fisicaMatch[1]) : (simpleMatch ? parseInt(simpleMatch[1]) : null);
-  const virtualGB = virtualMatch ? parseInt(virtualMatch[1]) : null;
+  // RAM física: primer número en GB
+  const fisicaMatch = txt.match(/(\d+)\s*GB/i);
+  const fisicaVal = fisicaMatch ? parseInt(fisicaMatch[1]) : null;
 
-  const ramDescFisica = gb => {
-    if (!gb) return '';
-    if (gb <= 3) return { color:'#94a3b8', nota:`<strong>${gb} GB de RAM física</strong> es lo mínimo. Sirve para llamadas, WhatsApp y apps muy básicas. Con más de 2-3 apps abiertas, el celular empezará a reiniciarlas al cambiar entre ellas.` };
-    if (gb === 4) return { color:'#f59e0b', nota:`<strong>4 GB de RAM física</strong> es suficiente para el uso cotidiano: redes sociales, WhatsApp, cámara, música. Si abres muchas pestañas en el navegador o tienes varias apps corriendo, notarás que el celular las recarga al volver a ellas.` };
-    if (gb === 6) return { color:'#0ea5e9', nota:`<strong>6 GB de RAM física</strong> es una cantidad cómoda. Puedes tener varias apps abiertas simultáneamente sin que el celular las reinicie constantemente. Suficiente para juegos casuales y multitarea normal.` };
-    if (gb === 8) return { color:'#4f46e5', nota:`<strong>8 GB de RAM física</strong> es el punto ideal para el 90% de los usuarios. Multitarea fluida, juegos moderados, muchas apps abiertas a la vez sin que el celular se ahogue. Lo que la mayoría necesita.` };
-    if (gb >= 12) return { color:'#7c3aed', nota:`<strong>${gb} GB de RAM física</strong> es gama alta. Puedes exigirle lo que quieras: edición de fotos, juegos pesados, decenas de pestañas del navegador. No vas a sentir limitaciones de memoria.` };
-    return { color:'#4f46e5', nota:`<strong>${gb} GB de RAM</strong>` };
-  };
+  // RAM virtual: "+ hasta X GB (Nombre)"
+  const virtualMatch = txt.match(/\+\s*hasta\s*(\d+)\s*GB\s*\(([^)]+)\)/i);
+  const virtualVal = virtualMatch ? parseInt(virtualMatch[1]) : null;
+  const virtualNombre = virtualMatch ? virtualMatch[2].trim() : null;
 
-  const ramFisicaInfo = ramDescFisica(fisicaGB);
+  let html = `<p class="mb-4">Este celular tiene <strong style="color:var(--indigo)">${txt}</strong>. Te explicamos qué significa para tu uso diario:</p>`;
 
-  const html = `
-    <p class="mb-4 text-sm text-slate-500">RAM del ${nombreCelular}: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 text-xs font-mono">${valor}</code></p>
+  if (fisicaVal) {
+    const info = fisicaVal >= 12
+      ? { color:'#7c3aed', emoji:'🏆', label:`${fisicaVal} GB — Memoria de sobra`, nota:`Con ${fisicaVal} GB de RAM física puedes tener muchísimas apps abiertas a la vez, cambiar entre ellas instantáneamente y correr juegos exigentes sin que el celular "respire" para liberar memoria. Es de los valores más altos que puedes encontrar hoy en un celular.`, tags:['✔ Multitarea extrema sin problema', '✔ Apps siempre en memoria', '✔ A prueba de futuro'] }
+      : fisicaVal >= 8
+      ? { color:'#4f46e5', emoji:'🚀', label:`${fisicaVal} GB — Excelente para multitarea`, nota:`Con ${fisicaVal} GB puedes tener varias apps abiertas — redes sociales, navegador, juegos, cámara — y moverte entre ellas sin que se recarguen ni se sientan lentas. Es un valor muy cómodo, ideal si usas el celular intensamente durante el día.`, tags:['✔ Multitarea fluida', '✔ Apps no se reinician al cambiar', '✔ Buen rendimiento en juegos'] }
+      : fisicaVal >= 6
+      ? { color:'#0ea5e9', emoji:'✅', label:`${fisicaVal} GB — Buen rendimiento`, nota:`Con ${fisicaVal} GB tienes un buen margen para el uso diario: redes sociales, mensajería, fotos y la mayoría de juegos sin problema. Si usas muchísimas apps a la vez de forma muy intensa, podrías notar que alguna se recarga, pero para el uso normal es más que suficiente.`, tags:['✔ Cubre muy bien el día a día', '✔ Buen balance precio/rendimiento'] }
+      : fisicaVal >= 4
+      ? { color:'#f59e0b', emoji:'📱', label:`${fisicaVal} GB — Uso normal`, nota:`Con ${fisicaVal} GB el celular funciona bien para lo cotidiano: WhatsApp, redes sociales, llamadas y fotos. Si abres muchas apps a la vez, es posible que algunas se recarguen cuando vuelvas a ellas, pero para un uso normal no vas a tener inconvenientes.`, tags:['✔ Cumple para uso cotidiano', '— Con muchas apps abiertas, alguna puede recargarse'] }
+      : { color:'#94a3b8', emoji:'🔋', label:`${fisicaVal} GB — Básico`, nota:`Con ${fisicaVal} GB el celular está pensado para tareas simples: llamadas, mensajes y navegación ligera. Con varias apps pesadas abiertas a la vez es probable que se sientan recargas frecuentes, pero para un uso muy básico cumple su función.`, tags:['✔ Funcional para tareas simples', '— Multitarea limitada'] };
 
-    ${fisicaGB ? `
+    html += `
     <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
-      <div class="px-4 py-3 flex items-center gap-3" style="background:${ramFisicaInfo.color}">
-        <span class="text-3xl">🧠</span>
+      <div class="px-4 py-3 flex items-center gap-3" style="background:${info.color}">
+        <span class="text-2xl">${info.emoji}</span>
         <div>
-          <p class="text-white font-bold text-base leading-tight">RAM física: ${fisicaGB} GB</p>
-          <p class="text-white/75 text-xs">Memoria de trabajo real del procesador</p>
+          <p class="text-white font-bold text-base leading-tight">${info.label}</p>
+          <p class="text-white/75 text-xs">RAM física</p>
         </div>
       </div>
       <div class="p-4 bg-white">
-        <p class="text-sm text-slate-700 leading-relaxed">${ramFisicaInfo.nota}</p>
-        <p class="text-sm text-slate-600 mt-2">La RAM física es la memoria rápida donde el procesador trabaja en tiempo real. Más GB físicos = más apps corriendo al mismo tiempo sin que el celular las cierre.</p>
-        <div class="mt-3 bg-slate-50 rounded-lg p-3">
-          <p class="text-xs font-semibold text-slate-600 mb-2">📊 Comparativa:</p>
-          <div class="flex gap-1 text-xs flex-wrap items-center">
-            ${[4,6,8,12,16].map(g=>`<span style="padding:3px 10px;border-radius:99px;${g===fisicaGB?'background:'+ramFisicaInfo.color+';color:#fff;font-weight:700':'background:#f1f5f9;color:#64748b'}">${g} GB</span>`).join('<span class="text-slate-400">→</span>')}
-          </div>
+        <p class="text-sm text-slate-700 leading-relaxed">${info.nota}</p>
+        <div class="mt-3 flex gap-2 text-xs flex-wrap">
+          ${info.tags.map(t => `<span style="${t.startsWith('✔')?'background:#dcfce7;color:#166534':t.startsWith('⚠')?'background:#fef3c7;color:#92400e':'background:#f1f5f9;color:#475569'};padding:2px 10px;border-radius:99px">${t}</span>`).join('')}
         </div>
       </div>
-    </div>` : ''}
+    </div>`;
+  }
 
-    ${tieneVirtual && virtualGB ? `
+  if (virtualVal && virtualNombre) {
+    html += `
     <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
-      <div class="px-4 py-3 flex items-center gap-3" style="background:#0891b2">
-        <span class="text-3xl">💾</span>
+      <div class="px-4 py-3 flex items-center gap-3" style="background:#10b981">
+        <span class="text-2xl">➕</span>
         <div>
-          <p class="text-white font-bold text-base leading-tight">${nombreVirtual}: hasta ${virtualGB} GB extra</p>
-          <p class="text-white/75 text-xs">RAM virtual desde el almacenamiento</p>
+          <p class="text-white font-bold text-base leading-tight">+ hasta ${virtualVal} GB (${virtualNombre})</p>
+          <p class="text-white/75 text-xs">RAM virtual / ampliada</p>
         </div>
       </div>
       <div class="p-4 bg-white">
-        <p class="text-sm text-slate-700 leading-relaxed mb-3">La <strong>${nombreVirtual}</strong> (también llamada RAM expandida o virtual) es una función que usa una parte del almacenamiento interno del celular como si fuera RAM adicional.</p>
-        <div class="grid grid-cols-2 gap-2 text-xs mb-3">
-          <div class="bg-green-50 p-3 rounded-lg">
-            <p class="font-semibold text-green-700 mb-1">✅ ¿Para qué sirve?</p>
-            <p class="text-green-800">Permite tener más apps abiertas en segundo plano sin que el celular las cierre. Es un colchón de memoria extra.</p>
-          </div>
-          <div class="bg-amber-50 p-3 rounded-lg">
-            <p class="font-semibold text-amber-700 mb-1">⚠️ ¿Tiene limitaciones?</p>
-            <p class="text-amber-800">Es más lenta que la RAM física porque el almacenamiento eMMC/UFS es más lento que la RAM real. No la sentirás igual.</p>
+        <p class="text-sm text-slate-700 leading-relaxed">Esta función toma una parte del almacenamiento interno (donde guardas tus fotos y apps) y la usa como memoria adicional cuando la necesitas. Es la forma en que las marcas le dan "un colchón extra" al celular para que pueda mantener más apps abiertas sin que se recarguen tan seguido.</p>
+        <p class="text-sm text-slate-700 leading-relaxed mt-2">Es un extra que ayuda, pero no es exactamente igual a tener esa misma cantidad de RAM física: es algo más lenta porque usa el almacenamiento, así que no reemplaza a la RAM real, la complementa. Aun así, es una ventaja que suma — especialmente si sueles tener muchas apps abiertas al mismo tiempo.</p>
+        <div class="mt-3 flex gap-2 text-xs flex-wrap">
+          <span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:99px">✔ Extra de memoria sin costo adicional</span>
+          <span style="background:#f1f5f9;color:#475569;padding:2px 10px;border-radius:99px">— Algo más lenta que la RAM física</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (!fisicaVal && !virtualVal) {
+    html += `<div class="bg-slate-50 rounded-xl p-4"><p class="text-sm text-slate-500">No se detectaron valores específicos en el formato: <strong>${txt}</strong>.</p></div>`;
+  }
+
+  const totalAprox = (fisicaVal || 0) + (virtualVal || 0);
+  if (fisicaVal) {
+    html += `<div class="bg-indigo-50 p-4 rounded-xl mt-1"><p class="text-sm text-indigo-900"><strong>💡 En resumen:</strong> lo que realmente determina la velocidad y fluidez es la RAM física (${fisicaVal} GB)${virtualVal ? `. La RAM virtual (hasta ${virtualVal} GB extra, total disponible hasta ${totalAprox} GB) es un complemento que ayuda en momentos de mucha multitarea` : ''}.</p></div>`;
+  }
+
+  tituloEl.innerHTML = `🧠 RAM: ${txt.length > 50 ? txt.substring(0,50)+'…' : txt}`;
+  contenidoEl.innerHTML = html;
+  modal.classList.remove('hidden');
+}
+
+
+// ─────────────────────────────────────────
+// EXPLICACIÓN CÁMARAS ESPECÍFICA
+// ─────────────────────────────────────────
+const CAM_TIPOS = {
+  uga: {
+    nombre: 'Ultra Gran Angular (UGA)',
+    emoji: '🌄',
+    color: '#0ea5e9',
+    img: 'https://www.areacucuta.com/wp-content/uploads/2019/09/Gran-Angular-H20-1000x491.jpg',
+    desc: 'La cámara <strong>Ultra Gran Angular</strong> capta una porción de escena mucho más amplia que la cámara principal — perfecta para paisajes, fotos de grupos grandes, edificios o cualquier toma donde quieras que entre "todo" en el cuadro sin tener que retroceder.'
+  },
+  teleobjetivo: {
+    nombre: 'Teleobjetivo (Zoom óptico)',
+    emoji: '🔭',
+    color: '#7c3aed',
+    img: 'https://www.dzoom.org.es/wp-content/uploads/2021/03/movil-ultima-generacion-zoom-hibrido-734x489.jpg',
+    desc: 'La cámara <strong>Teleobjetivo</strong> permite acercarte a objetos lejanos manteniendo buena calidad de imagen, a diferencia del zoom digital que solo "recorta" la foto y pierde nitidez. Ideal para conciertos, eventos deportivos o fotos de algo que está lejos.'
+  },
+  macro: {
+    nombre: 'Macro',
+    emoji: '🔬',
+    color: '#10b981',
+    img: 'https://s2.elespanol.com/2021/08/02/elandroidelibre/tutoriales/trucos/601204514_198531518_1706x764.jpg',
+    desc: 'La cámara <strong>Macro</strong> está diseñada para fotos de objetos muy pequeños desde muy cerca — texturas, flores, insectos, detalles diminutos — logrando un nivel de detalle que la cámara principal no puede capturar a esa distancia.'
+  },
+  retrato: {
+    nombre: 'Modo Retrato',
+    emoji: '🧑‍🦰',
+    color: '#f59e0b',
+    img: 'https://cdsassets.apple.com/live/7WUAS350/images/ios-apps/iphoto/locale/es-mx/ios15-iphone12-pro-camera-portrait-selfie.png',
+    desc: 'El <strong>Modo Retrato</strong> separa al sujeto del fondo y aplica un desenfoque (efecto "bokeh") detrás de la persona, logrando ese aspecto profesional donde la persona se ve nítida y el fondo se ve difuminado, como con cámaras profesionales.'
+  }
+};
+
+function apertureNota(f) {
+  if (f == null) return '';
+  if (f <= 1.7) return `Con una apertura de ƒ/${f}, esta cámara deja entrar mucha luz — muy buena para fotos nocturnas y ambientes con poca iluminación.`;
+  if (f <= 2.0) return `Con una apertura de ƒ/${f}, esta cámara tiene un buen desempeño en luz normal y aceptable en ambientes con poca luz.`;
+  return `Con una apertura de ƒ/${f}, esta cámara funciona mejor con buena luz (de día o en ambientes iluminados); en lugares oscuros rendirá menos que las cámaras con apertura más amplia.`;
+}
+
+function mostrarExplicacionCamaraEspecifica(valor) {
+  const modal = document.getElementById('modalExplicacion');
+  const tituloEl = document.getElementById('modalTitulo');
+  const contenidoEl = document.getElementById('modalContenido');
+  const txt = String(valor);
+
+  // Separar por "+"
+  const lentes = txt.split('+').map(s => s.trim()).filter(Boolean);
+
+  let html = `<p class="mb-4">Este celular tiene un sistema de <strong style="color:var(--indigo)">${lentes.length} cámara${lentes.length > 1 ? 's' : ''}</strong>: <strong>${txt}</strong>. Te explicamos qué aporta cada una:</p>`;
+
+  const detectados = new Set();
+
+  lentes.forEach((lente, idx) => {
+    const mpMatch = lente.match(/(\d+(?:\.\d+)?)\s*(?:Mpx|MP)/i);
+    const mp = mpMatch ? mpMatch[1] : null;
+    const fMatch = lente.match(/ƒ\/?\s*(\d+(?:\.\d+)?)/i);
+    const f = fMatch ? parseFloat(fMatch[1]) : null;
+
+    let tipoKey = null;
+    if (/uga|ultra\s*gran\s*angular/i.test(lente)) tipoKey = 'uga';
+    else if (/tele/i.test(lente)) tipoKey = 'teleobjetivo';
+    else if (/macro/i.test(lente)) tipoKey = 'macro';
+    else if (/retrato/i.test(lente)) tipoKey = 'retrato';
+
+    if (tipoKey) {
+      detectados.add(tipoKey);
+      const info = CAM_TIPOS[tipoKey];
+      html += `
+      <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
+        <div class="px-4 py-3 flex items-center gap-3" style="background:${info.color}">
+          <span class="text-2xl">${info.emoji}</span>
+          <div>
+            <p class="text-white font-bold text-base leading-tight">${info.nombre}${mp ? ` — ${mp} Mpx` : ''}</p>
+            <p class="text-white/75 text-xs">${lente}</p>
           </div>
         </div>
-        <p class="text-sm text-slate-600">Piénsalo así: la RAM física es como el escritorio donde trabajas, y la RAM virtual es como una mesa auxiliar al lado — útil para poner cosas temporalmente, pero no tan cómoda como el escritorio principal.</p>
-      </div>
-    </div>` : ''}
+        <div class="p-4 bg-white">
+          <p class="text-sm text-slate-700 leading-relaxed">${info.desc}</p>
+          ${f ? `<p class="text-sm text-slate-700 leading-relaxed mt-2">${apertureNota(f)}</p>` : ''}
+          <div class="my-3 bg-slate-100 rounded-xl p-2 text-center">
+            <img src="${info.img}" class="mx-auto rounded-lg w-full max-w-sm" alt="Ejemplo de ${info.nombre}" loading="lazy">
+            <p class="text-xs text-slate-500 mt-1">Ejemplo de foto tomada con ${info.nombre.toLowerCase()}</p>
+          </div>
+        </div>
+      </div>`;
+    } else if (idx === 0) {
+      // Cámara principal (primer lente sin etiqueta especial)
+      html += `
+      <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
+        <div class="px-4 py-3 flex items-center gap-3" style="background:#4f46e5">
+          <span class="text-2xl">📸</span>
+          <div>
+            <p class="text-white font-bold text-base leading-tight">Cámara Principal${mp ? ` — ${mp} Mpx` : ''}</p>
+            <p class="text-white/75 text-xs">${lente}</p>
+          </div>
+        </div>
+        <div class="p-4 bg-white">
+          <p class="text-sm text-slate-700 leading-relaxed">Es la cámara que usarás la mayoría del tiempo — la que toma las fotos del día a día. ${mp ? `Con ${mp} Mpx tiene buena resolución para fotos nítidas que se pueden recortar o imprimir sin perder calidad.` : ''}</p>
+          ${f ? `<p class="text-sm text-slate-700 leading-relaxed mt-2">${apertureNota(f)}</p>` : ''}
+        </div>
+      </div>`;
+    } else {
+      // Lente secundario sin clasificar (sensor de profundidad, flicker sensor, etc.)
+      html += `
+      <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
+        <div class="px-4 py-3 flex items-center gap-3" style="background:#94a3b8">
+          <span class="text-2xl">📷</span>
+          <div>
+            <p class="text-white font-bold text-base leading-tight">Lente adicional${mp ? ` — ${mp} Mpx` : ''}</p>
+            <p class="text-white/75 text-xs">${lente}</p>
+          </div>
+        </div>
+        <div class="p-4 bg-white">
+          <p class="text-sm text-slate-700 leading-relaxed">Un sensor adicional que complementa a la cámara principal, ayudando con detalles, profundidad o mejoras en ciertas condiciones de luz.</p>
+        </div>
+      </div>`;
+    }
+  });
 
-    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
-      <p class="text-sm text-indigo-900"><strong>💡 Resumen:</strong> ${
-        fisicaGB >= 8 ? `Con ${fisicaGB} GB físicos${tieneVirtual && virtualGB ? ` y hasta ${virtualGB} GB virtuales adicionales` : ''}, este celular maneja la multitarea sin esfuerzo. Para el uso diario de la gran mayoría de personas, esto es más que suficiente.` :
-        fisicaGB === 6 ? `6 GB es cómodo para el uso normal. La RAM virtual${virtualGB ? ` de hasta ${virtualGB} GB` : ''} ayuda como respaldo extra para apps en segundo plano.` :
-        fisicaGB === 4 ? `4 GB físicos${tieneVirtual && virtualGB ? ` más hasta ${virtualGB} GB virtuales` : ''} es suficiente para uso básico. La RAM virtual ayuda, pero recuerda que es más lenta. Para uso muy intenso, puede que notes algo de lentitud con muchas apps abiertas.` :
-        'La combinación de RAM física y virtual ofrece un balance adecuado para el segmento de este celular.'
-      }</p>
-    </div>
-  `;
+  // Tipos NO presentes — mencionar brevemente que no los tiene
+  const faltantes = Object.entries(CAM_TIPOS).filter(([k]) => !detectados.has(k));
+  if (faltantes.length) {
+    html += `<div class="bg-slate-50 rounded-xl p-3 mb-4"><p class="text-sm text-slate-600"><strong>ℹ️ Este celular no incluye:</strong> ${faltantes.map(([,v]) => v.nombre).join(', ')}. No es un defecto — simplemente no forma parte de este sistema de cámaras.</p></div>`;
+  }
 
-  tituloEl.innerHTML = `🧠 RAM: ${valor}`;
+  html += `<div class="bg-indigo-50 p-4 rounded-xl mt-1"><p class="text-sm text-indigo-900"><strong>💡 En resumen:</strong> mientras más lentes especializados tenga el celular (UGA, teleobjetivo, macro, retrato), más versátil será para distintos tipos de fotos sin depender solo del zoom digital o recortes.</p></div>`;
+
+  tituloEl.innerHTML = `📸 Cámaras: ${txt.length > 50 ? txt.substring(0,50)+'…' : txt}`;
   contenidoEl.innerHTML = html;
   modal.classList.remove('hidden');
 }
@@ -1979,341 +2150,116 @@ function mostrarExplicacionBateriaEspecifica(valor, nombreCelular) {
   const modal = document.getElementById('modalExplicacion');
   const tituloEl = document.getElementById('modalTitulo');
   const contenidoEl = document.getElementById('modalContenido');
-
   const txt = String(valor);
-  const mAhMatch = txt.match(/(\d{3,5})\s*mAh/i);
-  const mAh = mAhMatch ? parseInt(mAhMatch[1]) : null;
-  const esIphone = /iphone|bionic|apple/i.test(nombreCelular);
 
-  if (!mAh) {
-    contenidoEl.innerHTML = explicaciones['bateria'].contenido;
-    tituloEl.innerHTML = explicaciones['bateria'].titulo;
+  const mahMatch = txt.match(/(\d{3,5})\s*mAh/i);
+  const mah = mahMatch ? parseInt(mahMatch[1]) : null;
+  const esIphone = /iphone/i.test(nombreCelular || '');
+
+  if (!mah) {
+    tituloEl.innerHTML = '🔋 Batería';
+    contenidoEl.innerHTML = `<div class="bg-slate-50 rounded-xl p-4"><p class="text-sm text-slate-500">No se detectó un valor de mAh en: <strong>${txt}</strong>.</p></div>`;
     modal.classList.remove('hidden');
     return;
   }
 
-  let bateriaColor = '#94a3b8', bateriaEmoji = '🔋', bateriaNivel = '', bateriaDesc = '';
-  if (mAh < 3500) {
-    bateriaColor = '#f59e0b'; bateriaEmoji = '🔋'; bateriaNivel = 'Compacta';
-    bateriaDesc = `${mAh} mAh es una batería en el rango compacto. En uso normal (pantalla encendida unas 4-5 horas, llamadas y redes sociales) probablemente llegues al final del día, pero ajustado. Si eres usuario intensivo, quizás quieras llevar el cargador.`;
-  } else if (mAh < 4500) {
-    bateriaColor = '#0ea5e9'; bateriaEmoji = '🔋'; bateriaNivel = 'Estándar — 1 día garantizado';
-    bateriaDesc = `Con ${mAh} mAh tienes autonomía para un día completo de uso normal sin problema. Llamadas, redes sociales, música, algo de navegación — al final del día tendrás carga suficiente para llegar a casa. Usuarios muy intensivos podrían necesitar una carga extra.`;
-  } else if (mAh < 5500) {
-    bateriaColor = '#4f46e5'; bateriaEmoji = '🔋'; bateriaNivel = 'Sólida — todo el día con margen';
-    bateriaDesc = `${mAh} mAh es el estándar actual de la gama media y alta. Uso normal o intenso: llegas al final del día con batería de sobra. Muchos usuarios con hábitos moderados llegan hasta el día y medio o incluso dos días sin cargar.`;
-  } else if (mAh < 6500) {
-    bateriaColor = '#16a34a'; bateriaEmoji = '🔋'; bateriaNivel = 'Grande — hasta 2 días';
-    bateriaDesc = `Con ${mAh} mAh entras al territorio de las baterías grandes. Día y medio a dos días completos de uso normal es completamente alcanzable. Si eres usuario moderado, podrías incluso llegar a 3 días. Ideal si odias estar pendiente del cargador.`;
-  } else {
-    bateriaColor = '#15803d'; bateriaEmoji = '🔋'; bateriaNivel = 'Mega batería — autonomía extrema';
-    bateriaDesc = `${mAh} mAh es una batería de las más grandes del mercado. Hablamos de 2-3 días sin cargar en uso normal, o incluso más con uso moderado. El celular puede pesar un poco más por esta razón, pero a cambio no tendrás que buscar un enchufe en días.`;
+  let html = `<p class="mb-4">Este celular tiene una batería de <strong style="color:var(--indigo)">${mah} mAh</strong>. Te explicamos qué puedes esperar de su duración:</p>`;
+
+  const info = mah >= 6000
+    ? { color:'#7c3aed', emoji:'🏆', label:`${mah} mAh — Autonomía extrema`, nota:`Una batería de ${mah} mAh es de las más grandes que puedes encontrar en un celular. Con un uso normal — redes sociales, WhatsApp, videos, fotos — fácilmente te puede durar más de un día completo, incluso día y medio o dos días en uso moderado. Ideal si sales todo el día fuera de casa y no quieres preocuparte por buscar un cargador.`, tags:['✔ Más de 1 día con uso normal', '✔ Tranquilidad si sales todo el día', '✔ Aguanta uso intenso (juegos, video, GPS)'] }
+    : mah >= 5000
+    ? { color:'#4f46e5', emoji:'🚀', label:`${mah} mAh — Muy buena duración`, nota:`${mah} mAh es el estándar de las baterías grandes hoy en día. Con uso normal te alcanza perfectamente para todo el día — desde que sales de casa en la mañana hasta que regresas en la noche — sin necesidad de cargarlo a media tarde. Si lo usas más intenso (juegos, redes sociales todo el día, GPS), aun así te dará una jornada completa con margen.`, tags:['✔ Todo el día con uso normal', '✔ Buen margen incluso con uso intenso', '✔ Estándar actual de gama media y alta'] }
+    : mah >= 4000
+    ? { color:'#0ea5e9', emoji:'✅', label:`${mah} mAh — Duración para un día`, nota:`Con ${mah} mAh el celular está pensado para acompañarte durante un día completo de uso normal. Si tienes un día con uso más intenso (muchas fotos, videos, navegación GPS), es posible que necesites cargarlo antes de dormir, pero para el día a día típico no tendrás que estar pendiente de la batería todo el tiempo.`, tags:['✔ Cubre un día normal', '— Con uso muy intenso, puede necesitar carga antes de la noche'] }
+    : { color:'#f59e0b', emoji:'🔋', label:`${mah} mAh — Batería compacta`, nota:`${mah} mAh es una batería más compacta, algo común en celulares pequeños o livianos. Para un uso ligero (llamadas, mensajes, redes sociales con moderación) puede acompañarte buena parte del día, pero con uso intenso es probable que necesites cargarlo antes de terminar la jornada. Es el "trade-off" típico de equipos más compactos.`, tags:['✔ Suficiente para uso ligero', '— Con uso intenso puede requerir carga durante el día'] };
+
+  html += `
+  <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
+    <div class="px-4 py-3 flex items-center gap-3" style="background:${info.color}">
+      <span class="text-2xl">${info.emoji}</span>
+      <div>
+        <p class="text-white font-bold text-base leading-tight">${info.label}</p>
+        <p class="text-white/75 text-xs">Capacidad de la batería</p>
+      </div>
+    </div>
+    <div class="p-4 bg-white">
+      <p class="text-sm text-slate-700 leading-relaxed">${info.nota}</p>
+      <div class="mt-3 flex gap-2 text-xs flex-wrap">
+        ${info.tags.map(t => `<span style="${t.startsWith('✔')?'background:#dcfce7;color:#166534':t.startsWith('⚠')?'background:#fef3c7;color:#92400e':'background:#f1f5f9;color:#475569'};padding:2px 10px;border-radius:99px">${t}</span>`).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  if (esIphone) {
+    html += `
+    <div class="bg-slate-50 rounded-xl p-4 mb-4 border-l-4" style="border-color:#64748b">
+      <h4 class="font-bold text-base text-slate-700">🍎 ¿Por qué un iPhone tiene "solo" ${mah} mAh?</h4>
+      <p class="text-sm text-slate-700 leading-relaxed mt-2">No te dejes engañar por el número: en Android, marcas como Samsung o Xiaomi suelen usar baterías más grandes en mAh, pero Apple optimiza el software (iOS) y el hardware (su propio procesador) para que cada mAh "rinda más". Es decir, un iPhone con ${mah} mAh puede durar tanto o más que un Android con una batería bastante más grande, porque consume menos energía para hacer lo mismo.</p>
+      <p class="text-sm text-slate-700 leading-relaxed mt-2">Además, Apple diseña sus equipos para que sean delgados y livianos, así que prefiere optimizar el consumo en lugar de simplemente meter una batería enorme. En la práctica, esto se traduce en una duración de batería competitiva pese a tener un número de mAh menor al de muchos Android.</p>
+    </div>`;
   }
 
-  const iphoneSection = esIphone ? `
-    <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
-      <div class="px-4 py-3 flex items-center gap-3" style="background:#111827">
-        <span class="text-3xl">🍎</span>
-        <div>
-          <p class="text-white font-bold text-base">¿Por qué el iPhone tiene ${mAh} mAh?</p>
-          <p class="text-white/75 text-xs">La eficiencia importa más que el tamaño</p>
-        </div>
-      </div>
-      <div class="p-4 bg-white space-y-3">
-        <p class="text-sm text-slate-700 leading-relaxed">Si comparas los ${mAh} mAh del iPhone con un Android de precio similar, puede que el Android tenga 5000 mAh o más. Entonces, ¿por qué Apple usa baterías más pequeñas?</p>
-        <div class="bg-slate-50 rounded-xl p-3 space-y-2">
-          <p class="text-sm text-slate-700"><strong>🔬 Chip Bionic ultra-eficiente:</strong> El chip Apple A-series consume mucha menos energía que la mayoría de procesadores Android para hacer el mismo trabajo. Menos consumo = menos mAh necesarios.</p>
-          <p class="text-sm text-slate-700"><strong>🔗 Software + Hardware de Apple:</strong> iOS está optimizado al milímetro para el hardware del iPhone. No hay apps de fondo consumiendo energía sin control. Cada proceso está calibrado.</p>
-          <p class="text-sm text-slate-700"><strong>📐 Diseño compacto:</strong> Apple prioriza que el iPhone sea delgado y ligero. Una batería más grande requeriría un cuerpo más grueso o más pesado.</p>
-          <p class="text-sm text-slate-700"><strong>📊 Resultado real:</strong> En pruebas de autonomía del mundo real, iPhones con 3000-3600 mAh suelen igualar o superar a Androids con 4500-5000 mAh, precisamente por esa eficiencia integrada.</p>
-        </div>
-      </div>
-    </div>` : '';
+  html += `<div class="bg-indigo-50 p-4 rounded-xl mt-1"><p class="text-sm text-indigo-900"><strong>💡 Tip:</strong> Para que la batería dure más con el tiempo, evita dejarla bajar del 20% muy seguido y, si puedes, no la cargues siempre al 100% — el rango ideal es entre 20% y 80%.</p></div>`;
 
-  const html = `
-    <p class="mb-4 text-sm text-slate-500">Batería del ${nombreCelular}: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 text-xs font-mono">${valor}</code></p>
-
-    <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
-      <div class="px-4 py-3 flex items-center gap-3" style="background:${bateriaColor}">
-        <span class="text-3xl">${bateriaEmoji}</span>
-        <div>
-          <p class="text-white font-bold text-base leading-tight">${mAh} mAh — ${bateriaNivel}</p>
-          <p class="text-white/75 text-xs">Capacidad de la batería</p>
-        </div>
-      </div>
-      <div class="p-4 bg-white">
-        <p class="text-sm text-slate-700 leading-relaxed">${bateriaDesc}</p>
-        <div class="mt-3 bg-slate-50 rounded-lg p-3">
-          <p class="text-xs font-semibold text-slate-600 mb-2">📊 Referencia de autonomía aproximada:</p>
-          <div class="space-y-1 text-xs text-slate-700">
-            <div class="flex justify-between"><span>Uso ligero (llamadas + WhatsApp)</span><span class="font-semibold">${mAh < 3500 ? '1 día' : mAh < 4500 ? '1-1.5 días' : mAh < 5500 ? '1.5-2 días' : mAh < 6500 ? '2-3 días' : '3+ días'}</span></div>
-            <div class="flex justify-between"><span>Uso normal (redes + fotos + vídeos)</span><span class="font-semibold">${mAh < 3500 ? '~1 día' : mAh < 4500 ? '1 día' : mAh < 5500 ? '1-2 días' : mAh < 6500 ? '1.5-2 días' : '2+ días'}</span></div>
-            <div class="flex justify-between"><span>Uso intenso (juegos + streaming)</span><span class="font-semibold">${mAh < 3500 ? '4-6 horas' : mAh < 4500 ? '6-8 horas' : mAh < 5500 ? '8-10 horas' : mAh < 6500 ? '10-12 horas' : '12+ horas'}</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    ${iphoneSection}
-
-    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
-      <p class="text-sm text-indigo-900"><strong>💡 Consejo de uso:</strong> Para prolongar la vida útil de la batería, lo ideal es cargarla entre el 20% y el 80% regularmente. Cargarla hasta el 100% todas las noches o dejarla agotar hasta el 0% frecuentemente puede reducir la capacidad de la batería con el tiempo.</p>
-    </div>
-  `;
-
-  tituloEl.innerHTML = `🔋 Batería: ${mAh} mAh`;
+  tituloEl.innerHTML = `🔋 Batería: ${mah} mAh`;
   contenidoEl.innerHTML = html;
   modal.classList.remove('hidden');
 }
 
 // ─────────────────────────────────────────
-// EXPLICACIÓN BLUETOOTH ESPECÍFICO
+// EXPLICACIÓN BLUETOOTH ESPECÍFICA
 // ─────────────────────────────────────────
-function mostrarExplicacionBTEspecifico(valor, nombreCelular) {
+function mostrarExplicacionBluetoothEspecifica(valor) {
   const modal = document.getElementById('modalExplicacion');
   const tituloEl = document.getElementById('modalTitulo');
   const contenidoEl = document.getElementById('modalContenido');
+  const txt = String(valor).trim();
 
-  const txt = String(valor);
   const verMatch = txt.match(/(\d+(?:\.\d+)?)/);
   const ver = verMatch ? parseFloat(verMatch[1]) : null;
 
-  if (!ver) {
-    tituloEl.innerHTML = explicaciones['bt'].titulo;
-    contenidoEl.innerHTML = explicaciones['bt'].contenido;
+  if (ver == null) {
+    tituloEl.innerHTML = '📶 Bluetooth';
+    contenidoEl.innerHTML = `<div class="bg-slate-50 rounded-xl p-4"><p class="text-sm text-slate-500">No se detectó una versión de Bluetooth en: <strong>${txt}</strong>.</p></div>`;
     modal.classList.remove('hidden');
     return;
   }
 
-  const btConfigs = {
-    5.0: { color:'#64748b', titulo:'Bluetooth 5.0 — El estándar confiable',
-      desc:'Bluetooth 5.0 marcó un salto importante en 2016-2017: duplicó el alcance respecto al 4.x (hasta ~40m en campo abierto) y cuadruplicó la velocidad de transferencia de datos. Conecta audífonos, parlantes, relojes inteligentes, autos y cualquier accesorio Bluetooth sin problema.',
-      extras:['Alcance real en interiores: ~10-15 m', 'Conexión más estable que versiones anteriores', 'Compatible con todos los accesorios Bluetooth modernos', 'Soporte para audio de buena calidad (SBC, AAC)'] },
-    5.1: { color:'#0ea5e9', titulo:'Bluetooth 5.1 — Con localización mejorada',
-      desc:'Bluetooth 5.1 añade sobre el 5.0 la capacidad de determinar la dirección de la señal con mayor precisión. Esto es la base de tecnologías de localización de ítems como los Tile o AirTags. Para el uso cotidiano (audífonos, parlantes, carro), es prácticamente idéntico al 5.0.',
-      extras:['Todo lo de Bluetooth 5.0', 'Localización de dirección de señal más precisa', 'Base para rastreo de objetos cercanos', 'Útil en dispositivos IoT de localización'] },
-    5.2: { color:'#4f46e5', titulo:'Bluetooth 5.2 — Audio mejorado con LE Audio',
-      desc:'Bluetooth 5.2 introduce el estándar LE Audio, que es un salto cualitativo para los audífonos. Soporta el códec LC3, que ofrece mejor calidad de sonido consumiendo menos energía que el SBC clásico. También habilita Audio Sharing (compartir audio con varios auriculares al mismo tiempo) y mejora la experiencia con audífonos para personas con problemas auditivos.',
-      extras:['Estándar LE Audio (códec LC3)', 'Mejor calidad de sonido con menor batería', 'Audio Sharing: música con varios audífonos a la vez', 'Mejoras en audífonos médicos', 'Mayor estabilidad en conexiones múltiples'] },
-    5.3: { color:'#6366f1', titulo:'Bluetooth 5.3 — Eficiencia y estabilidad mejoradas',
-      desc:'Bluetooth 5.3 perfecciona el 5.2 con mejoras en la forma en que gestiona las conexiones: reduce las interferencias en entornos con muchos dispositivos Bluetooth (como oficinas o centros comerciales), mejora la seguridad y la eficiencia energética de los accesorios conectados.',
-      extras:['Todo lo de Bluetooth 5.2 + LE Audio', 'Mejor gestión de conexiones múltiples', 'Menos interferencias en entornos congestionados', 'Mayor eficiencia energética para accesorios', 'Estándar actual de la mayoría de celulares modernos'] },
-    5.4: { color:'#7c3aed', titulo:'Bluetooth 5.4 — Lo más reciente en conectividad',
-      desc:'Bluetooth 5.4 (lanzado en 2023) introduce mejoras para el ecosistema IoT (dispositivos inteligentes del hogar y la industria) y perfecciona la gestión de múltiples conexiones simultáneas. Para el usuario cotidiano, significa una conectividad más estable, especialmente cuando tienes audífonos, reloj y otros accesorios conectados al mismo tiempo.',
-      extras:['Todo lo de Bluetooth 5.3', 'Mejor soporte para ecosistema IoT y casa inteligente', 'Gestión avanzada de múltiples dispositivos simultáneos', 'Más eficiencia en entornos de alta densidad de señales', 'De lo más nuevo disponible en el mercado'] },
-    6.0: { color:'#dc2626', titulo:'Bluetooth 6.0 — La próxima generación',
-      desc:'Bluetooth 6.0 es lo más nuevo del estándar. Introduce Channel Sounding, que permite medir distancias con centímetros de precisión (ideal para cerraduras inteligentes o localización de precisión). Mejora la eficiencia de la transmisión y prepara el terreno para casos de uso que aún están en desarrollo.',
-      extras:['Channel Sounding: medición de distancia precisa a cm', 'Seguridad mejorada en conexiones de proximidad', 'Mayor eficiencia de transmisión', 'Base para nuevas aplicaciones de localización', 'De lo más avanzado que existe actualmente'] },
-  };
-
-  const verKey = ver >= 6.0 ? 6.0 : ver >= 5.4 ? 5.4 : ver >= 5.3 ? 5.3 : ver >= 5.2 ? 5.2 : ver >= 5.1 ? 5.1 : 5.0;
-  const cfg = btConfigs[verKey];
+  const info = ver >= 6.0
+    ? { color:'#7c3aed', emoji:'🏆', label:`Bluetooth ${ver} — Lo más reciente`, nota:`Bluetooth ${ver} es de las versiones más nuevas disponibles. Te da conexiones más estables, mejor alcance, menos consumo de batería al estar conectado a audífonos o relojes, y mejor calidad de audio en general. Si conectas seguido audífonos, parlantes o smartwatch, vas a notar una conexión más confiable.`, tags:['✔ Lo más actual del mercado', '✔ Mejor estabilidad y alcance', '✔ Menor consumo al usar accesorios'] }
+    : ver >= 5.3
+    ? { color:'#4f46e5', emoji:'🚀', label:`Bluetooth ${ver} — Muy moderno`, nota:`Bluetooth ${ver} es una versión moderna que mejora la estabilidad de la conexión y reduce el consumo de batería cuando tienes audífonos o relojes conectados todo el día. También soporta tecnologías de audio más recientes, lo que se traduce en menos cortes y mejor calidad al escuchar música o hacer llamadas con audífonos inalámbricos.`, tags:['✔ Conexión estable', '✔ Buen ahorro de batería con accesorios', '✔ Soporta audio de alta calidad'] }
+    : ver >= 5.1
+    ? { color:'#0ea5e9', emoji:'✅', label:`Bluetooth ${ver} — Estándar confiable`, nota:`Bluetooth ${ver} es una versión muy usada y confiable. Te permite conectar audífonos, parlantes, relojes inteligentes y otros accesorios sin problema, con buen alcance y consumo razonable de batería. Es la versión que la mayoría de personas usa hoy sin ningún inconveniente.`, tags:['✔ Compatible con todos los accesorios comunes', '✔ Buen alcance y estabilidad'] }
+    : { color:'#94a3b8', emoji:'📶', label:`Bluetooth ${ver} — Funcional`, nota:`Bluetooth ${ver} cumple perfectamente para conectar audífonos, parlantes y otros accesorios básicos. No tiene las mejoras de eficiencia energética de las versiones más nuevas, pero para el uso típico — escuchar música, llamadas con manos libres, transferir algún archivo — funciona sin problema.`, tags:['✔ Compatible con accesorios básicos', '— Sin las mejoras de eficiencia de versiones recientes'] };
 
   const html = `
-    <p class="mb-4 text-sm text-slate-500">Bluetooth del ${nombreCelular}: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 text-xs font-mono">${valor}</code></p>
-
-    <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
-      <div class="px-4 py-3 flex items-center gap-3" style="background:${cfg.color}">
-        <span class="text-3xl">📶</span>
-        <div>
-          <p class="text-white font-bold text-base leading-tight">Bluetooth ${ver} — ${cfg.titulo.split('—')[1]?.trim()}</p>
-          <p class="text-white/75 text-xs">Versión de conectividad inalámbrica</p>
-        </div>
-      </div>
-      <div class="p-4 bg-white">
-        <p class="text-sm text-slate-700 leading-relaxed mb-3">${cfg.desc}</p>
-        <div class="space-y-1.5">
-          ${cfg.extras.map(e=>`<div class="flex gap-2 text-sm text-slate-700"><span class="text-green-600 flex-shrink-0">✔</span><span>${e}</span></div>`).join('')}
-        </div>
-        <div class="mt-3 bg-slate-50 rounded-lg p-3">
-          <p class="text-xs font-semibold text-slate-600 mb-2">📊 Evolución del Bluetooth:</p>
-          <div class="flex gap-1 text-xs flex-wrap items-center">
-            ${[5.0,5.1,5.2,5.3,5.4,6.0].map(v=>`<span style="padding:3px 10px;border-radius:99px;${v===verKey?'background:'+cfg.color+';color:#fff;font-weight:700':'background:#f1f5f9;color:#64748b'}">${v}</span>`).join('<span class="text-slate-400">→</span>')}
-          </div>
-        </div>
+  <p class="mb-4">Este celular cuenta con <strong style="color:var(--indigo)">Bluetooth ${ver}</strong>. Te explicamos qué significa esto para conectar tus accesorios:</p>
+  <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
+    <div class="px-4 py-3 flex items-center gap-3" style="background:${info.color}">
+      <span class="text-2xl">${info.emoji}</span>
+      <div>
+        <p class="text-white font-bold text-base leading-tight">${info.label}</p>
+        <p class="text-white/75 text-xs">Versión de Bluetooth</p>
       </div>
     </div>
-
-    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
-      <p class="text-sm text-indigo-900"><strong>💡 ¿Importa mucho la versión?</strong> ${
-        ver >= 5.4 ? 'Bluetooth 5.4+ es lo más moderno. Conectividad ultra-estable, LE Audio para audífonos de nueva generación y preparado para el futuro del ecosistema de accesorios.' :
-        ver >= 5.3 ? 'Bluetooth 5.3 ya incluye LE Audio (mejor calidad de audio) y es perfectamente estable con cualquier accesorio del mercado. Una excelente versión para el uso diario.' :
-        ver >= 5.2 ? 'Bluetooth 5.2 ya soporta LE Audio, lo que hace una diferencia notable en audífonos compatibles. Para uso cotidiano, es más que suficiente.' :
-        'Bluetooth 5.0 y 5.1 conectan perfectamente con cualquier audífono, parlante o reloj del mercado. La diferencia con versiones más nuevas la notarás principalmente si usas audífonos de nueva generación con LE Audio.'
-      }</p>
+    <div class="p-4 bg-white">
+      <p class="text-sm text-slate-700 leading-relaxed">${info.nota}</p>
+      <div class="mt-3 flex gap-2 text-xs flex-wrap">
+        ${info.tags.map(t => `<span style="${t.startsWith('✔')?'background:#dcfce7;color:#166534':t.startsWith('⚠')?'background:#fef3c7;color:#92400e':'background:#f1f5f9;color:#475569'};padding:2px 10px;border-radius:99px">${t}</span>`).join('')}
+      </div>
     </div>
-  `;
+  </div>
+  <div class="bg-indigo-50 p-4 rounded-xl mt-1"><p class="text-sm text-indigo-900"><strong>💡 En resumen:</strong> el Bluetooth se usa para conectar audífonos, parlantes, relojes inteligentes, el manos libres del auto y compartir archivos. Cualquier versión moderna (5.0 en adelante) es totalmente compatible con tus accesorios actuales — las versiones más nuevas simplemente mejoran la estabilidad y el ahorro de batería.</p></div>`;
 
-  tituloEl.innerHTML = `📶 Bluetooth ${ver}`;
+  tituloEl.innerHTML = `📶 Bluetooth: ${ver}`;
   contenidoEl.innerHTML = html;
   modal.classList.remove('hidden');
 }
 
-// ─────────────────────────────────────────
-// EXPLICACIÓN CÁMARA ESPECÍFICA
-// ─────────────────────────────────────────
-function mostrarExplicacionCamaraEspecifica(valor, nombreCelular) {
-  const modal = document.getElementById('modalExplicacion');
-  const tituloEl = document.getElementById('modalTitulo');
-  const contenidoEl = document.getElementById('modalContenido');
-
-  const txt = String(valor);
-
-  // Detectar cámaras
-  const camaras = [];
-  // Dividir por " + "
-  const partes = txt.split(/\s*\+\s*/);
-
-  partes.forEach(p => {
-    p = p.trim();
-    const mpxMatch = p.match(/([\d.]+)\s*Mpx?/i) || p.match(/([\d.]+)\s*MP/i);
-    const aperturaMatch = p.match(/ƒ?\/?(\d+\.\d+)/i);
-    const esUGA = /UGA|gran angular|ultra.?wide|ultra.?gran/i.test(p);
-    const esMacro = /MACRO/i.test(p);
-    const esRetrato = /Retrato|portrait|depth/i.test(p);
-    const esTO = /\bTO\b|Teleobjetivo|telephoto|zoom/i.test(p);
-    const esFlicker = /Flicker/i.test(p);
-
-    const mpx = mpxMatch ? parseFloat(mpxMatch[1]) : null;
-    const apertura = aperturaMatch ? aperturaMatch[1] : null;
-
-    if (mpx || esFlicker) {
-      camaras.push({ mpx, apertura, esUGA, esMacro, esRetrato, esTO, esFlicker, raw: p });
-    }
-  });
-
-  // Función para describir apertura
-  const descApertura = f => {
-    if (!f) return '';
-    const v = parseFloat(f);
-    if (v <= 1.6) return `ƒ/${f} — apertura <strong>muy amplia</strong>. Capta muchísima luz. Fotos nocturnas excelentes.`;
-    if (v <= 1.8) return `ƒ/${f} — apertura <strong>amplia</strong>. El estándar premium. Fotos con poca luz muy buenas.`;
-    if (v <= 2.0) return `ƒ/${f} — apertura <strong>buena</strong>. Fotos en condiciones normales y bajas — funciona bien.`;
-    if (v <= 2.4) return `ƒ/${f} — apertura <strong>media</strong>. Con luz suficiente toma buenas fotos. Con poca luz puede necesitar más procesamiento.`;
-    return `ƒ/${f} — apertura <strong>reducida</strong>. Funciona mejor con buena iluminación.`;
-  };
-
-  // Generar sección por cámara
-  let seccionesCam = '';
-  let camPrincipalMpx = null;
-  let tieneUGA = false, tieneMacro = false, tieneRetrato = false, tieneTO = false;
-
-  camaras.forEach((cam, i) => {
-    const esPrincipal = i === 0 && !cam.esUGA && !cam.esMacro && !cam.esRetrato && !cam.esTO;
-    if (esPrincipal) camPrincipalMpx = cam.mpx;
-    if (cam.esUGA) tieneUGA = true;
-    if (cam.esMacro) tieneMacro = true;
-    if (cam.esRetrato) tieneRetrato = true;
-    if (cam.esTO) tieneTO = true;
-
-    if (cam.esFlicker) {
-      seccionesCam += `
-      <div class="rounded-xl mb-3 overflow-hidden border border-slate-200">
-        <div class="px-4 py-2.5 flex items-center gap-2" style="background:#64748b">
-          <span class="text-white font-bold text-sm">📡 Sensor Flicker</span>
-        </div>
-        <div class="p-4 bg-white">
-          <p class="text-sm text-slate-700">Un sensor auxiliar que detecta el parpadeo de las luces artificiales (fluorescentes, LEDs) para que el celular lo compense automáticamente. El resultado: fotos en interiores sin bandas horizontales ni colores raros por la iluminación.</p>
-        </div>
-      </div>`;
-      return;
-    }
-
-    let tipo = esPrincipal ? '📷 Cámara Principal' : cam.esUGA ? '🔭 Ultra Gran Angular (UGA)' : cam.esMacro ? '🔬 Macro' : cam.esRetrato ? '👤 Modo Retrato / Profundidad' : cam.esTO ? '🔍 Teleobjetivo (Zoom)' : `📷 Cámara ${i+1}`;
-    let color = esPrincipal ? '#4f46e5' : cam.esUGA ? '#0891b2' : cam.esMacro ? '#16a34a' : cam.esRetrato ? '#9333ea' : cam.esTO ? '#dc2626' : '#64748b';
-
-    let desc = '';
-    if (esPrincipal) {
-      desc = `La cámara que más vas a usar. Con <strong>${cam.mpx ? cam.mpx+' Mpx' : 'alta resolución'}</strong>${cam.apertura ? ` y apertura ${descApertura(cam.apertura)}` : ''}, es la responsable de la mayoría de tus fotos del día a día, selfies de la cámara trasera y videos.`;
-    } else if (cam.esUGA) {
-      desc = `La Ultra Gran Angular captura un ángulo de visión mucho más amplio que la cámara principal — similar a lo que ves con tus propios ojos al mirar a los lados. Con ${cam.mpx ? cam.mpx+' Mpx' : 'sus megapíxeles'}, es ideal para fotografiar paisajes, arquitectura, grupos de personas o cualquier escena donde no quieres que nada quede fuera del encuadre.${cam.apertura ? ` Apertura: ${descApertura(cam.apertura)}` : ''}`;
-    } else if (cam.esMacro) {
-      desc = `El lente macro te acerca a detalles diminutos que el ojo humano casi no puede ver: flores, insectos, texturas, gotas de agua. Se toman fotos a una distancia muy corta del objeto (generalmente 2-5 cm). ${cam.mpx && cam.mpx < 5 ? '<strong>Nota:</strong> Con '+cam.mpx+' Mpx, las fotos macro son funcionales pero no de altísima resolución — son para compartir en redes, no para impresión grande.' : ''}`;
-    } else if (cam.esRetrato) {
-      desc = `El lente de retrato (o profundidad) mide la distancia al sujeto para crear el efecto <strong>bokeh</strong>: el fondo queda desenfocado y el sujeto aparece nítido, como en las fotos de estudio profesional. ${cam.mpx && cam.mpx <= 2 ? '<strong>Nota:</strong> '+cam.mpx+' Mpx es suficiente para medir profundidad, aunque no para fotos de alta resolución por sí solo.' : ''}`;
-    } else if (cam.esTO) {
-      desc = `El teleobjetivo permite acercarse a sujetos lejanos con <strong>zoom óptico real</strong> — sin perder calidad de imagen, a diferencia del zoom digital que simplemente recorta la foto. Con ${cam.mpx ? cam.mpx+' Mpx' : 'su resolución'}${cam.apertura ? ` y ƒ/${cam.apertura}` : ''}, es ideal para retratos (fondo más desenfocado), deportes, conciertos o fotografía de naturaleza.`;
-    } else {
-      desc = `${cam.mpx ? cam.mpx+' Mpx' : 'Cámara adicional'}${cam.apertura ? `, ƒ/${cam.apertura}` : ''}.`;
-    }
-
-    seccionesCam += `
-    <div class="rounded-xl mb-3 overflow-hidden border border-slate-200">
-      <div class="px-4 py-2.5 flex items-center gap-2" style="background:${color}">
-        <span class="text-white font-bold text-sm">${tipo}${cam.mpx ? ' · '+cam.mpx+' Mpx' : ''}</span>
-      </div>
-      <div class="p-4 bg-white">
-        <p class="text-sm text-slate-700 leading-relaxed">${desc}</p>
-        ${cam.apertura && !esPrincipal ? `<p class="text-xs text-slate-500 mt-2">Apertura: ƒ/${cam.apertura}</p>` : ''}
-      </div>
-    </div>`;
-  });
-
-  // Imágenes de referencia para tipos especiales
-  let imagenes = '';
-  if (tieneUGA) {
-    imagenes += `
-    <div class="rounded-xl mb-3 overflow-hidden border border-slate-200">
-      <div class="p-3 bg-cyan-50 border-b border-slate-200"><p class="text-sm font-semibold text-cyan-800">🔭 Ejemplo: Ultra Gran Angular en acción</p></div>
-      <div class="p-3 bg-white text-center">
-        <img src="https://www.areacucuta.com/wp-content/uploads/2019/09/Gran-Angular-H20-1000x491.jpg" class="mx-auto rounded-lg w-full max-w-md" alt="Comparativa Gran Angular vs Normal" loading="lazy">
-        <p class="text-xs text-slate-500 mt-2">Izquierda: lente normal. Derecha: ultra gran angular. Más escena en el mismo encuadre.</p>
-      </div>
-    </div>`;
-  }
-  if (tieneTO) {
-    imagenes += `
-    <div class="rounded-xl mb-3 overflow-hidden border border-slate-200">
-      <div class="p-3 bg-red-50 border-b border-slate-200"><p class="text-sm font-semibold text-red-800">🔍 Ejemplo: Teleobjetivo / Zoom</p></div>
-      <div class="p-3 bg-white text-center">
-        <img src="https://www.dzoom.org.es/wp-content/uploads/2021/03/movil-ultima-generacion-zoom-hibrido-734x489.jpg" class="mx-auto rounded-lg w-full max-w-md" alt="Teleobjetivo zoom en móvil" loading="lazy">
-        <p class="text-xs text-slate-500 mt-2">El zoom óptico acerca el sujeto sin recortar ni perder calidad.</p>
-      </div>
-    </div>`;
-  }
-  if (tieneMacro) {
-    imagenes += `
-    <div class="rounded-xl mb-3 overflow-hidden border border-slate-200">
-      <div class="p-3 bg-green-50 border-b border-slate-200"><p class="text-sm font-semibold text-green-800">🔬 Ejemplo: Fotografía Macro</p></div>
-      <div class="p-3 bg-white text-center">
-        <img src="https://s2.elespanol.com/2021/08/02/elandroidelibre/tutoriales/trucos/601204514_198531518_1706x764.jpg" class="mx-auto rounded-lg w-full max-w-md" alt="Fotografía macro en móvil" loading="lazy">
-        <p class="text-xs text-slate-500 mt-2">La macro revela detalles invisibles para el ojo humano.</p>
-      </div>
-    </div>`;
-  }
-  if (tieneRetrato) {
-    imagenes += `
-    <div class="rounded-xl mb-3 overflow-hidden border border-slate-200">
-      <div class="p-3 bg-purple-50 border-b border-slate-200"><p class="text-sm font-semibold text-purple-800">👤 Ejemplo: Modo Retrato / Bokeh</p></div>
-      <div class="p-3 bg-white text-center">
-        <img src="https://cdsassets.apple.com/live/7WUAS350/images/ios-apps/iphoto/locale/es-mx/ios15-iphone12-pro-camera-portrait-selfie.png" class="mx-auto rounded-lg w-full max-w-md" alt="Modo retrato bokeh" loading="lazy">
-        <p class="text-xs text-slate-500 mt-2">El modo retrato desenfoca el fondo para destacar al sujeto.</p>
-      </div>
-    </div>`;
-  }
-
-  const html = `
-    <p class="mb-4 text-sm text-slate-500">Cámaras del ${nombreCelular}: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 text-xs font-mono">${valor}</code></p>
-    ${seccionesCam}
-    ${imagenes}
-    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl mt-2">
-      <p class="text-sm text-indigo-900"><strong>💡 En resumen:</strong> ${
-        camaras.length === 1 ? 'Una sola cámara bien diseñada puede tomar fotos excelentes. La cantidad de lentes importa menos que la calidad del sensor principal.' :
-        camaras.length === 2 ? (tieneUGA ? 'La combinación Principal + UGA es la más versátil: fotos normales con la principal, paisajes y grupos con la UGA.' : tieneMacro ? 'Principal + Macro: fotos cotidianas con la principal y detalles extremos con la macro.' : 'Dos cámaras con roles complementarios.') :
-        'Un sistema de tres cámaras ofrece versatilidad real: cada una tiene su rol específico y cubre situaciones distintas.'
-      }</p>
-    </div>
-  `;
-
-  tituloEl.innerHTML = `📸 Cámaras: ${nombreCelular}`;
-  contenidoEl.innerHTML = html;
-  modal.classList.remove('hidden');
-}
-
-// ─────────────────────────────────────────
-// RECOMENDADOR
-// ─────────────────────────────────────────
 const W = { cpu:.25, cam:.18, screen:.10, ram:.12, storage:.07, battery:.12, resist:.06, bt:.04, price:.06 };
+
+
 
 function numFromText(t) { if (!t) return null; const m = ('' + t).toLowerCase().match(/(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : null; }
 function parseAnTuTu(s) { if (!s) return null; const z = ('' + s).toLowerCase().replace(/,/g,''); const m = z.match(/(\d+(?:\.\d+)?)/); if (!m) return null; let v = parseFloat(m[1]); if (/m\b/.test(z)) v *= 1e6; else if (/k\b/.test(z)) v *= 1e3; return v; }
