@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --indigo: #4f46e5;
@@ -534,7 +534,7 @@
   <div>
     <span id="statusBadge" class="status-badge">
       <span class="status-dot"></span>
-      <span id="statusText">📌 Carga un Excel con hoja <b>caracteristicas</b> y hoja <b>imagen</b></span>
+      <span id="statusText">⏳ Cargando datos...</span>
     </span>
   </div>
 
@@ -553,6 +553,18 @@
       <div>
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Equipo 3</label>
         <div class="ac-wrap" id="wrap3"></div>
+      </div>
+    </div>
+    <div id="comercialBox" class="hidden flex flex-wrap items-end gap-3 mb-4 pt-4 border-t border-[--border]">
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Lista de precios Entel (renovación · contado regular)</label>
+        <div class="flex gap-2">
+          <label class="btn-ghost cursor-pointer whitespace-nowrap">
+            📊 Subir .xlsm de Entel
+            <input id="entelInput" type="file" accept=".xlsm,.xlsx,.xls" class="hidden" />
+          </label>
+          <button id="btnExportCSV" class="btn-ghost hidden whitespace-nowrap" title="Descarga el CSV para pegarlo en la pestaña RENO CONT del Sheet">⬇ CSV para RENO CONT</button>
+        </div>
       </div>
     </div>
     <div class="flex gap-2 pt-2 border-t border-[--border]">
@@ -617,7 +629,6 @@
 const clean = s => (s ?? '').toString().trim();
 const deaccent = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const U = s => deaccent(clean(s).toUpperCase()).replace(/\+/g, 'PLUS').replace(/[^A-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
-const KEY = 'nexx_3d_final_v8';
 
 function debounce(fn, ms) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
@@ -942,7 +953,7 @@ function render3DCard(p) {
   const card = document.createElement('div');
   card.className = 'phone-card';
   card.innerHTML = `
-    <div class="phone-card-title">${p.nombre}</div>
+    <div class="phone-card-title">${escapeHtml(p.nombre)}</div>
     <div class="viewer-shell" id="${viewerId}">
       ${has3D ? `
         <div class="viewer-loader" id="loader-${viewerId}">
@@ -974,7 +985,7 @@ function render3DCard(p) {
         <div class="viewer-no3d">
           <svg width="56" height="56" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           <p style="font-size:13px;color:#94a3b8;font-weight:500">Sin visor 3D</p>
-          <p style="font-size:11px;color:#cbd5e1">Agrega link en columna C de "Imagen"</p>
+          <p style="font-size:11px;color:#cbd5e1">Agrega el link en la pestaña <b>Imagen3D</b></p>
         </div>
       `}
     </div>
@@ -1052,13 +1063,6 @@ function getTipoFromLabel(label) {
   return null;
 }
 
-function getTipoFromLabel(label) {
-  for (const [key, val] of Object.entries(CLICKABLE_SPECS)) {
-    if (label.includes(key)) return val;
-  }
-  return null;
-}
-
 function byName(n) { return DATA.find(d => d.nombre === n) || null; }
 
 function formatAnTuTu(v) {
@@ -1073,6 +1077,52 @@ function formatAnTuTu(v) {
   return v;
 }
 
+function pintarFilasComerciales(tb, names) {
+  if (!PRECIOS || !names.length) return;
+  const datos = names.map(n => comercial(byName(n) || {}));
+  if (!datos.some(d => d.precio != null || d.estado)) return;
+
+  const tr = document.createElement('tr');
+  tr.style.background = 'var(--indigo-pale)';
+  const td = document.createElement('td');
+  td.className = 'p-3 font-medium whitespace-nowrap';
+  td.textContent = '💰 Precio del equipo';
+  tr.appendChild(td);
+  datos.forEach(d => {
+    const c = document.createElement('td');
+    c.className = 'p-3 text-center font-bold';
+    c.style.color = 'var(--indigo)';
+    c.textContent = money(d.precio) || '—';
+    tr.appendChild(c);
+  });
+  for (let i = names.length; i < 3; i++) tr.appendChild(document.createElement('td'));
+  tb.appendChild(tr);
+
+  if (datos.some(d => d.gama)) {
+    const g = document.createElement('tr');
+    const gl = document.createElement('td');
+    gl.className = 'p-3 font-medium whitespace-nowrap';
+    gl.textContent = '🏷️ Gama Entel';
+    g.appendChild(gl);
+    datos.forEach(d => {
+      const c = document.createElement('td');
+      c.className = 'p-3 text-center';
+      c.textContent = d.gama || '—';
+      g.appendChild(c);
+    });
+    for (let i = names.length; i < 3; i++) g.appendChild(document.createElement('td'));
+    tb.appendChild(g);
+  }
+
+  const sinCruce = names.filter((n, i) => ['SIN-CRUCE', 'SIN-PRECIO'].includes(datos[i].estado));
+  if (sinCruce.length) {
+    const w = document.createElement('tr');
+    w.innerHTML = `<td colspan="4" class="p-2 text-xs" style="background:#fef3c7;color:#92400e">
+      ⚠️ Sin precio en RENO CONT: ${escapeHtml(sinCruce.join(', '))}</td>`;
+    tb.appendChild(w);
+  }
+}
+
 function renderTable() {
   const names = selections.filter(Boolean);
   document.getElementById('h1').textContent = names[0] || '';
@@ -1080,6 +1130,7 @@ function renderTable() {
   document.getElementById('h3').textContent = names[2] || '';
   const tb = document.getElementById('tbody');
   tb.innerHTML = '';
+  pintarFilasComerciales(tb, names);
 
   FIELDS.forEach(field => {
     const has = names.some(n => { const v = (byName(n) || {})[field.k]; return v != null && String(v).trim() !== ''; });
@@ -1096,8 +1147,7 @@ function renderTable() {
       tdLabel.querySelector('.spec-label').addEventListener('click', () => abrirExplicacion(tipo, field.label));
       tdLabel.querySelector('.spec-label').addEventListener('keydown', e => { if (e.key === 'Enter') abrirExplicacion(tipo, field.label); });
     } else {
-      tdLabel.textContent = field.label.replace(/^[^\s]+\s/, '');
-      tdLabel.innerHTML = field.label;
+      tdLabel.innerHTML = escapeHtml(field.label);
     }
     tr.appendChild(tdLabel);
 
@@ -2263,7 +2313,7 @@ const W = { cpu:.25, cam:.18, screen:.10, ram:.12, storage:.07, battery:.12, res
 
 function numFromText(t) { if (!t) return null; const m = ('' + t).toLowerCase().match(/(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : null; }
 function parseAnTuTu(s) { if (!s) return null; const z = ('' + s).toLowerCase().replace(/,/g,''); const m = z.match(/(\d+(?:\.\d+)?)/); if (!m) return null; let v = parseFloat(m[1]); if (/m\b/.test(z)) v *= 1e6; else if (/k\b/.test(z)) v *= 1e3; return v; }
-function hasOIS(s) { return /^s/i.test(String(s || '')); }
+function hasOIS(s) { return /^(si|s[ií]|yes|ois)\b/i.test(String(s || '').trim()); }
 function nm(proc) { const m = String(proc || '').match(/(\d+)\s*nm/i); return m ? parseInt(m[1],10) : null; }
 function hz(v) { const m = String(v || '').match(/(\d{2,3})\s*Hz/i); return m ? parseInt(m[1],10) : null; }
 function priceNum(s) { const z = ('' + (s || '')).replace(/[^\d.]/g,''); const v = parseFloat(z); return isNaN(v) ? null : v; }
@@ -2280,7 +2330,7 @@ function rawScore(p) {
     battery: .65*Math.max(0,Math.min(1,((numFromText(p.bateria)||0)-4500)/2200))+.35*Math.max(0,Math.min(1,(numFromText(p.carga)||0)/66)),
     resist: waterScore(p.resistencia),
     bt: (v=>v>=5.4?1:v>=5.3?.9:v>=5.1?.75:v>=5.0?.7:.6)(btVer(p.bt)),
-    price: (pr=>pr==null?.6:pr<=600?1:pr<=900?.85:pr<=1400?.7:pr<=2000?.55:.4)(priceNum(p.contado))
+    price: (pr=>pr==null?.6:pr<=600?1:pr<=900?.85:pr<=1400?.7:pr<=2000?.55:.4)(precioEfectivo(p))
   };
   return { total: Object.keys(W).reduce((a,k)=>a+W[k]*scores[k],0), parts: scores };
 }
@@ -2291,17 +2341,17 @@ function runRecommender(names) {
   const sec = document.getElementById('winnerSection');
   if (!names.length) { sec.classList.add('hidden'); return; }
   const chosen = names.map(byName).filter(Boolean);
-  const bands = new Set(chosen.map(x => gama(priceNum(x.contado)||0)));
+  const bands = new Set(chosen.map(x => gama(precioEfectivo(x)||0)));
   const bonus = bands.size === 1 ? 0.02 : 0;
   const scored = chosen.map(p => {
     const { total, parts } = rawScore(p);
-    return { name: p.nombre, p, parts, score: total + bonus, bonus, price: priceNum(p.contado)||0 };
+    return { name: p.nombre, p, parts, score: total + bonus, bonus, price: precioEfectivo(p)||0 };
   }).sort((a,b) => b.score - a.score);
   const top = scored[0];
   document.getElementById('winnerText').textContent = `🏆 Ganador: ${top.name}${top.bonus>0?' (bono misma gama)':''}`;
   const avg = k => scored.slice(1).reduce((s,r)=>s+r.parts[k],0)/Math.max(1,scored.length-1);
   const reasons = [];
-  if (top.parts.price>=.7) reasons.push(`💰 Mejor relación precio (${top.p.contado})`);
+  if (top.parts.price>=.7) reasons.push(`💰 Mejor relación precio (${money(precioEfectivo(top.p)) || 's/d'})`);
   if (top.parts.resist>avg('resist')+.05) reasons.push(`💧 Mejor resistencia IP`);
   if (top.parts.screen>=.95) reasons.push(`📱 Pantalla muy fluida (120 Hz)`);
   if (top.parts.cpu>avg('cpu')+.03) reasons.push(`⚡ CPU/AnTuTu superior`);
@@ -2312,10 +2362,10 @@ function runRecommender(names) {
   const pct = x => (x*100).toFixed(1);
   document.getElementById('rankList').innerHTML = scored.map(r=>`
     <li>
-      <span class="font-semibold">${r.name}</span> — <span class="mono text-white/90">${pct(r.score)}</span>
+      <span class="font-semibold">${escapeHtml(r.name)}</span> — <span class="mono text-white/90">${pct(r.score)}</span>
       <div class="text-xs opacity-75 mt-0.5">
         CPU ${pct(r.parts.cpu*W.cpu)} · Cámara ${pct(r.parts.cam*W.cam)} · Pantalla ${pct(r.parts.screen*W.screen)} · RAM ${pct(r.parts.ram*W.ram)} · ROM ${pct(r.parts.storage*W.storage)} · Batería ${pct(r.parts.battery*W.battery)} · Resistencia ${pct(r.parts.resist*W.resist)} · BT ${pct(r.parts.bt*W.bt)} · Precio ${pct(r.parts.price*W.price)}
-        <br>💰 ${r.p.contado||'—'}
+        <br>💰 ${money(precioEfectivo(r.p)) || '—'}
       </div>
     </li>
   `).join('');
@@ -2340,40 +2390,362 @@ document.getElementById('btnReset').addEventListener('click', () => {
   update();
 });
 
-// ─────────────────────────────────────────
-// CARGA / CACHÉ
-// ─────────────────────────────────────────
-document.getElementById('btnClear').addEventListener('click', () => {
-  localStorage.removeItem(KEY);
-  location.reload();
-});
+// ═════════════════════════════════════════════════════════════
+// CONFIGURACIÓN
+// Lee directamente de tu Sheet "COMP" por su ID y el nombre de
+// cada pestaña. No hace falta publicar nada ni manejar gids.
+// ═════════════════════════════════════════════════════════════
+const CONFIG = {
+  sheetId: '1sjjMNqrWM_sXas12JK_9c67GdFvFm3W8XbFAvivXvqA',
+  hojas: {
+    caracteristicas: 'Caracteristicas',
+    imagen:          'Imagen',
+    precios:         'RENO CONT',     // renovación · oferta contado regular
+    equivalencias:   'EQUIVALENCIAS'  // opcional: si existe, pisa la tabla de abajo
+  },
+  // Plan B: solo si el navegador bloquea gviz por CORS.
+  // Publica las pestañas (Archivo → Compartir → Publicar en la web → CSV) y completa esto.
+  publicado: { base: '', gid: { caracteristicas: '', imagen: '', precios: '', equivalencias: '' } },
+  ttlMinutos: 10,
+  fallbackXlsx: 'COMP.xlsx',
+  hojaEntel: /RENOVACION.*CONTADO.*OFERTA/i
+};
 
-async function loadExcelFromServer() {
+const gvizUrl = hoja =>
+  `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq` +
+  `?tqx=out:csv&headers=0&sheet=${encodeURIComponent(hoja)}`;
+
+const pubUrl = clave => {
+  const p = CONFIG.publicado;
+  return p.base && p.gid[clave] ? `${p.base}?gid=${p.gid[clave]}&single=true&output=csv` : null;
+};
+
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const num = v => { const n = parseFloat(String(v ?? '').replace(/[^\d.,-]/g,'').replace(',', '.')); return isNaN(n) ? null : n; };
+const money = v => v == null ? null : 'S/ ' + Number(v).toLocaleString('es-PE', { maximumFractionDigits: 0 });
+const norm = s => deaccent(String(s ?? '')).toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
+
+// ─────────────────────────────────────────
+// LECTURA DE HOJAS
+// ─────────────────────────────────────────
+async function fetchCSVTexto(url) {
+  const res = await fetch(url + '&_=' + Date.now(), { cache: 'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const txt = await res.text();
+  if (/^\s*<!DOCTYPE|^\s*<html/i.test(txt)) throw new Error('respuesta HTML: la hoja no es pública');
+  if (/^\s*\)\]\}'/.test(txt)) throw new Error('gviz devolvió un error para esa pestaña');
+  const wb = XLSX.read(txt, { type: 'string', raw: false });
+  return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', blankrows: false });
+}
+
+/** Intenta gviz y, si falla, la URL publicada. */
+async function leerHoja(clave) {
+  const nombre = CONFIG.hojas[clave];
   try {
-    const res = await fetch('COMP.xlsx');
-    if (!res.ok) throw new Error('No encontrado');
-    const wb = XLSX.read(await res.arrayBuffer());
-    const { links3D } = processWorkbook(wb);
-    setStatus(`✅ Cargado desde COMP.xlsx · ${DATA.length} equipos | ${links3D.filter(l=>l.link3D).length} con visor 3D`, 'ok');
-    rebuildAllAC(); update();
-  } catch {
-    setStatus(`⚠️ No se encontró COMP.xlsx. Usa "Cargar Excel" para subir tu archivo.`, 'warn');
+    return await fetchCSVTexto(gvizUrl(nombre));
+  } catch (err) {
+    const alt = pubUrl(clave);
+    if (!alt) throw new Error(`"${nombre}": ${err.message}`);
+    return await fetchCSVTexto(alt);
   }
 }
+
+/** Ubica la fila de encabezado que contiene una etiqueta y la columna donde está. */
+function ubicarEncabezado(A, etiqueta) {
+  const objetivo = norm(etiqueta);
+  for (let i = 0; i < Math.min(A.length, 40); i++) {
+    const j = (A[i] || []).findIndex(c => norm(c) === objetivo);
+    if (j >= 0) return { fila: i, col: j };
+  }
+  return null;
+}
+
+// Cruce entre el nombre del equipo en Caracteristicas y el de la columna MODELO
+// de la pestaña RENO CONT. Si agregas un equipo, añade aquí su línea.
+// Una pestaña llamada EQUIVALENCIAS en el Sheet (EQUIPO | MODELO) pisa esta tabla.
+const EQUIVALENCIAS = {
+  "HONOR 400": "Honor 400 512GB 5G",
+  "HONOR 400 LITE": "Honor 400 Lite 256GB 5G",
+  "HONOR 600 SMART 256GB 5G": "Honor 600 Smart 256GB 5G",
+  "HONOR MAGIC 7 LITE 512GB": "Honor Magic 7 lite 512GB 5G",
+  "HONOR MAGIC 8 LITE 512GB 5G": "Honor Magic 8 Lite 512GB 5G",
+  "HONOR MAGIC 8 PRO 512GB 5G": "Honor Magic 8 Pro 512GB 5G",
+  "HONOR X5B": "Honor X5B",
+  "HONOR X5C": "Honor X5c",
+  "HONOR X7D": "Honor X7D 256GB 5G",
+  "HONOR X8C 256GB": "Honor X8C 256GB 5G",
+  "Honor 600 512GB 5G": "Honor 600 512GB 5G",
+  "Honor 600e 512GB 5G": "Honor 600e 512GB 5G",
+  "Honor X6D 256GB 5G": "Honor X6D 256GB 5G",
+  "Honor X7e Plus 256GB 5G": "Honor X7e Plus 256GB 5G",
+  "IPHONE 13 128GB": "Apple Iphone 13 128GB",
+  "IPHONE 15 128GB": "Apple Iphone 15 128GB 5G",
+  "IPHONE 16 128GB": "Apple Iphone 16 128GB 5G",
+  "IPHONE 17 256GB": "Apple Iphone 17 256GB 5G",
+  "IPHONE 17 512GB": "Apple Iphone 17 512GB 5G",
+  "IPHONE 17 PRO MAX 512GB": "Apple Iphone 17 Pro Max 512GB 5G",
+  "IPHONE AIR 256GB": "Apple Iphone Air 256GB 5G",
+  "MOTOROLA EDGE 60 FUSION 256GB 5G": "Motorola Moto Edge 60 fusion 256GB 5G",
+  "MOTOROLA EDGE 70 512GB 5G": "Motorola Moto Edge 70 512GB 5G",
+  "MOTOROLA EDGE 70 FUSION 256GB 5G": "Motorola Moto Edge 70 fusion 256GB 5G",
+  "MOTOROLA G56 256GB": "Motorola Moto G56 256GB 5G",
+  "MOTOROLA G77 256GB 5G": "Motorola Moto G77 256GB 5G",
+  "MOTOROLA MOTO G06 128GB 4G": "Motorola Moto G06 128GB 4G",
+  "Motorola Moto G06 256GB 4G": "Motorola Moto G06 256GB 4G",
+  "Motorola Moto G15": "Motorola Moto G15",
+  "Motorola Moto G17 256GB 4G": "Motorola Moto G17 256GB 4G",
+  "Motorola Moto G85 256GB 5G": "Motorola Moto G85 256GB 5G",
+  "OPPO A5 256GB 5G": "Oppo A5 256GB 5G",
+  "OPPO A5 256GB LTE": "Oppo A5 256GB 5G",
+  "OPPO A5 PRO 256GB": "Oppo A5 Pro 256GB 5G",
+  "OPPO A6 PRO 256GB": "Oppo A6 Pro 256GB 5G",
+  "OPPO A6C 128GB 4G": "Oppo A6C 128GB 4G",
+  "OPPO A6X 256GB 5G": "Oppo A6X 256GB 5G",
+  "OPPO RENO 14F 256GB 5G": "Oppo Reno 14F 256GB 5G",
+  "OPPO RENO 16 256GB 5G": "Oppo Reno 16 256GB 5G",
+  "Oppo Reno 16F 256GB 5G": "Oppo Reno 16F 256GB 5G",
+  "SAMSUNG GXY A07 64GB 4G": "Samsung Galaxy A07 64GB 4G",
+  "SAMSUNG GXY A27 128GB 5G": "Samsung Galaxy A27 128GB 5G",
+  "SAMSUNG GXY A27 256GB 5G": "Samsung Galaxy A27 256GB 5G",
+  "SAMSUNG GXY A57 512GB 5G": "Samsung Galaxy A57 512GB 5G",
+  "SAMSUNG GXY S25 FE 256GB 5G": "Samsung Galaxy S25 FE 256GB 5G",
+  "Samsung Galaxy A06 128GB 4G": "Samsung Galaxy A06 128GB 4G",
+  "Samsung Galaxy A07 128GB 4G": "Samsung Galaxy A07 128GB 4G",
+  "Samsung Galaxy A16 256GB 4G": "Samsung Galaxy A16 256GB 4G",
+  "Samsung Galaxy A17 128GB 5G": "Samsung Galaxy A17 128GB 5G",
+  "Samsung Galaxy A26 256GB 5G": "Samsung Galaxy A26 256GB 5G",
+  "Samsung Galaxy A36 256GB 5G": "Samsung Galaxy A36 256GB 5G",
+  "Samsung Galaxy A37 256GB 5G": "Samsung Galaxy A37 256GB 5G",
+  "Samsung Galaxy A56 256GB 5G": "Samsung Galaxy A56 256GB 5G",
+  "Samsung Galaxy A57 256GB 5G": "Samsung Galaxy A57 256GB 5G",
+  "Samsung Galaxy S26 256GB 5G": "Samsung Galaxy S26 256GB 5G",
+  "Samsung Galaxy S26 Plus 256GB 5G": "Samsung Galaxy S26 Plus 256GB 5G",
+  "Samsung Galaxy S26 Ultra 256GB 5G": "Samsung Galaxy S26 Ultra 256GB 5G",
+  "VIVO V60 LITE 256GB 5G": "Vivo V60 Lite 256GB 5G",
+  "VIVO X300 PRO 512GB 5G": "Vivo X300 Pro 512GB 5G",
+  "VIVO Y21 256GB 5G": "Vivo Y21 256GB 5G",
+  "VIVO Y31 512GB 5G": "Vivo Y31 512GB 5G",
+  "Vivo V70 FE 256GB 5G": "Vivo V70 FE 256GB 5G",
+  "Vivo Y11 128GB 5G": "Vivo Y11 128GB 5G",
+  "Vivo Y31 256GB 5G": "Vivo Y31 256GB 5G",
+  "XIAOMI 15T": "Xiaomi 15T 512GB 5G",
+  "XIAOMI 15T PRO": "Xiaomi 15T Pro 512GB 5G",
+  "XIAOMI 17 ULTRA 512GB 5G": "Xiaomi 17 Ultra 512GB 5G",
+  "XIAOMI 17T 512GB 5G": "Xiaomi 17T 512GB 5G",
+  "XIAOMI 17T PRO 512GB 5G": "Xiaomi 17T Pro 512GB 5G",
+  "XIAOMI REDMI A5 128GB": "Xiaomi Redmi A5 128GB",
+  "Xiaomi Redmi 15 4G": "Xiaomi Redmi 15 4G",
+  "Xiaomi Redmi 15C 256GB 4G": "Xiaomi Redmi 15C 256GB 4G",
+  "Xiaomi Redmi A7 Pro 128GB 4G": "Xiaomi Redmi A7 Pro 128GB 4G",
+  "Xiaomi Redmi Note 14 5G": "Xiaomi Redmi Note 14 5G",
+  "Xiaomi Redmi Note 14 Pro 5G": "Xiaomi Redmi Note 14 Pro 5G",
+  "Xiaomi Redmi Note 14 Pro Plus 5G": "Xiaomi Redmi Note 14 Pro Plus 5G",
+  "Xiaomi Redmi Note 15 256GB 5G": "Xiaomi Redmi Note 15 256GB 5G",
+  "Xiaomi Redmi Note 15 Pro 512GB 5G": "Xiaomi Redmi Note 15 Pro 512GB 5G",
+  "Xiaomi Redmi Note 15 Pro Plus 512GB 5G": "Xiaomi Redmi Note 15 Pro Plus 512GB 5G",
+  "ZTE Blade A56 Pro 128GB 4G": "ZTE Blade A56 Pro 128GB 4G",
+  "ZTE NUBIA AIR 256GB 5G": "Zte Nubia Air 256GB 5G",
+  "ZTE NUBIA AIR 512GB 5G": "ZTE Nubia Air 512GB 5G",
+  "Zte Blade A35": "Zte Blade A35",
+  "Zte Blade A36 64GB 4G": "Zte Blade A36 64GB 4G",
+  "Zte Blade A55": "Zte Blade A55",
+};
+// ─────────────────────────────────────────
+// PRECIOS — pestaña RENO CONT de tu Sheet
+// ─────────────────────────────────────────
+let PRECIOS = null;       // { filas: Map(MODELO -> {precio, gama}) }
+let MAPA = { ...EQUIVALENCIAS };
+
+/** Convierte la hoja de planes en un mapa MODELO -> {precio, gama}. */
+function armarPrecios(A) {
+  const enc = ubicarEncabezado(A, 'MODELO');
+  if (!enc) throw new Error('no encontré la columna MODELO');
+  const filas = new Map();
+  for (let r = enc.fila + 1; r < A.length; r++) {
+    const modelo = clean(A[r]?.[enc.col]);
+    if (!modelo) continue;
+    filas.set(modelo, {
+      precio: num(A[r][enc.col + 1]),          // primera banda de plan
+      gama:   clean(A[r][Math.max(0, enc.col - 2)])
+    });
+  }
+  if (!filas.size) throw new Error('no encontré filas de modelos');
+  return { filas };
+}
+
+/** Si existe una pestaña EQUIVALENCIAS (EQUIPO | MODELO), pisa la tabla incrustada. */
+async function cargarEquivalencias() {
+  try {
+    const A = await leerHoja('equivalencias');
+    const enc = ubicarEncabezado(A, 'EQUIPO');
+    const desde = enc ? enc.fila + 1 : 0;
+    const extra = {};
+    for (let r = desde; r < A.length; r++) {
+      const eq = clean(A[r]?.[0]), mo = clean(A[r]?.[1]);
+      if (eq && mo) extra[eq] = mo;
+    }
+    if (Object.keys(extra).length) {
+      MAPA = { ...EQUIVALENCIAS, ...extra };
+      console.info(`EQUIVALENCIAS del Sheet: ${Object.keys(extra).length} filas`);
+    }
+  } catch { /* la pestaña es opcional */ }
+}
+
+/** Busca el nombre del equipo en la tabla de cruce, tolerando mayúsculas y tildes. */
+let _mapaNorm = null;
+function modeloEntel(nombre) {
+  if (MAPA[nombre]) return MAPA[nombre];
+  if (!_mapaNorm || _mapaNorm.origen !== MAPA) {
+    const m = new Map();
+    for (const [k, v] of Object.entries(MAPA)) m.set(norm(k), v);
+    _mapaNorm = { origen: MAPA, m };
+  }
+  return _mapaNorm.m.get(norm(nombre)) || null;
+}
+
+function comercial(p) {
+  if (!PRECIOS || !p?.nombre) return {};
+  const modelo = modeloEntel(p.nombre);
+  if (!modelo) return { estado: 'SIN-CRUCE' };
+  const fila = PRECIOS.filas.get(modelo) ||
+               [...PRECIOS.filas.entries()].find(([k]) => norm(k) === norm(modelo))?.[1];
+  if (!fila) return { estado: 'SIN-PRECIO', modeloEntel: modelo };
+  return { precio: fila.precio, gama: fila.gama, modeloEntel: modelo, estado: 'OK' };
+}
+
+const precioEfectivo = p => comercial(p).precio ?? null;
+
+// ─────────────────────────────────────────
+// LISTA DE PRECIOS DE ENTEL (.xlsm)
+// ─────────────────────────────────────────
+function parseEntel(wb) {
+  const hoja = wb.SheetNames.find(n => CONFIG.hojaEntel.test(deaccent(String(n))));
+  if (!hoja) throw new Error('no encontré la hoja de renovación contado regular. Hojas: ' + wb.SheetNames.join(', '));
+  const A = XLSX.utils.sheet_to_json(wb.Sheets[hoja], { header: 1, defval: '', blankrows: false });
+  const enc = ubicarEncabezado(A, 'MODELO');
+  if (!enc) throw new Error(`la hoja "${hoja}" no tiene una fila de encabezado con MODELO`);
+
+  const bandas = (A[enc.fila] || []).slice(enc.col + 1).map(clean).filter(Boolean).map(String);
+  const filas = [];
+  for (let r = enc.fila + 1; r < A.length; r++) {
+    const modelo = clean(A[r][enc.col]);
+    if (!modelo) continue;
+    filas.push([clean(A[r][enc.col - 2]), clean(A[r][enc.col - 1]), modelo,
+                ...bandas.map((_, k) => A[r][enc.col + 1 + k])]);
+  }
+  if (!filas.length) throw new Error('no encontré filas de modelos debajo del encabezado');
+  return { hoja, bandas, filas };
+}
+
+function descargarCSV(nombre, filas) {
+  const csv = filas.map(r => r.map(c => {
+    const s = c == null ? '' : String(c);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+let ULTIMO_ENTEL = null;
+
+function aplicarEntel(parsed) {
+  const filas = new Map();
+  parsed.filas.forEach(f => filas.set(f[2], { precio: num(f[3]), gama: f[0] }));
+  PRECIOS = { filas };
+  ULTIMO_ENTEL = parsed;
+  document.getElementById('btnExportCSV')?.classList.remove('hidden');
+}
+
+// ─────────────────────────────────────────
+// UI — carga de la lista de Entel
+// ─────────────────────────────────────────
+function pintarControlesComerciales() {
+  document.getElementById('comercialBox')?.classList.remove('hidden');
+}
+
+function engancharControlesComerciales() {
+  document.getElementById('entelInput')?.addEventListener('change', async e => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setStatus('⏳ Leyendo la lista de Entel...', 'info');
+    try {
+      const parsed = parseEntel(XLSX.read(await f.arrayBuffer()));
+      aplicarEntel(parsed);
+      update();
+      const con = DATA.filter(p => precioEfectivo(p) != null).length;
+      setStatus(`✅ Precios de Entel cargados · hoja "${escapeHtml(parsed.hoja)}" · ${parsed.filas.length} modelos · ` +
+                `${con} de tus ${DATA.length} equipos con precio. Descarga el CSV y pégalo en RENO CONT para que lo vean todos.`, 'ok');
+    } catch (err) {
+      setStatus(`⚠️ No pude leer el archivo de Entel: ${escapeHtml(err.message)}`, 'warn');
+    } finally { e.target.value = ''; }
+  });
+
+  document.getElementById('btnExportCSV')?.addEventListener('click', () => {
+    if (!ULTIMO_ENTEL) return;
+    descargarCSV('RENO_CONT.csv',
+      [['GAMA', 'TÁCTICA', 'MODELO', ...ULTIMO_ENTEL.bandas], ...ULTIMO_ENTEL.filas]);
+  });
+}
+
+// ─────────────────────────────────────────
+// CARGA PRINCIPAL
+// ─────────────────────────────────────────
+const CACHE_KEY = 'comparity_sheet_v11';
+
+const guardarCache = p => { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), ...p })); } catch {} };
+const leerCache = () => { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch { return null; } };
+
+function reconstruir(Acar, Aimg) {
+  DATA = mergeCarImg(buildFromCaracteristicas(Acar), buildFromImagen(Aimg || []));
+  MODELOS_SET = Array.from(new Set(DATA.map(d => d.nombre)))
+    .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+}
+
+async function cargarDesdeSheet() {
+  const [Acar, Aimg] = await Promise.all([leerHoja('caracteristicas'), leerHoja('imagen')]);
+  reconstruir(Acar, Aimg);
+
+  let nPrecios = 0, avisoPrecios = '';
+  try {
+    await cargarEquivalencias();
+    PRECIOS = armarPrecios(await leerHoja('precios'));
+    nPrecios = DATA.filter(p => precioEfectivo(p) != null).length;
+  } catch (err) {
+    avisoPrecios = err.message;
+    console.warn('Precios no disponibles:', err.message);
+  }
+  guardarCache({ Acar, Aimg });
+  return { con3D: DATA.filter(d => d.link3D).length, nPrecios, avisoPrecios };
+}
+
+async function cargarDesdeXlsx() {
+  const res = await fetch(CONFIG.fallbackXlsx);
+  if (!res.ok) throw new Error('no se encontró ' + CONFIG.fallbackXlsx);
+  const { links3D } = processWorkbook(XLSX.read(await res.arrayBuffer()));
+  return { con3D: links3D.filter(l => l.link3D).length, nPrecios: 0, avisoPrecios: '' };
+}
+
+document.getElementById('btnClear').addEventListener('click', () => {
+  localStorage.removeItem(CACHE_KEY);
+  location.reload();
+});
 
 document.getElementById('fileInput').addEventListener('change', async e => {
   const f = e.target.files?.[0];
   if (!f) return;
   try {
-    const wb = XLSX.read(await f.arrayBuffer());
-    const { Acar, Aimg, links3D } = processWorkbook(wb);
-    const { ws: wsCar } = getSheet(wb, 'caracteristicas');
-    const { name: sheetCar } = getSheet(wb, 'caracteristicas');
-    const { name: sheetImg } = getSheet(wb, 'imagen');
-    localStorage.setItem(KEY, JSON.stringify({ Acar, Aimg, sheetCar, sheetImg }));
-    setStatus(`✅ Cargado: ${DATA.length} equipos | ${links3D.filter(l=>l.link3D).length} con visor 3D`, 'ok');
+    const { Acar, Aimg, links3D } = processWorkbook(XLSX.read(await f.arrayBuffer()));
+    guardarCache({ Acar, Aimg });
+    setStatus(`✅ Catálogo desde archivo: ${DATA.length} equipos · ${links3D.filter(l => l.link3D).length} con visor 3D`, 'ok');
     rebuildAllAC(); update();
-  } catch (err) { alert('Error al leer el archivo: ' + (err.message || err)); }
+  } catch (err) {
+    setStatus(`⚠️ Error al leer el archivo: ${escapeHtml(err.message || err)}`, 'warn');
+  } finally { e.target.value = ''; }
 });
 
 // ─────────────────────────────────────────
@@ -2381,16 +2753,30 @@ document.getElementById('fileInput').addEventListener('change', async e => {
 // ─────────────────────────────────────────
 (async function init() {
   rebuildAllAC();
-  const cache = (() => { try { return JSON.parse(localStorage.getItem(KEY)||'null'); } catch { return null; } })();
+  engancharControlesComerciales();
+  pintarControlesComerciales();
+
+  const cache = leerCache();
+  const fresca = cache && (Date.now() - (cache.t || 0)) < CONFIG.ttlMinutos * 60000;
   if (cache?.Acar?.length) {
-    const car = buildFromCaracteristicas(cache.Acar);
-    const links3D = buildFromImagen(cache.Aimg||[]);
-    DATA = mergeCarImg(car, links3D);
-    MODELOS_SET = Array.from(new Set(DATA.map(d=>d.nombre))).sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
-    setStatus(`📦 Caché: ${DATA.length} equipos | ${links3D.filter(l=>l.link3D).length} con visor 3D`, 'info');
+    reconstruir(cache.Acar, cache.Aimg);
+    setStatus(`📦 Mostrando caché local · ${DATA.length} equipos`, 'info');
     rebuildAllAC(); update();
-  } else {
-    await loadExcelFromServer();
+  }
+  if (fresca && PRECIOS) return;
+
+  try {
+    const r = CONFIG.sheetId ? await cargarDesdeSheet() : await cargarDesdeXlsx();
+    rebuildAllAC(); update();
+    setStatus(
+      `✅ ${DATA.length} equipos · ${r.con3D} con visor 3D · ` +
+      (r.nPrecios ? `${r.nPrecios} con precio` : `sin precios (${escapeHtml(r.avisoPrecios || 'revisa RENO CONT')})`) +
+      ` · ${new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`,
+      r.nPrecios ? 'ok' : 'warn');
+  } catch (err) {
+    const msg = escapeHtml(err.message);
+    if (DATA.length) setStatus(`⚠️ Mostrando caché: no se pudo actualizar (${msg})`, 'warn');
+    else setStatus(`⚠️ Sin datos del Sheet (${msg}). Comparte el Sheet como "Cualquiera con el enlace: Lector" o usa "Cargar Excel".`, 'warn');
   }
 })();
 </script>
