@@ -1,1 +1,1 @@
-# CompNexx
+# Comparity
