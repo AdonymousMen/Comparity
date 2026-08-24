@@ -1167,6 +1167,8 @@ function renderTable() {
       const esCamSistema = tipo === 'camSistema';
       const esBateria = tipo === 'bateria';
       const esBt = tipo === 'bt';
+      const esCarga = tipo === 'carga';
+      const esInalambrica = tipo === 'inalambrica';
 
       if (esIP) {
         const span = document.createElement('span');
@@ -1240,6 +1242,16 @@ function renderTable() {
         span.setAttribute('role', 'button');
         span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionBluetoothEspecifica(v); });
         span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionBluetoothEspecifica(v); });
+        td.appendChild(span);
+      } else if (esCarga || esInalambrica) {
+        const span = document.createElement('span');
+        span.className = 'val-clickable';
+        span.textContent = v;
+        span.setAttribute('tabindex', '0');
+        span.setAttribute('role', 'button');
+        const abrir = e => { if (e) e.stopPropagation(); mostrarExplicacionCargaEspecifica(v, n, esInalambrica); };
+        span.addEventListener('click', abrir);
+        span.addEventListener('keydown', e => { if (e.key === 'Enter') abrir(); });
         td.appendChild(span);
       } else {
         td.textContent = v;
@@ -2303,6 +2315,107 @@ function mostrarExplicacionBluetoothEspecifica(valor) {
   <div class="bg-indigo-50 p-4 rounded-xl mt-1"><p class="text-sm text-indigo-900"><strong>💡 En resumen:</strong> el Bluetooth se usa para conectar audífonos, parlantes, relojes inteligentes, el manos libres del auto y compartir archivos. Cualquier versión moderna (5.0 en adelante) es totalmente compatible con tus accesorios actuales — las versiones más nuevas simplemente mejoran la estabilidad y el ahorro de batería.</p></div>`;
 
   tituloEl.innerHTML = `📶 Bluetooth: ${ver}`;
+  contenidoEl.innerHTML = html;
+  modal.classList.remove('hidden');
+}
+
+// ─────────────────────────────────────────
+// EXPLICACIÓN CARGA ESPECÍFICA (con y sin cable)
+// ─────────────────────────────────────────
+function mostrarExplicacionCargaEspecifica(valor, nombreCelular, inalambrica = false) {
+  const modal = document.getElementById('modalExplicacion');
+  const tituloEl = document.getElementById('modalTitulo');
+  const contenidoEl = document.getElementById('modalContenido');
+  const txt = String(valor).trim();
+
+  // "SI, 40W" / "35.0W" / "NO"
+  const nada = /^(no|-|n\/a|sin)\b/i.test(txt);
+  const m = txt.match(/(\d+(?:\.\d+)?)\s*w/i) || (nada ? null : txt.match(/(\d+(?:\.\d+)?)/));
+  const w = m ? parseFloat(m[1]) : null;
+
+  if (nada && !w) {
+    tituloEl.innerHTML = inalambrica ? '🔌 Carga Inalámbrica' : '⚡ Carga Rápida';
+    contenidoEl.innerHTML = inalambrica
+      ? `<p class="mb-4">Este equipo <strong>no tiene carga inalámbrica</strong>. Solo se carga con cable.</p>
+         <div class="bg-slate-50 rounded-xl p-4"><p class="text-sm text-slate-600">La carga inalámbrica es cómoda —dejas el celular sobre una base y listo— pero es más lenta y desperdicia entre 30% y 40% de la energía en calor. No tenerla no afecta en nada la duración de la batería ni la velocidad de carga por cable.</p></div>`
+      : `<p class="mb-4">No se detectó un valor de vatios en: <strong>${escapeHtml(txt)}</strong>.</p>`;
+    modal.classList.remove('hidden');
+    return;
+  }
+  if (w == null) {
+    tituloEl.innerHTML = inalambrica ? '🔌 Carga Inalámbrica' : '⚡ Carga Rápida';
+    contenidoEl.innerHTML = `<div class="bg-slate-50 rounded-xl p-4"><p class="text-sm text-slate-500">No se detectó un valor de vatios en: <strong>${escapeHtml(txt)}</strong>.</p></div>`;
+    modal.classList.remove('hidden');
+    return;
+  }
+
+  const info = inalambrica
+    ? (w >= 50 ? { color:'#7c3aed', emoji:'🏆', label:`${w}W inalámbrica — Ultra rápida`, nota:`${w}W sin cable es de lo más veloz que existe hoy. Carga casi tan rápido como muchos cargadores con cable, así que puedes dejarlo en la base un rato corto y seguir tu día. Necesitas una base compatible de la propia marca para alcanzar esta velocidad.`, tags:['✔ Casi tan rápida como con cable','✔ Requiere base de la marca'] }
+     : w >= 15 ? { color:'#4f46e5', emoji:'🚀', label:`${w}W inalámbrica — Rápida`, nota:`${w}W sin cable es una buena velocidad. Es cómodo para cargar mientras trabajas o de noche, y suficiente para recuperar bastante batería en una pausa. Aun así, con cable siempre va a ser más rápido.`, tags:['✔ Cómoda para el escritorio o la mesa de noche','— Más lenta que con cable'] }
+     : { color:'#0ea5e9', emoji:'🔌', label:`${w}W inalámbrica — Básica`, nota:`${w}W sin cable es una carga lenta, pensada más para mantener el celular cargado mientras no lo usas que para recuperar batería con prisa. Ideal para dejarlo en la base toda la noche.`, tags:['✔ Práctica para cargar de noche','— Muy lenta si tienes apuro'] })
+    : (w >= 100 ? { color:'#7c3aed', emoji:'🏆', label:`${w}W — Ultracarga`, nota:`${w}W es de las cargas más veloces del mercado. En lo que te bañas o desayunas, el celular pasa de casi vacío a lleno. Si eres de los que se olvida de cargar de noche, esto te cambia la rutina: enchufas unos minutos antes de salir y te alcanza para el día.`, tags:['✔ De 0 a 100% en muy poco tiempo','✔ Salvavidas si te olvidas de cargar','✔ Suele venir con cargador propio de la marca'] }
+     : w >= 66 ? { color:'#4f46e5', emoji:'🚀', label:`${w}W — Muy rápida`, nota:`${w}W carga muy rápido. Con media hora enchufado recuperas buena parte del día. Es el punto donde dejas de planificar la carga: enchufas cuando puedes y siempre te alcanza.`, tags:['✔ Recuperas gran parte de la batería en 30 min','✔ No necesitas cargar de noche a fuerza'] }
+     : w >= 33 ? { color:'#0ea5e9', emoji:'✅', label:`${w}W — Carga rápida`, nota:`${w}W es el punto dulce: carga rápido sin generar demasiado calor, que es lo que más desgasta la batería con los años. Una carga completa te toma alrededor de una hora, y un rato corto enchufado ya te da varias horas de uso.`, tags:['✔ Buen equilibrio entre velocidad y cuidado de la batería','✔ Una carga completa en cerca de 1 hora'] }
+     : w >= 18 ? { color:'#0ea5e9', emoji:'⚡', label:`${w}W — Carga estándar`, nota:`${w}W es la velocidad más común. Una carga completa te toma entre hora y media y dos horas, así que conviene cargarlo de noche o aprovechar ratos largos enchufado. Para un uso normal cumple sin problema.`, tags:['✔ Suficiente para cargar de noche','— Necesita un rato largo para llenarse'] }
+     : { color:'#f59e0b', emoji:'🐢', label:`${w}W — Carga lenta`, nota:`${w}W es una carga lenta: llenar la batería te va a tomar entre dos y tres horas. No es un problema si acostumbras cargarlo mientras duermes, pero si sales con poca batería no vas a poder recuperar mucho en una pausa corta.`, tags:['— Entre 2 y 3 horas para una carga completa','✔ Menos calor, la batería sufre menos'] });
+
+  // Tiempo estimado usando la batería del propio equipo
+  let bloqueTiempo = '';
+  const p = typeof byName === 'function' ? byName(nombreCelular) : null;
+  const mah = p ? numFromText(p.bateria) : null;
+  if (mah && mah > 1000) {
+    const wh = mah * 3.85 / 1000;                 // capacidad aproximada en vatios-hora
+    const min = (wh / (w * 0.65)) * 60;           // 65% de eficiencia media, incluye el tramo final lento
+    const rango = (a, b) => {
+      const paso = b < 40 ? 1 : 5;
+      const x = Math.round(a / paso) * paso, y = Math.round(b / paso) * paso;
+      if (y >= 90) {                                    // pasa de una hora y media: en horas
+        const h = v => (v / 60).toFixed(1).replace('.0', '').replace('.', ',');
+        return x === y ? `~${h(x)} h` : `${h(x)}–${h(y)} h`;
+      }
+      return x === y ? `~${x} min` : `${x}–${y} min`;
+    };
+    bloqueTiempo = `
+    <div class="bg-slate-50 rounded-xl p-4 mb-4 border-l-4" style="border-color:${info.color}">
+      <h4 class="font-bold text-sm text-slate-700">⏱️ Cuánto tardaría en cargar</h4>
+      <p class="text-sm text-slate-700 mt-2">Con una batería de <strong>${mah} mAh</strong> a <strong>${w}W</strong>${inalambrica ? ' sin cable' : ''}:</p>
+      <div class="flex gap-4 mt-3 flex-wrap">
+        <div class="bg-white rounded-lg px-4 py-2 border border-slate-200">
+          <div class="text-xs text-slate-500">de 0 a 50%</div>
+          <div class="font-bold" style="color:${info.color}">${rango(min * 0.3, min * 0.42)}</div>
+        </div>
+        <div class="bg-white rounded-lg px-4 py-2 border border-slate-200">
+          <div class="text-xs text-slate-500">carga completa</div>
+          <div class="font-bold" style="color:${info.color}">${rango(min * 0.85, min * 1.2)}</div>
+        </div>
+      </div>
+      <p class="text-xs text-slate-500 mt-3">Es una estimación. El tramo final siempre va más lento a propósito, para cuidar la batería, y el tiempo real depende del cargador y del cable que uses.</p>
+    </div>`;
+  }
+
+  const html = `
+  <p class="mb-4">Este equipo carga a <strong style="color:var(--indigo)">${w}W</strong>${inalambrica ? ' de forma inalámbrica' : ' con cable'}. Te explicamos qué significa en el día a día:</p>
+  <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
+    <div class="px-4 py-3 flex items-center gap-3" style="background:${info.color}">
+      <span class="text-2xl">${info.emoji}</span>
+      <div>
+        <p class="text-white font-bold text-base leading-tight">${info.label}</p>
+        <p class="text-white/75 text-xs">${inalambrica ? 'Potencia de carga inalámbrica' : 'Potencia de carga rápida'}</p>
+      </div>
+    </div>
+    <div class="p-4 bg-white">
+      <p class="text-sm text-slate-700 leading-relaxed">${info.nota}</p>
+      <div class="mt-3 flex gap-2 text-xs flex-wrap">
+        ${info.tags.map(t => `<span style="${t.startsWith('✔')?'background:#dcfce7;color:#166534':'background:#f1f5f9;color:#475569'};padding:2px 10px;border-radius:99px">${t}</span>`).join('')}
+      </div>
+    </div>
+  </div>
+  ${bloqueTiempo}
+  <div class="bg-indigo-50 p-4 rounded-xl"><p class="text-sm text-indigo-900"><strong>💡 Tip:</strong> ${inalambrica
+    ? 'La carga inalámbrica pierde entre 30% y 40% de la energía en calor, y el calor es lo que más envejece la batería. Úsala por comodidad en ratos cortos, y el cable cuando tengas prisa.'
+    : 'Para que la batería dure más años, evita cargarla al máximo de velocidad todos los días si no lo necesitas. Muchos equipos traen un modo de "carga optimizada" que conviene dejar activado.'}</p></div>`;
+
+  tituloEl.innerHTML = `${inalambrica ? '🔌 Carga Inalámbrica' : '⚡ Carga Rápida'}: ${w}W`;
   contenidoEl.innerHTML = html;
   modal.classList.remove('hidden');
 }
