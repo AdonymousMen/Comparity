@@ -541,6 +541,28 @@
   <!-- Selección de equipos -->
   <section class="bg-white border border-[--border] rounded-2xl p-5 shadow-sm">
     <h2 class="text-base font-bold mb-4" style="font-family:'Syne',sans-serif">Selecciona hasta 3 equipos</h2>
+
+    <div class="flex flex-wrap items-end gap-3 mb-4 pb-4 border-b border-[--border]">
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Precio mín.</label>
+        <input id="filtroPrecioMin" type="number" min="0" step="10" placeholder="S/ 0" class="ac-input" style="width:100px" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Precio máx.</label>
+        <input id="filtroPrecioMax" type="number" min="0" step="10" placeholder="S/ 5000" class="ac-input" style="width:100px" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RAM mínima</label>
+        <select id="filtroRam" class="ac-select" style="width:130px"><option value="">Cualquiera</option></select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Almacenamiento mín.</label>
+        <select id="filtroRom" class="ac-select" style="width:150px"><option value="">Cualquiera</option></select>
+      </div>
+      <button id="btnLimpiarFiltros" class="btn-ghost whitespace-nowrap">✕ Limpiar filtros</button>
+      <span id="filtroContador" class="text-xs text-slate-500 ml-auto"></span>
+    </div>
+
     <div class="grid sm:grid-cols-3 gap-4 mb-4">
       <div>
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Equipo 1</label>
@@ -753,6 +775,7 @@ function processWorkbook(wb) {
   const links3D = buildFromImagen(Aimg);
   DATA = mergeCarImg(car, links3D);
   MODELOS_SET = Array.from(new Set(DATA.map(d => d.nombre))).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  poblarFiltros();
   return { Acar, Aimg, car, links3D };
 }
 
@@ -836,8 +859,8 @@ function buildAC(wrapId, slot) {
   }
 
   function renderDropdownFull(selectedName) {
-    // Siempre muestra TODOS los equipos, marcando el seleccionado con checkmark
-    const list = MODELOS_SET;
+    // Siempre muestra los equipos que pasan el filtro activo, marcando el seleccionado con checkmark
+    const list = modelosFiltrados();
     buildSelectList('');
     focusedIdx = -1;
     dropdown.innerHTML = list.map((n, i) => {
@@ -852,12 +875,12 @@ function buildAC(wrapId, slot) {
 
   function buildSelectList(filterQ) {
     const q = (filterQ || '').toLowerCase().trim();
-    const list = MODELOS_SET.filter(n => n.toLowerCase().includes(q));
+    const list = modelosFiltrados().filter(n => n.toLowerCase().includes(q));
     select.innerHTML = '<option value="">— Lista completa —</option>' + list.map(n => `<option value="${n}"${selections[slot]===n?' selected':''}>${n}</option>`).join('');
   }
 
   function renderDropdown(q) {
-    const list = MODELOS_SET.filter(n => n.toLowerCase().includes(q.toLowerCase())).slice(0, 60);
+    const list = modelosFiltrados().filter(n => n.toLowerCase().includes(q.toLowerCase())).slice(0, 60);
     buildSelectList(q);
     if (!q.trim() || !list.length) { dropdown.classList.remove('open'); return; }
     focusedIdx = -1;
@@ -940,6 +963,86 @@ function rebuildAllAC() {
   buildAC('wrap2', 1);
   buildAC('wrap3', 2);
 }
+
+// ─────────────────────────────────────────
+// FILTROS (precio / RAM / almacenamiento)
+// Acotan qué equipos aparecen en los 3 selectores. Como el
+// recomendador solo puntúa lo que está seleccionado, filtrar aquí
+// acota también, en la práctica, lo que puede recomendarse.
+// ─────────────────────────────────────────
+const filtros = { precioMin: null, precioMax: null, ramMin: null, romMin: null };
+
+function numFromTextFiltro(t) { if (!t) return null; const m = ('' + t).match(/(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : null; }
+
+function pasaFiltro(p) {
+  const precio = precioEfectivo(p);
+  if (filtros.precioMin != null && precio != null && precio < filtros.precioMin) return false;
+  if (filtros.precioMax != null && precio != null && precio > filtros.precioMax) return false;
+  if (filtros.ramMin != null) {
+    const r = numFromTextFiltro(p.ram);
+    if (r != null && r < filtros.ramMin) return false;
+  }
+  if (filtros.romMin != null) {
+    const s = numFromTextFiltro(p.rom);
+    if (s != null && s < filtros.romMin) return false;
+  }
+  return true;
+}
+
+function modelosFiltrados() {
+  return MODELOS_SET.filter(n => { const p = byName(n); return !p || pasaFiltro(p); });
+}
+
+/** Llena las opciones de los selects de RAM/Almacenamiento con los valores que realmente existen en la data. */
+function poblarFiltros() {
+  const ramSel = document.getElementById('filtroRam');
+  const romSel = document.getElementById('filtroRom');
+  if (!ramSel || !romSel) return;
+  const ramVals = Array.from(new Set(DATA.map(p => numFromTextFiltro(p.ram)).filter(v => v != null))).sort((a, b) => a - b);
+  const romVals = Array.from(new Set(DATA.map(p => numFromTextFiltro(p.rom)).filter(v => v != null))).sort((a, b) => a - b);
+  const prevRam = ramSel.value, prevRom = romSel.value;
+  ramSel.innerHTML = '<option value="">Cualquiera</option>' + ramVals.map(v => `<option value="${v}">${v} GB o más</option>`).join('');
+  romSel.innerHTML = '<option value="">Cualquiera</option>' + romVals.map(v => `<option value="${v}">${v} GB o más</option>`).join('');
+  if (ramVals.includes(parseFloat(prevRam))) ramSel.value = prevRam;
+  if (romVals.includes(parseFloat(prevRom))) romSel.value = prevRom;
+}
+
+function actualizarContadorFiltro() {
+  const el = document.getElementById('filtroContador');
+  if (!el) return;
+  const activo = filtros.precioMin != null || filtros.precioMax != null || filtros.ramMin != null || filtros.romMin != null;
+  if (!activo) { el.textContent = ''; return; }
+  el.textContent = `${modelosFiltrados().length} de ${MODELOS_SET.length} equipos`;
+}
+
+function aplicarFiltrosUI() {
+  const pMin = document.getElementById('filtroPrecioMin').value;
+  const pMax = document.getElementById('filtroPrecioMax').value;
+  const ram = document.getElementById('filtroRam').value;
+  const rom = document.getElementById('filtroRom').value;
+  filtros.precioMin = pMin === '' ? null : parseFloat(pMin);
+  filtros.precioMax = pMax === '' ? null : parseFloat(pMax);
+  filtros.ramMin = ram === '' ? null : parseFloat(ram);
+  filtros.romMin = rom === '' ? null : parseFloat(rom);
+  actualizarContadorFiltro();
+  rebuildAllAC();
+}
+
+['filtroPrecioMin', 'filtroPrecioMax'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', debounce(aplicarFiltrosUI, 300));
+});
+['filtroRam', 'filtroRom'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', aplicarFiltrosUI);
+});
+document.getElementById('btnLimpiarFiltros')?.addEventListener('click', () => {
+  document.getElementById('filtroPrecioMin').value = '';
+  document.getElementById('filtroPrecioMax').value = '';
+  document.getElementById('filtroRam').value = '';
+  document.getElementById('filtroRom').value = '';
+  filtros.precioMin = filtros.precioMax = filtros.ramMin = filtros.romMin = null;
+  actualizarContadorFiltro();
+  rebuildAllAC();
+});
 
 // ─────────────────────────────────────────
 // 3D CARDS
@@ -1169,6 +1272,8 @@ function renderTable() {
       const esBt = tipo === 'bt';
       const esCarga = tipo === 'carga';
       const esInalambrica = tipo === 'inalambrica';
+      const esAlmacenamiento = tipo === 'almacenamiento';
+      const esNfc = tipo === 'nfc';
 
       if (esIP) {
         const span = document.createElement('span');
@@ -1252,6 +1357,24 @@ function renderTable() {
         const abrir = e => { if (e) e.stopPropagation(); mostrarExplicacionCargaEspecifica(v, n, esInalambrica); };
         span.addEventListener('click', abrir);
         span.addEventListener('keydown', e => { if (e.key === 'Enter') abrir(); });
+        td.appendChild(span);
+      } else if (esAlmacenamiento) {
+        const span = document.createElement('span');
+        span.className = 'val-clickable';
+        span.textContent = v;
+        span.setAttribute('tabindex', '0');
+        span.setAttribute('role', 'button');
+        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionAlmacenamientoEspecifica(v, n); });
+        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionAlmacenamientoEspecifica(v, n); });
+        td.appendChild(span);
+      } else if (esNfc) {
+        const span = document.createElement('span');
+        span.className = 'val-clickable';
+        span.textContent = v;
+        span.setAttribute('tabindex', '0');
+        span.setAttribute('role', 'button');
+        span.addEventListener('click', e => { e.stopPropagation(); mostrarExplicacionNfcEspecifica(v, n); });
+        span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarExplicacionNfcEspecifica(v, n); });
         td.appendChild(span);
       } else {
         td.textContent = v;
@@ -2420,6 +2543,104 @@ function mostrarExplicacionCargaEspecifica(valor, nombreCelular, inalambrica = f
   modal.classList.remove('hidden');
 }
 
+// ─────────────────────────────────────────
+// EXPLICACIÓN ALMACENAMIENTO ESPECÍFICA (UFS / eMMC, solo si el dato lo trae)
+// ─────────────────────────────────────────
+function mostrarExplicacionAlmacenamientoEspecifica(valor, nombreCelular) {
+  const modal = document.getElementById('modalExplicacion');
+  const tituloEl = document.getElementById('modalTitulo');
+  const contenidoEl = document.getElementById('modalContenido');
+  const txt = String(valor || '').trim();
+
+  const mUfs = txt.match(/UFS\s*([\d.]+)/i);
+  const mEmmc = txt.match(/eMMC\s*([\d.]+)/i);
+  const mCap = txt.match(/(\d+)\s*(GB|TB)/i);
+  const cap = mCap ? `${mCap[1]} ${mCap[2].toUpperCase()}` : null;
+
+  let bloqueTipo = '';
+  if (mUfs) {
+    const v = parseFloat(mUfs[1]);
+    const info = v >= 4.0
+      ? { color:'#7c3aed', emoji:'🏆', label:`UFS ${mUfs[1]} — Muy rápido`, nota:'Es el estándar más veloz disponible hoy en celulares. Abres apps, cambias entre ellas y guardas fotos o videos pesados casi sin esperar. Suele venir en equipos de gama alta.' }
+      : v >= 3.0
+      ? { color:'#4f46e5', emoji:'🚀', label:`UFS ${mUfs[1]} — Rápido`, nota:'Es la velocidad de almacenamiento más común hoy en equipos de gama media y alta. Instala apps rápido y no se siente lento al copiar archivos grandes o grabar video en alta calidad.' }
+      : { color:'#0ea5e9', emoji:'✅', label:`UFS ${mUfs[1]} — Estándar`, nota:'Es más rápido que el eMMC de gama de entrada, aunque ya no es lo último. Para uso diario (redes sociales, fotos, apps comunes) se siente ágil.' };
+    bloqueTipo = `
+    <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
+      <div class="px-4 py-3 flex items-center gap-3" style="background:${info.color}">
+        <span class="text-2xl">${info.emoji}</span>
+        <div>
+          <p class="text-white font-bold text-base leading-tight">${info.label}</p>
+          <p class="text-white/75 text-xs">Tipo de memoria interna</p>
+        </div>
+      </div>
+      <div class="p-4 bg-white"><p class="text-sm text-slate-700 leading-relaxed">${info.nota}</p></div>
+    </div>`;
+  } else if (mEmmc) {
+    bloqueTipo = `
+    <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
+      <div class="px-4 py-3 flex items-center gap-3" style="background:#f59e0b">
+        <span class="text-2xl">🐢</span>
+        <div>
+          <p class="text-white font-bold text-base leading-tight">eMMC ${mEmmc[1]} — Básico</p>
+          <p class="text-white/75 text-xs">Tipo de memoria interna</p>
+        </div>
+      </div>
+      <div class="p-4 bg-white"><p class="text-sm text-slate-700 leading-relaxed">Es un tipo de memoria más antiguo y más lento que el UFS, típico de equipos de entrada. No es un problema para llamadas, WhatsApp o redes sociales, pero se nota más al instalar apps pesadas, actualizar el sistema o mover muchos archivos a la vez.</p></div>
+    </div>`;
+  }
+
+  const html = `
+  <p class="mb-4">Este equipo trae <strong style="color:var(--indigo)">${cap || txt}</strong> de almacenamiento${(mUfs||mEmmc) ? ', usando memoria de tipo:' : '.'}</p>
+  ${bloqueTipo}
+  ${!mUfs && !mEmmc ? `<div class="bg-slate-50 rounded-xl p-4 mb-4"><p class="text-sm text-slate-500">La ficha de este equipo no especifica si su memoria es UFS o eMMC.</p></div>` : ''}
+  <h4 class="font-bold text-base mt-4 mb-2">💾 ¿Para qué te alcanza?</h4>
+  <p class="text-sm text-slate-700 leading-relaxed">El almacenamiento guarda tus fotos, videos, apps y archivos. Entre más GB, más cosas puedes guardar sin tener que borrar. Con 128 GB o más ya no sueles tener que preocuparte por el espacio en el uso diario.</p>
+  <div class="bg-indigo-50 p-4 rounded-xl mt-4"><p class="text-sm text-indigo-900"><strong>💡 Tip:</strong> El tipo de memoria (UFS o eMMC) afecta qué tan rápido el celular abre apps y copia archivos — no cuánto espacio tienes, sino qué tan rápido lo usas.</p></div>`;
+
+  tituloEl.innerHTML = `💾 Almacenamiento: ${cap || txt}`;
+  contenidoEl.innerHTML = html;
+  modal.classList.remove('hidden');
+}
+
+// ─────────────────────────────────────────
+// EXPLICACIÓN NFC ESPECÍFICA (solo describe a fondo si el equipo SÍ lo tiene)
+// ─────────────────────────────────────────
+function mostrarExplicacionNfcEspecifica(valor, nombreCelular) {
+  const modal = document.getElementById('modalExplicacion');
+  const tituloEl = document.getElementById('modalTitulo');
+  const contenidoEl = document.getElementById('modalContenido');
+  const tiene = /^(si|s[ií]|yes)\b/i.test(String(valor || '').trim());
+
+  const html = tiene ? `
+  <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
+    <div class="px-4 py-3 flex items-center gap-3" style="background:#16a34a">
+      <span class="text-2xl">✅</span>
+      <div>
+        <p class="text-white font-bold text-base leading-tight">Sí tiene NFC</p>
+        <p class="text-white/75 text-xs">Comunicación de corta distancia (menos de 4 cm)</p>
+      </div>
+    </div>
+    <div class="p-4 bg-white">
+      <p class="text-sm text-slate-700 leading-relaxed">Con este equipo puedes pagar acercando el celular al POS, usando <strong>Google Wallet</strong>, <strong>Apple Pay</strong> o la billetera de tu banco (requiere tener el celular desbloqueado).</p>
+      <div class="mt-3 flex gap-2 text-xs flex-wrap">
+        <span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:99px">✔ Pagos sin contacto</span>
+        <span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:99px">✔ Compartir archivos</span>
+        <span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:99px">✔ Leer tarjetas/etiquetas NFC</span>
+      </div>
+    </div>
+  </div>
+  <div class="bg-indigo-50 p-4 rounded-xl"><p class="text-sm text-indigo-900"><strong>💡 Tip:</strong> Si piensas pagar con el celular en el día a día, el NFC es la función clave — cada vez más POS y apps bancarias lo piden.</p></div>` : `
+  <div class="bg-slate-50 rounded-xl p-4">
+    <p class="text-sm text-slate-700 leading-relaxed">Este equipo <strong>no tiene NFC</strong>, así que no puedes usarlo para pagar acercándolo al POS con Google Wallet, Apple Pay o la billetera de tu banco.</p>
+    <p class="text-sm text-slate-500 mt-2">Sigues pudiendo pagar con tarjeta física, apps de pago con QR, o transferencias — solo no la modalidad de "acercar y pagar".</p>
+  </div>`;
+
+  tituloEl.innerHTML = tiene ? '📲 NFC: Sí' : '📲 NFC: No';
+  contenidoEl.innerHTML = html;
+  modal.classList.remove('hidden');
+}
+
 const W = { cpu:.25, cam:.18, screen:.10, ram:.12, storage:.07, battery:.12, resist:.06, bt:.04, price:.06 };
 
 
@@ -2865,6 +3086,7 @@ function reconstruir(Acar, Aimg) {
   DATA = mergeCarImg(buildFromCaracteristicas(Acar), buildFromImagen(Aimg || []));
   MODELOS_SET = Array.from(new Set(DATA.map(d => d.nombre)))
     .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  poblarFiltros();
 }
 
 async function cargarDesdeSheet() {
