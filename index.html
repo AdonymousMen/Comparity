@@ -2707,7 +2707,7 @@ async function cargarEquivalencias() {
 
 /** Busca el nombre del equipo en la tabla de cruce, tolerando mayúsculas y tildes. */
 let _mapaNorm = null;
-function modeloEntel(nombre) {
+function modeloEntelFijo(nombre) {
   if (MAPA[nombre]) return MAPA[nombre];
   if (!_mapaNorm || _mapaNorm.origen !== MAPA) {
     const m = new Map();
@@ -2715,6 +2715,54 @@ function modeloEntel(nombre) {
     _mapaNorm = { origen: MAPA, m };
   }
   return _mapaNorm.m.get(norm(nombre)) || null;
+}
+
+// ─────────────────────────────────────────
+// CRUCE AUTOMÁTICO (respaldo cuando no hay entrada en EQUIVALENCIAS)
+// Compara por "bolsa de palabras": separa letras y números pegados
+// ("NEO5" -> "NEO","5") para tolerar diferencias de espacios/mayúsculas,
+// y exige que todas las palabras de un lado estén contenidas en el otro.
+// Así un equipo nuevo que agregues a "Caracteristicas" cruza su precio
+// solo con que su nombre coincida razonablemente con el de "RENO CONT",
+// sin tener que tocar código ni la tabla EQUIVALENCIAS.
+// ─────────────────────────────────────────
+const ALIAS_TOKEN = { gxy: 'galaxy' };
+function tokenizar(s) {
+  const out = [];
+  for (const w of norm(s).split(' ').filter(Boolean)) {
+    for (const t of w.match(/[A-Z]+|[0-9]+/g) || []) out.push(ALIAS_TOKEN[t.toLowerCase()] || t);
+  }
+  return out;
+}
+let _fuzzyIdx = null; // { origen: PRECIOS, lista: [{modelo, set}] }
+function modeloEntelFuzzy(nombre) {
+  if (!PRECIOS) return null;
+  if (!_fuzzyIdx || _fuzzyIdx.origen !== PRECIOS) {
+    const lista = [...PRECIOS.filas.keys()].map(modelo => ({ modelo, set: new Set(tokenizar(modelo)) }));
+    _fuzzyIdx = { origen: PRECIOS, lista };
+  }
+  let et = new Set(tokenizar(nombre));
+  if (et.has('IPHONE')) et.add('APPLE');
+  const contiene = (grande, chico) => { for (const x of chico) if (!grande.has(x)) return false; return true; };
+
+  // 1) el nombre del catálogo cabe dentro del modelo de Entel (p.ej. falta "5G" o el GB)
+  let cands = _fuzzyIdx.lista.filter(c => contiene(c.set, et)).map(c => ({ ...c, extra: c.set.size - et.size }));
+  // 2) si no hay, el modelo de Entel cabe dentro del nombre del catálogo (p.ej. a Entel le falta el almacenamiento)
+  if (!cands.length) {
+    cands = _fuzzyIdx.lista.filter(c => c.set.size && contiene(et, c.set)).map(c => ({ ...c, extra: et.size - c.set.size }));
+  }
+  if (!cands.length) return null;
+  cands.sort((a, b) => a.extra - b.extra);
+  const mejor = cands[0].extra;
+  const empatados = cands.filter(c => c.extra === mejor);
+  if (empatados.length > 1) {
+    console.warn(`Cruce ambiguo para "${nombre}": ${empatados.map(c => c.modelo).join(' | ')}`);
+    return null; // mejor no adivinar entre varios candidatos igual de buenos
+  }
+  return empatados[0].modelo;
+}
+function modeloEntel(nombre) {
+  return modeloEntelFijo(nombre) || modeloEntelFuzzy(nombre);
 }
 
 function comercial(p) {
