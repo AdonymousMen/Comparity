@@ -285,6 +285,22 @@
       text-underline-offset: 3px;
       position: relative;
     }
+    .descontinuado-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      color: #b91c1c;
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      border-radius: 99px;
+      padding: 1px 8px;
+      margin-left: 6px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    .ac-option.descontinuado, th.descontinuado, .phone-card-title.descontinuado {
+      color: #b91c1c !important;
+    }
     .val-clickable:hover { color: var(--indigo-light); }
     .val-clickable::after {
       content: '👆 ¡Tócame para saber más!';
@@ -699,6 +715,7 @@ function inferKeyFromHeader(h) {
   if (s.includes('nfc')) return 'nfc';
   if (s.includes('huella') || s.includes('finger')) return 'huella';
   if (s.includes('actualiz') || s.includes('update')) return 'updates';
+  if (s.includes('lanzamiento') || s.includes('launch')) return 'fechaLanzamiento';
   return null;
 }
 
@@ -865,7 +882,7 @@ function buildAC(wrapId, slot) {
     focusedIdx = -1;
     dropdown.innerHTML = list.map((n, i) => {
       const isSel = n === selectedName;
-      return `<button class="ac-option${isSel ? ' ac-option-selected' : ''}" type="button" data-idx="${i}" data-name="${encodeURIComponent(n)}">${isSel ? '✓ ' : ''}${n}</button>`;
+      return `<button class="ac-option${isSel ? ' ac-option-selected' : ''}${esDescontinuado(n) ? ' descontinuado' : ''}" type="button" data-idx="${i}" data-name="${encodeURIComponent(n)}">${isSel ? '✓ ' : ''}${nombreConEtiqueta(n)}</button>`;
     }).join('');
     dropdown.classList.add('open');
     input.setAttribute('aria-expanded', 'true');
@@ -876,7 +893,7 @@ function buildAC(wrapId, slot) {
   function buildSelectList(filterQ) {
     const q = (filterQ || '').toLowerCase().trim();
     const list = modelosFiltrados().filter(n => n.toLowerCase().includes(q));
-    select.innerHTML = '<option value="">— Lista completa —</option>' + list.map(n => `<option value="${n}"${selections[slot]===n?' selected':''}>${n}</option>`).join('');
+    select.innerHTML = '<option value="">— Lista completa —</option>' + list.map(n => `<option value="${escapeHtml(n)}"${selections[slot]===n?' selected':''}>${esDescontinuado(n)?'🔴 ':''}${escapeHtml(n)}</option>`).join('');
   }
 
   function renderDropdown(q) {
@@ -886,7 +903,7 @@ function buildAC(wrapId, slot) {
     focusedIdx = -1;
     dropdown.innerHTML = list.map((n, i) => {
       const isSel = n === selections[slot];
-      return `<button class="ac-option${isSel ? ' ac-option-selected' : ''}" type="button" data-idx="${i}" data-name="${encodeURIComponent(n)}">${isSel ? '✓ ' : ''}${n}</button>`;
+      return `<button class="ac-option${isSel ? ' ac-option-selected' : ''}${esDescontinuado(n) ? ' descontinuado' : ''}" type="button" data-idx="${i}" data-name="${encodeURIComponent(n)}">${isSel ? '✓ ' : ''}${nombreConEtiqueta(n)}</button>`;
     }).join('');
     dropdown.classList.add('open');
     input.setAttribute('aria-expanded', 'true');
@@ -1056,7 +1073,7 @@ function render3DCard(p) {
   const card = document.createElement('div');
   card.className = 'phone-card';
   card.innerHTML = `
-    <div class="phone-card-title">${escapeHtml(p.nombre)}</div>
+    <div class="phone-card-title${esDescontinuado(p.nombre) ? ' descontinuado' : ''}">${nombreConEtiqueta(p.nombre)}</div>
     <div class="viewer-shell" id="${viewerId}">
       ${has3D ? `
         <div class="viewer-loader" id="loader-${viewerId}">
@@ -1146,7 +1163,8 @@ const FIELDS = [
   { k:'bt',          label:'📶 Bluetooth' },
   { k:'nfc',         label:'📲 NFC' },
   { k:'huella',      label:'🆔 Huella' },
-  { k:'updates',     label:'📅 Actualización' }
+  { k:'updates',     label:'📅 Actualización' },
+  { k:'fechaLanzamiento', label:'🗓️ Lanzamiento' }
 ];
 
 const CLICKABLE_SPECS = {
@@ -1226,11 +1244,18 @@ function pintarFilasComerciales(tb, names) {
   }
 }
 
+function nombreConEtiqueta(n) {
+  if (!n) return '';
+  return escapeHtml(n) + (esDescontinuado(n) ? ' <span class="descontinuado-tag">DESCONTINUADO</span>' : '');
+}
+
 function renderTable() {
   const names = selections.filter(Boolean);
-  document.getElementById('h1').textContent = names[0] || '';
-  document.getElementById('h2').textContent = names[1] || '';
-  document.getElementById('h3').textContent = names[2] || '';
+  [0, 1, 2].forEach(i => {
+    const th = document.getElementById(`h${i + 1}`);
+    th.innerHTML = nombreConEtiqueta(names[i]);
+    th.classList.toggle('descontinuado', !!names[i] && esDescontinuado(names[i]));
+  });
   const tb = document.getElementById('tbody');
   tb.innerHTML = '';
   pintarFilasComerciales(tb, names);
@@ -2735,11 +2760,12 @@ const CONFIG = {
     caracteristicas: 'Caracteristicas',
     imagen:          'Imagen',
     precios:         'RENO CONT',     // renovación · oferta contado regular
-    equivalencias:   'EQUIVALENCIAS'  // opcional: si existe, pisa la tabla de abajo
+    equivalencias:   'EQUIVALENCIAS', // opcional: si existe, pisa la tabla de abajo
+    descontinuados:  'DESCONTINUADOS' // opcional: una columna EQUIPO, uno por fila
   },
   // Plan B: solo si el navegador bloquea gviz por CORS.
   // Publica las pestañas (Archivo → Compartir → Publicar en la web → CSV) y completa esto.
-  publicado: { base: '', gid: { caracteristicas: '', imagen: '', precios: '', equivalencias: '' } },
+  publicado: { base: '', gid: { caracteristicas: '', imagen: '', precios: '', equivalencias: '', descontinuados: '' } },
   ttlMinutos: 10,
   fallbackXlsx: 'COMP.xlsx',
   hojaEntel: /RENOVACION.*CONTADO.*OFERTA/i
@@ -2926,6 +2952,76 @@ async function cargarEquivalencias() {
   } catch { /* la pestaña es opcional */ }
 }
 
+// ─────────────────────────────────────────
+// DESCONTINUADOS — equipos que ya no vende Entel (sin precio activo en
+// RENO CONT, o que la marca dejó de fabricar), MÁS equipos que superan
+// cierta antigüedad desde su lanzamiento (columna "FECHA DE LANZAMIENTO"
+// de Caracteristicas, formato "Mes Año" en español). Se marcan en rojo
+// en los selectores, la tarjeta 3D y la comparativa, pero SIN quitarlos
+// del catálogo (por si el equipo aún se necesita comparar contra otros).
+//
+// Umbral de antigüedad: ajusta este número si 18 meses no es el criterio
+// que quieres usar (por ejemplo, 12 o 24).
+const UMBRAL_MESES_DESCONTINUADO = 18;
+//
+// Una pestaña llamada DESCONTINUADOS en el Sheet (una columna EQUIPO,
+// un nombre por fila) se SUMA a la lista base — no hace falta tocar el
+// código para marcar uno nuevo a mano, solo agregar su nombre en esa
+// pestaña (útil para un equipo descontinuado que aún no cumple el
+// umbral de antigüedad, por ejemplo por quiebre de stock del fabricante).
+// ─────────────────────────────────────────
+const DESCONTINUADOS_BASE = [
+  'MOTOROLA G05 128GB',
+  'ZTE BLADE V70 256GB',
+  'ZTE BLADE V70 MAX 256GB',
+  'ZTE NUBIA V80 PRO 256GB LTE',
+  'ZTE NUBIA V80 MAX 256GB LTE',
+];
+let DESCONTINUADOS = new Set(DESCONTINUADOS_BASE.map(norm));
+
+async function cargarDescontinuados() {
+  try {
+    const A = await leerHoja('descontinuados');
+    const enc = ubicarEncabezado(A, 'EQUIPO');
+    const desde = enc ? enc.fila + 1 : 0;
+    const extra = [];
+    for (let r = desde; r < A.length; r++) {
+      const eq = clean(A[r]?.[0]);
+      if (eq) extra.push(norm(eq));
+    }
+    DESCONTINUADOS = new Set([...DESCONTINUADOS_BASE.map(norm), ...extra]);
+    if (extra.length) console.info(`DESCONTINUADOS del Sheet: ${extra.length} filas adicionales`);
+  } catch { /* la pestaña es opcional */ }
+}
+
+const MESES_ES = { enero:0, febrero:1, marzo:2, abril:3, mayo:4, junio:5, julio:6,
+  agosto:7, septiembre:8, setiembre:8, octubre:9, noviembre:10, diciembre:11 };
+
+/** Convierte "Octubre 2024" o "2024" en meses transcurridos hasta hoy. null si no se puede leer. */
+function mesesDesdeLanzamiento(texto) {
+  const s = deaccent(String(texto || '').trim().toLowerCase());
+  if (!s) return null;
+  const mMesAnio = s.match(/^([a-z]+)\s+(\d{4})$/);
+  const hoy = new Date();
+  if (mMesAnio && MESES_ES[mMesAnio[1]] !== undefined) {
+    const lanzamiento = new Date(parseInt(mMesAnio[2], 10), MESES_ES[mMesAnio[1]], 1);
+    return (hoy.getFullYear() - lanzamiento.getFullYear()) * 12 + (hoy.getMonth() - lanzamiento.getMonth());
+  }
+  const mSoloAnio = s.match(/^(\d{4})$/);
+  if (mSoloAnio) {
+    const lanzamiento = new Date(parseInt(mSoloAnio[1], 10), 0, 1);
+    return (hoy.getFullYear() - lanzamiento.getFullYear()) * 12 + (hoy.getMonth() - lanzamiento.getMonth());
+  }
+  return null; // p.ej. "NO ENCONTRADO (...)" u otro texto que no es una fecha
+}
+
+function esDescontinuado(nombre) {
+  if (DESCONTINUADOS.has(norm(nombre))) return true;
+  const p = typeof byName === 'function' ? byName(nombre) : null;
+  const meses = p ? mesesDesdeLanzamiento(p.fechaLanzamiento) : null;
+  return meses != null && meses >= UMBRAL_MESES_DESCONTINUADO;
+}
+
 /** Busca el nombre del equipo en la tabla de cruce, tolerando mayúsculas y tildes. */
 let _mapaNorm = null;
 function modeloEntelFijo(nombre) {
@@ -3092,6 +3188,7 @@ function reconstruir(Acar, Aimg) {
 async function cargarDesdeSheet() {
   const [Acar, Aimg] = await Promise.all([leerHoja('caracteristicas'), leerHoja('imagen')]);
   reconstruir(Acar, Aimg);
+  await cargarDescontinuados();
 
   let nPrecios = 0, avisoPrecios = '';
   try {
