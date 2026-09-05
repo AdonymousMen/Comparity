@@ -2761,11 +2761,12 @@ const CONFIG = {
     imagen:          'Imagen',
     precios:         'RENO CONT',     // renovación · oferta contado regular
     equivalencias:   'EQUIVALENCIAS', // opcional: si existe, pisa la tabla de abajo
-    descontinuados:  'DESCONTINUADOS' // opcional: una columna EQUIPO, uno por fila
+    descontinuados:  'DESCONTINUADOS', // opcional: una columna EQUIPO, uno por fila
+    vigentes:        'VIGENTES'        // opcional: excepciones que NO se marcan en rojo
   },
   // Plan B: solo si el navegador bloquea gviz por CORS.
   // Publica las pestañas (Archivo → Compartir → Publicar en la web → CSV) y completa esto.
-  publicado: { base: '', gid: { caracteristicas: '', imagen: '', precios: '', equivalencias: '', descontinuados: '' } },
+  publicado: { base: '', gid: { caracteristicas: '', imagen: '', precios: '', equivalencias: '', descontinuados: '', vigentes: '' } },
   ttlMinutos: 10,
   fallbackXlsx: 'COMP.xlsx',
   hojaEntel: /RENOVACION.*CONTADO.*OFERTA/i
@@ -2994,6 +2995,35 @@ async function cargarDescontinuados() {
   } catch { /* la pestaña es opcional */ }
 }
 
+// VIGENTES — excepciones: equipos que superan el umbral de antigüedad
+// pero que confirmaste que TODAVÍA se venden, así que NO se marcan en
+// rojo aunque su fecha de lanzamiento diga lo contrario. Esta lista
+// manda por encima de todo lo demás (edad y hasta DESCONTINUADOS).
+// Una pestaña llamada VIGENTES en el Sheet (una columna EQUIPO) se
+// SUMA a esta lista base, igual que con DESCONTINUADOS.
+const VIGENTES_BASE = [
+  'IPHONE 15 128GB',
+  'IPHONE 16 128GB',
+  'HONOR X8C 256GB',
+  'SAMSUNG GALAXY A56 256GB 5G',
+];
+let VIGENTES = new Set(VIGENTES_BASE.map(norm));
+
+async function cargarVigentes() {
+  try {
+    const A = await leerHoja('vigentes');
+    const enc = ubicarEncabezado(A, 'EQUIPO');
+    const desde = enc ? enc.fila + 1 : 0;
+    const extra = [];
+    for (let r = desde; r < A.length; r++) {
+      const eq = clean(A[r]?.[0]);
+      if (eq) extra.push(norm(eq));
+    }
+    VIGENTES = new Set([...VIGENTES_BASE.map(norm), ...extra]);
+    if (extra.length) console.info(`VIGENTES del Sheet: ${extra.length} filas adicionales`);
+  } catch { /* la pestaña es opcional */ }
+}
+
 const MESES_ES = { enero:0, febrero:1, marzo:2, abril:3, mayo:4, junio:5, julio:6,
   agosto:7, septiembre:8, setiembre:8, octubre:9, noviembre:10, diciembre:11 };
 
@@ -3016,6 +3046,7 @@ function mesesDesdeLanzamiento(texto) {
 }
 
 function esDescontinuado(nombre) {
+  if (VIGENTES.has(norm(nombre))) return false;
   if (DESCONTINUADOS.has(norm(nombre))) return true;
   const p = typeof byName === 'function' ? byName(nombre) : null;
   const meses = p ? mesesDesdeLanzamiento(p.fechaLanzamiento) : null;
@@ -3189,6 +3220,7 @@ async function cargarDesdeSheet() {
   const [Acar, Aimg] = await Promise.all([leerHoja('caracteristicas'), leerHoja('imagen')]);
   reconstruir(Acar, Aimg);
   await cargarDescontinuados();
+  await cargarVigentes();
 
   let nPrecios = 0, avisoPrecios = '';
   try {
