@@ -69,6 +69,17 @@
     .status-badge.warn { background: #fef3c7; color: #92400e; border-color: #fde68a; }
     .status-badge.info { background: var(--indigo-pale); color: var(--indigo); border-color: #c7d2fe; }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    /* Versión chica, pegada bajo el título del header (en vez de su propia fila en el main) */
+    .status-badge-compact {
+      padding: 1px 8px;
+      font-size: 10.5px;
+      gap: 4px;
+      border-radius: 6px;
+      background: transparent;
+      border-color: transparent;
+      margin-left: -8px;
+    }
+    .status-badge-compact .status-dot { width: 5px; height: 5px; }
 
     /* ── Autocomplete ── */
     .ac-wrap { position: relative; }
@@ -595,9 +606,15 @@
 <!-- ═══════════════ HEADER ═══════════════ -->
 <header class="site-header">
   <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-    <h1 class="text-lg sm:text-2xl" style="font-family:'Syne',sans-serif;font-weight:800;letter-spacing:-.5px">
-      📱 <span style="color:var(--indigo)">COMPARITY</span> <span style="color:var(--amber);font-size:.8em">· Recomendador</span>
-    </h1>
+    <div class="min-w-0">
+      <h1 class="text-lg sm:text-2xl" style="font-family:'Syne',sans-serif;font-weight:800;letter-spacing:-.5px">
+        📱 <span style="color:var(--indigo)">COMPARITY</span> <span style="color:var(--amber);font-size:.8em">· Recomendador</span>
+      </h1>
+      <span id="statusBadge" class="status-badge status-badge-compact">
+        <span class="status-dot"></span>
+        <span id="statusText">⏳ Cargando datos...</span>
+      </span>
+    </div>
     <div class="flex items-center gap-2">
       <label class="cursor-pointer">
         <input id="fileInput" type="file" accept=".xlsx,.xls" class="hidden" />
@@ -610,14 +627,6 @@
 
 <!-- ═══════════════ MAIN ═══════════════ -->
 <main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
-
-  <!-- Status -->
-  <div>
-    <span id="statusBadge" class="status-badge">
-      <span class="status-dot"></span>
-      <span id="statusText">⏳ Cargando datos...</span>
-    </span>
-  </div>
 
   <!-- Selección de equipos -->
   <section class="bg-white border border-[--border] rounded-[20px] p-5 shadow-sm">
@@ -870,7 +879,7 @@ function processWorkbook(wb) {
 function setStatus(msg, type = '') {
   const badge = document.getElementById('statusBadge');
   const text = document.getElementById('statusText');
-  badge.className = 'status-badge' + (type ? ' ' + type : '');
+  badge.className = 'status-badge status-badge-compact' + (type ? ' ' + type : '');
   text.innerHTML = msg;
 }
 
