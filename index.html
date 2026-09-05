@@ -301,6 +301,25 @@
     .ac-option.descontinuado, th.descontinuado, .phone-card-title.descontinuado {
       color: #b91c1c !important;
     }
+    .marca-chip {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #475569;
+      cursor: pointer;
+      transition: background .12s, color .12s, border-color .12s, transform .08s;
+      user-select: none;
+    }
+    .marca-chip:hover { border-color: var(--indigo); color: var(--indigo); }
+    .marca-chip:active { transform: scale(.96); }
+    .marca-chip.activo {
+      background: var(--indigo);
+      border-color: var(--indigo);
+      color: #fff;
+    }
     .val-clickable:hover { color: var(--indigo-light); }
     .val-clickable::after {
       content: '👆 ¡Tócame para saber más!';
@@ -568,15 +587,16 @@
         <input id="filtroPrecioMax" type="number" min="0" step="10" placeholder="S/ 5000" class="ac-input" style="width:100px" />
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RAM mínima</label>
-        <select id="filtroRam" class="ac-select" style="width:130px"><option value="">Cualquiera</option></select>
-      </div>
-      <div>
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Almacenamiento mín.</label>
         <select id="filtroRom" class="ac-select" style="width:150px"><option value="">Cualquiera</option></select>
       </div>
       <button id="btnLimpiarFiltros" class="btn-ghost whitespace-nowrap">✕ Limpiar filtros</button>
       <span id="filtroContador" class="text-xs text-slate-500 ml-auto"></span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b border-[--border]">
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide mr-1">Marca:</span>
+      <div id="filtroMarcaChips" class="flex flex-wrap gap-2"></div>
     </div>
 
     <div class="grid sm:grid-cols-3 gap-4 mb-4">
@@ -982,27 +1002,33 @@ function rebuildAllAC() {
 }
 
 // ─────────────────────────────────────────
-// FILTROS (precio / RAM / almacenamiento)
+// FILTROS (precio / marca / almacenamiento)
 // Acotan qué equipos aparecen en los 3 selectores. Como el
 // recomendador solo puntúa lo que está seleccionado, filtrar aquí
 // acota también, en la práctica, lo que puede recomendarse.
+// Todo se arma solo a partir de lo que hay en DATA — si mañana llega
+// una marca o un almacenamiento nuevo, aparece solo, sin tocar código.
 // ─────────────────────────────────────────
-const filtros = { precioMin: null, precioMax: null, ramMin: null, romMin: null };
+const filtros = { precioMin: null, precioMax: null, romMin: null, marcas: new Set() };
 
 function numFromTextFiltro(t) { if (!t) return null; const m = ('' + t).match(/(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : null; }
+
+/** Primera palabra del nombre, con el ajuste de que "iPhone" es de la marca Apple. */
+function marcaDe(nombre) {
+  const t = norm(nombre).split(' ')[0] || '';
+  return t === 'IPHONE' ? 'APPLE' : t;
+}
+function marcaLabel(marca) { return marca === 'ZTE' ? 'ZTE' : marca.charAt(0) + marca.slice(1).toLowerCase(); }
 
 function pasaFiltro(p) {
   const precio = precioEfectivo(p);
   if (filtros.precioMin != null && precio != null && precio < filtros.precioMin) return false;
   if (filtros.precioMax != null && precio != null && precio > filtros.precioMax) return false;
-  if (filtros.ramMin != null) {
-    const r = numFromTextFiltro(p.ram);
-    if (r != null && r < filtros.ramMin) return false;
-  }
   if (filtros.romMin != null) {
     const s = numFromTextFiltro(p.rom);
     if (s != null && s < filtros.romMin) return false;
   }
+  if (filtros.marcas.size && !filtros.marcas.has(marcaDe(p.nombre))) return false;
   return true;
 }
 
@@ -1010,24 +1036,29 @@ function modelosFiltrados() {
   return MODELOS_SET.filter(n => { const p = byName(n); return !p || pasaFiltro(p); });
 }
 
-/** Llena las opciones de los selects de RAM/Almacenamiento con los valores que realmente existen en la data. */
+/** Llena el select de Almacenamiento y los chips de Marca con lo que realmente existe en la data. */
 function poblarFiltros() {
-  const ramSel = document.getElementById('filtroRam');
   const romSel = document.getElementById('filtroRom');
-  if (!ramSel || !romSel) return;
-  const ramVals = Array.from(new Set(DATA.map(p => numFromTextFiltro(p.ram)).filter(v => v != null))).sort((a, b) => a - b);
+  const chipsWrap = document.getElementById('filtroMarcaChips');
+  if (!romSel || !chipsWrap) return;
+
   const romVals = Array.from(new Set(DATA.map(p => numFromTextFiltro(p.rom)).filter(v => v != null))).sort((a, b) => a - b);
-  const prevRam = ramSel.value, prevRom = romSel.value;
-  ramSel.innerHTML = '<option value="">Cualquiera</option>' + ramVals.map(v => `<option value="${v}">${v} GB o más</option>`).join('');
+  const prevRom = romSel.value;
   romSel.innerHTML = '<option value="">Cualquiera</option>' + romVals.map(v => `<option value="${v}">${v} GB o más</option>`).join('');
-  if (ramVals.includes(parseFloat(prevRam))) ramSel.value = prevRam;
   if (romVals.includes(parseFloat(prevRom))) romSel.value = prevRom;
+
+  const marcas = Array.from(new Set(DATA.map(p => marcaDe(p.nombre)).filter(Boolean))).sort((a, b) => marcaLabel(a).localeCompare(marcaLabel(b), 'es'));
+  // quita de la selección activa cualquier marca que ya no exista en la data
+  filtros.marcas.forEach(m => { if (!marcas.includes(m)) filtros.marcas.delete(m); });
+  chipsWrap.innerHTML = marcas.map(m =>
+    `<button type="button" class="marca-chip${filtros.marcas.has(m) ? ' activo' : ''}" data-marca="${escapeHtml(m)}">${escapeHtml(marcaLabel(m))}</button>`
+  ).join('');
 }
 
 function actualizarContadorFiltro() {
   const el = document.getElementById('filtroContador');
   if (!el) return;
-  const activo = filtros.precioMin != null || filtros.precioMax != null || filtros.ramMin != null || filtros.romMin != null;
+  const activo = filtros.precioMin != null || filtros.precioMax != null || filtros.romMin != null || filtros.marcas.size > 0;
   if (!activo) { el.textContent = ''; return; }
   el.textContent = `${modelosFiltrados().length} de ${MODELOS_SET.length} equipos`;
 }
@@ -1035,11 +1066,9 @@ function actualizarContadorFiltro() {
 function aplicarFiltrosUI() {
   const pMin = document.getElementById('filtroPrecioMin').value;
   const pMax = document.getElementById('filtroPrecioMax').value;
-  const ram = document.getElementById('filtroRam').value;
   const rom = document.getElementById('filtroRom').value;
   filtros.precioMin = pMin === '' ? null : parseFloat(pMin);
   filtros.precioMax = pMax === '' ? null : parseFloat(pMax);
-  filtros.ramMin = ram === '' ? null : parseFloat(ram);
   filtros.romMin = rom === '' ? null : parseFloat(rom);
   actualizarContadorFiltro();
   rebuildAllAC();
@@ -1048,15 +1077,25 @@ function aplicarFiltrosUI() {
 ['filtroPrecioMin', 'filtroPrecioMax'].forEach(id => {
   document.getElementById(id)?.addEventListener('input', debounce(aplicarFiltrosUI, 300));
 });
-['filtroRam', 'filtroRom'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', aplicarFiltrosUI);
+document.getElementById('filtroRom')?.addEventListener('change', aplicarFiltrosUI);
+
+document.getElementById('filtroMarcaChips')?.addEventListener('click', e => {
+  const btn = e.target.closest('.marca-chip');
+  if (!btn) return;
+  const m = btn.dataset.marca;
+  if (filtros.marcas.has(m)) filtros.marcas.delete(m); else filtros.marcas.add(m);
+  btn.classList.toggle('activo');
+  actualizarContadorFiltro();
+  rebuildAllAC();
 });
+
 document.getElementById('btnLimpiarFiltros')?.addEventListener('click', () => {
   document.getElementById('filtroPrecioMin').value = '';
   document.getElementById('filtroPrecioMax').value = '';
-  document.getElementById('filtroRam').value = '';
   document.getElementById('filtroRom').value = '';
-  filtros.precioMin = filtros.precioMax = filtros.ramMin = filtros.romMin = null;
+  filtros.precioMin = filtros.precioMax = filtros.romMin = null;
+  filtros.marcas.clear();
+  poblarFiltros();
   actualizarContadorFiltro();
   rebuildAllAC();
 });
