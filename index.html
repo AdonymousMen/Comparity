@@ -231,6 +231,32 @@
       gap: 8px;
       border-radius: 14px;
     }
+    .viewer-facade {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--indigo-pale), #eef2ff);
+      gap: 12px;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+    .viewer-facade-icon { font-size: 30px; opacity: .55; }
+    .viewer-load-btn {
+      padding: 10px 20px;
+      background: var(--indigo);
+      color: #fff;
+      border: none;
+      border-radius: 99px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background .15s, transform .12s, box-shadow .15s;
+    }
+    .viewer-load-btn:hover { background: var(--indigo-light); transform: translateY(-1px); box-shadow: 0 8px 20px -6px rgba(79,70,229,.4); }
+    .viewer-load-btn:active { transform: scale(.97); }
+    .viewer-facade-hint { font-size: 11px; color: var(--text-muted); max-width: 22ch; }
     .floating-hint {
       position: absolute;
       bottom: 12px; left: 50%;
@@ -790,7 +816,9 @@ function buildFromImagen(A) {
     const row = A[r] || [], nombre = clean(row[0]);
     if (!nombre) continue;
     let link3D = row[2] ? clean(row[2]) : '';
-    if (link3D) link3D = link3D.split('?')[0];
+    // Se conserva el query string completo (?...) del link: puede traer parámetros
+    // del proveedor del visor (autostart, calidad, fondo transparente, etc.) que antes
+    // se perdían al cortar todo lo que viniera después del "?".
     links.push({ nombre, link3D });
   }
   return links;
@@ -1123,49 +1151,80 @@ document.getElementById('btnLimpiarFiltros')?.addEventListener('click', () => {
 // ─────────────────────────────────────────
 const hints = ["🖱️ Click + arrastra para girar 360°", "✨ Explora la vista en 3D", "🔍 Haz clic y mueve para rotar"];
 
-function render3DCard(p) {
-  const has3D = p.link3D && p.link3D.trim() !== '';
-  const viewerId = `viewer-${p.nombre.replace(/[^a-zA-Z0-9]/g, '-')}`;
-  const hint = hints[Math.floor(Math.random() * hints.length)];
-  const card = document.createElement('div');
-  card.className = 'phone-card';
-  card.innerHTML = `
-    <div class="phone-card-title${esDescontinuado(p.nombre) ? ' descontinuado' : ''}">${nombreConEtiqueta(p.nombre)}</div>
-    <div class="viewer-shell" id="${viewerId}">
-      ${has3D ? `
-        <div class="viewer-loader" id="loader-${viewerId}">
-          <div class="loader-ring"></div>
-          <span style="font-size:11px;color:#94a3b8">Cargando visor...</span>
-        </div>
-        <iframe
-          src="${p.link3D}"
-          frameborder="0"
-          allowfullscreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
-          loading="lazy"
-          onload="
+// Construye el markup del visor 3D ya "activo" (iframe real cargando).
+// Se usa tanto al reabrir un visor que ya se había cargado antes (cachedSrc)
+// como cuando el usuario hace clic en "Cargar visor 3D" desde la fachada.
+function build3DViewerHTML(viewerId, nombre, src, hint) {
+  const nombreEsc = nombre.replace(/'/g, "\\'");
+  return `
+    <div class="viewer-loader" id="loader-${viewerId}">
+      <div class="loader-ring"></div>
+      <span style="font-size:11px;color:#94a3b8">Cargando visor...</span>
+    </div>
+    <iframe
+      src="${src}"
+      frameborder="0"
+      allowfullscreen
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
+      onload="
   document.getElementById('loader-${viewerId}')?.remove();
   const c = document.getElementById('${viewerId}');
   const fr = c?.querySelector('iframe');
-  if (fr && !visoresGuardados['${p.nombre}']) {
-    visoresGuardados['${p.nombre}'] = fr.cloneNode(true);
-  }
-  // Restaurar zoom si existía
+  if (fr) { visoresGuardados['${nombreEsc}'] = fr.src; }
   if (fr && fr.dataset.zoom) {
     fr.style.transform = 'scale(' + fr.dataset.zoom + ')';
   }
+  if (typeof habilitarZoomEnVisores === 'function') habilitarZoomEnVisores();
 ">
-        </iframe>
-        <button class="viewer-fs-btn" onclick="abrirFullscreen('${p.nombre.replace(/'/g,"\\'")}','${p.link3D}')" title="Ver en pantalla completa">⛶</button>
-        <div class="floating-hint">${hint}</div>
-      ` : `
+    </iframe>
+    <button class="viewer-fs-btn" onclick="abrirFullscreen('${nombreEsc}','${src}')" title="Ver en pantalla completa">⛶</button>
+    <div class="floating-hint">${hint}</div>
+  `;
+}
+
+// Carga bajo demanda: el iframe del visor 3D solo se monta cuando el usuario
+// pulsa "Cargar visor 3D". Evita descargar 3 escenas 3D pesadas a la vez
+// apenas se selecciona la comparación.
+function cargarVisor3D(viewerId, nombre, link3D, hint) {
+  const container = document.getElementById(viewerId);
+  if (!container) return;
+  container.innerHTML = build3DViewerHTML(viewerId, nombre, link3D, hint);
+  if (typeof habilitarZoomEnVisores === 'function') habilitarZoomEnVisores();
+}
+
+function render3DCard(p, cachedSrc) {
+  const has3D = p.link3D && p.link3D.trim() !== '';
+  const viewerId = `viewer-${p.nombre.replace(/[^a-zA-Z0-9]/g, '-')}`;
+  const hint = hints[Math.floor(Math.random() * hints.length)];
+  const nombreEsc = p.nombre.replace(/'/g, "\\'");
+  const card = document.createElement('div');
+  card.className = 'phone-card';
+  let viewerInner = '';
+  if (has3D && cachedSrc) {
+    // Ya se había cargado en esta sesión: se restaura directo, sin pedir clic de nuevo.
+    viewerInner = build3DViewerHTML(viewerId, p.nombre, cachedSrc, hint);
+  } else if (has3D) {
+    viewerInner = `
+        <div class="viewer-facade">
+          <div class="viewer-facade-icon">📱</div>
+          <button class="viewer-load-btn" onclick="cargarVisor3D('${viewerId}','${nombreEsc}','${p.link3D}','${hint.replace(/'/g,"\\'")}')">
+            ▶ Cargar visor 3D
+          </button>
+          <p class="viewer-facade-hint">Se carga solo cuando lo pides — así no espera de más</p>
+        </div>
+      `;
+  } else {
+    viewerInner = `
         <div class="viewer-no3d">
           <svg width="56" height="56" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           <p style="font-size:13px;color:#94a3b8;font-weight:500">Sin visor 3D</p>
           <p style="font-size:11px;color:#cbd5e1">Agrega el link en la pestaña <b>Imagen3D</b></p>
         </div>
-      `}
-    </div>
+      `;
+  }
+  card.innerHTML = `
+    <div class="phone-card-title${esDescontinuado(p.nombre) ? ' descontinuado' : ''}">${nombreConEtiqueta(p.nombre)}</div>
+    <div class="viewer-shell" id="${viewerId}">${viewerInner}</div>
   `;
   return card;
 }
@@ -1173,25 +1232,20 @@ function render3DCard(p) {
 function renderCards3D(names) {
   const wrap = document.getElementById('cards3D');
   // Save live iframes before clearing (store src URL, not DOM clone, to avoid losing state)
+  const cache = {};
   document.querySelectorAll('.phone-card').forEach(card => {
     const t = card.querySelector('.phone-card-title')?.innerText?.trim();
     const fr = card.querySelector('iframe');
-    if (t && fr && fr.src) visoresGuardados[t] = fr.src;
+    if (t && fr && fr.src) { visoresGuardados[t] = fr.src; cache[t] = fr.src; }
   });
   wrap.innerHTML = '';
   names.forEach(n => {
     const p = DATA.find(d => d.nombre === n);
     if (!p) return;
-    const card = render3DCard(p);
+    // Si ya se había cargado antes en esta sesión, se restaura directo (sin fachada ni segunda descarga).
+    const cachedSrc = cache[p.nombre] || visoresGuardados[p.nombre] || null;
+    const card = render3DCard(p, cachedSrc);
     wrap.appendChild(card);
-    // Restore cached iframe src — only replace the <iframe>, keep the rest (button, hint, loader gone)
-    if (visoresGuardados[p.nombre] && p.link3D) {
-      const container = card.querySelector('.viewer-shell');
-      const existingIframe = container?.querySelector('iframe');
-      if (existingIframe && visoresGuardados[p.nombre] !== existingIframe.src) {
-        existingIframe.src = visoresGuardados[p.nombre];
-      }
-    }
   });
 }
 
