@@ -162,6 +162,8 @@
     .ac-select:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,.10); }
 
     /* ── 3D viewer card ── */
+    .card-slot { display: contents; }
+    .card-slot[hidden] { display: none !important; }
     .phone-card {
       background: #fff;
       border: 1px solid var(--border);
@@ -171,8 +173,8 @@
       transition: transform .3s, box-shadow .3s;
       animation: cardIn .45s cubic-bezier(.16,1,.3,1) both;
     }
-    .phone-card:nth-child(2) { animation-delay: .06s; }
-    .phone-card:nth-child(3) { animation-delay: .12s; }
+    .card-slot:nth-child(2) .phone-card { animation-delay: .06s; }
+    .card-slot:nth-child(3) .phone-card { animation-delay: .12s; }
     .phone-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(79,70,229,.15); }
     @keyframes cardIn {
       from { opacity: 0; transform: translateY(14px) scale(.98); }
@@ -1229,24 +1231,49 @@ function render3DCard(p, cachedSrc) {
   return card;
 }
 
-function renderCards3D(names) {
+// renderCards3D recibe el array COMPLETO de 3 slots (selections), no la lista
+// compactada de nombres. Mantiene 3 "slots" fijos en el DOM (uno por Equipo 1/2/3)
+// que nunca se reordenan ni se destruyen entre sí: solo se reconstruye el slot
+// cuyo equipo realmente cambió. Así, si solo cambias el Equipo 2, los visores 3D
+// ya cargados de los Equipos 1 y 3 quedan intactos (sin recargar, sin perder
+// rotación/zoom) en vez de refrescarse los 3 cada vez.
+function renderCards3D(selectionsArr) {
   const wrap = document.getElementById('cards3D');
-  // Save live iframes before clearing (store src URL, not DOM clone, to avoid losing state)
-  const cache = {};
-  document.querySelectorAll('.phone-card').forEach(card => {
-    const t = card.querySelector('.phone-card-title')?.innerText?.trim();
-    const fr = card.querySelector('iframe');
-    if (t && fr && fr.src) { visoresGuardados[t] = fr.src; cache[t] = fr.src; }
-  });
-  wrap.innerHTML = '';
-  names.forEach(n => {
-    const p = DATA.find(d => d.nombre === n);
-    if (!p) return;
-    // Si ya se había cargado antes en esta sesión, se restaura directo (sin fachada ni segunda descarga).
-    const cachedSrc = cache[p.nombre] || visoresGuardados[p.nombre] || null;
-    const card = render3DCard(p, cachedSrc);
-    wrap.appendChild(card);
-  });
+
+  // Asegura que existan los 3 contenedores de slot, en orden fijo.
+  while (wrap.children.length < 3) {
+    const slot = document.createElement('div');
+    slot.className = 'card-slot';
+    slot.dataset.currentName = '';
+    slot.hidden = true;
+    wrap.appendChild(slot);
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const slot = wrap.children[i];
+    const name = selectionsArr[i] || null;
+
+    // Nada cambió en este slot: no tocar su contenido (el visor 3D sigue cargado tal cual).
+    if (slot.dataset.currentName === (name || '')) continue;
+
+    // Antes de reemplazar, guarda el src actual por si ese equipo vuelve a aparecer luego.
+    const prevIframe = slot.querySelector('iframe');
+    if (prevIframe && prevIframe.src && slot.dataset.currentName) {
+      visoresGuardados[slot.dataset.currentName] = prevIframe.src;
+    }
+
+    slot.dataset.currentName = name || '';
+    slot.innerHTML = '';
+    slot.hidden = !name;
+
+    if (name) {
+      const p = DATA.find(d => d.nombre === name);
+      if (p) {
+        const cachedSrc = visoresGuardados[name] || null;
+        slot.appendChild(render3DCard(p, cachedSrc));
+      }
+    }
+  }
 }
 
 // ─────────────────────────────────────────
@@ -2847,7 +2874,7 @@ function runRecommender(names) {
 // ─────────────────────────────────────────
 function update() {
   const names = selections.filter(Boolean);
-  renderCards3D(names);
+  renderCards3D(selections); // array completo de 3 slots: preserva los visores no cambiados
   renderTable();
   runRecommender(names);
 }
