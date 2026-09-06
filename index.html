@@ -249,11 +249,16 @@
     }
 
     /* ── Comparison table ── */
+    /* --header-h se recalcula por JS (el header tiene alto variable: en móvil
+       puede pasar a 2 líneas). Así el nombre del equipo queda pegado justo
+       debajo del header al bajar, en vez de desaparecer detrás de él. */
+    :root { --header-h: 64px; }
     .cmp-table thead th {
-      position: sticky; top: 0;
+      position: sticky; top: var(--header-h);
       background: #fff;
-      z-index: 5;
+      z-index: 15;
       font-family: 'Syne', sans-serif;
+      box-shadow: 0 1px 0 var(--border);
     }
     .cmp-table tbody tr:nth-child(even) td { background: #fafafa; }
     .spec-label {
@@ -3644,6 +3649,21 @@ renderCards3D = function(names) {
   originalRenderCards3D(names);
   setTimeout(habilitarZoomEnVisores, 100); // Esperar a que los iframes se carguen
 };
+
+// ─────────────────────────────────────────
+// Alto real del header (dinámico: en pantallas angostas el header puede
+// pasar a 2 líneas) para que la fila con los nombres de los equipos en la
+// tabla comparativa se quede pegada justo debajo, en vez de perderse detrás
+// del header al bajar a ver las especificaciones.
+// ─────────────────────────────────────────
+function actualizarAltoHeader() {
+  const header = document.querySelector('.site-header');
+  if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+}
+actualizarAltoHeader();
+window.addEventListener('resize', actualizarAltoHeader);
+window.addEventListener('load', actualizarAltoHeader);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(actualizarAltoHeader);
 </script>
 
 <footer style="text-align:center;padding:18px 10px;opacity:.6;font-size:.85rem;font-family:'Syne',sans-serif">
