@@ -69,17 +69,6 @@
     .status-badge.warn { background: #fef3c7; color: #92400e; border-color: #fde68a; }
     .status-badge.info { background: var(--indigo-pale); color: var(--indigo); border-color: #c7d2fe; }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-    /* Versión chica, pegada bajo el título del header (en vez de su propia fila en el main) */
-    .status-badge-compact {
-      padding: 1px 8px;
-      font-size: 10.5px;
-      gap: 4px;
-      border-radius: 6px;
-      background: transparent;
-      border-color: transparent;
-      margin-left: -8px;
-    }
-    .status-badge-compact .status-dot { width: 5px; height: 5px; }
 
     /* ── Autocomplete ── */
     .ac-wrap { position: relative; }
@@ -173,8 +162,6 @@
     .ac-select:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,.10); }
 
     /* ── 3D viewer card ── */
-    .card-slot { display: contents; }
-    .card-slot[hidden] { display: none !important; }
     .phone-card {
       background: #fff;
       border: 1px solid var(--border);
@@ -182,18 +169,8 @@
       padding: 16px;
       text-align: center;
       transition: transform .3s, box-shadow .3s;
-      animation: cardIn .45s cubic-bezier(.16,1,.3,1) both;
     }
-    .card-slot:nth-child(2) .phone-card { animation-delay: .06s; }
-    .card-slot:nth-child(3) .phone-card { animation-delay: .12s; }
     .phone-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(79,70,229,.15); }
-    @keyframes cardIn {
-      from { opacity: 0; transform: translateY(14px) scale(.98); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .phone-card { animation: none; }
-    }
     .phone-card-title {
       font-family: 'Syne', sans-serif;
       font-size: 15px;
@@ -244,32 +221,6 @@
       gap: 8px;
       border-radius: 14px;
     }
-    .viewer-facade {
-      width: 100%; height: 100%;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      background: linear-gradient(135deg, var(--indigo-pale), #eef2ff);
-      gap: 12px;
-      border-radius: 14px;
-      padding: 16px;
-      text-align: center;
-    }
-    .viewer-facade-icon { font-size: 30px; opacity: .55; }
-    .viewer-load-btn {
-      padding: 10px 20px;
-      background: var(--indigo);
-      color: #fff;
-      border: none;
-      border-radius: 99px;
-      font-family: inherit;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background .15s, transform .12s, box-shadow .15s;
-    }
-    .viewer-load-btn:hover { background: var(--indigo-light); transform: translateY(-1px); box-shadow: 0 8px 20px -6px rgba(79,70,229,.4); }
-    .viewer-load-btn:active { transform: scale(.97); }
-    .viewer-facade-hint { font-size: 11px; color: var(--text-muted); max-width: 22ch; }
     .floating-hint {
       position: absolute;
       bottom: 12px; left: 50%;
@@ -396,15 +347,8 @@
     .winner-card {
       border-radius: 20px;
       overflow: hidden;
-      background: linear-gradient(135deg, var(--indigo), #3730a3);
+      background: linear-gradient(135deg, #1d4ed8, #6d28d9);
       color: #fff;
-      animation: cardIn .5s cubic-bezier(.16,1,.3,1) both;
-    }
-    #tblWrap:not(.hidden) {
-      animation: cardIn .45s cubic-bezier(.16,1,.3,1) both;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .winner-card, #tblWrap:not(.hidden) { animation: none; }
     }
 
     /* ── Modal ── */
@@ -459,10 +403,10 @@
       font-weight: 600;
       font-size: 14px;
       cursor: pointer;
-      transition: background .15s, transform .12s, box-shadow .15s;
+      transition: background .15s, transform .1s;
     }
-    .btn-primary:hover { background: var(--indigo-light); transform: translateY(-1px); box-shadow: 0 8px 20px -6px rgba(79,70,229,.45); }
-    .btn-primary:active { transform: scale(.97); box-shadow: none; }
+    .btn-primary:hover { background: var(--indigo-light); }
+    .btn-primary:active { transform: scale(.97); }
     .btn-ghost {
       padding: 10px 18px;
       background: #f1f5f9;
@@ -473,10 +417,9 @@
       font-weight: 500;
       font-size: 14px;
       cursor: pointer;
-      transition: background .15s, transform .12s, border-color .15s;
+      transition: background .15s;
     }
-    .btn-ghost:hover { background: #e2e8f0; color: var(--text); border-color: #cbd5e1; }
-    .btn-ghost:active { transform: scale(.97); }
+    .btn-ghost:hover { background: #e2e8f0; color: var(--text); }
 
     .mono { font-variant-numeric: tabular-nums; }
 
@@ -606,15 +549,9 @@
 <!-- ═══════════════ HEADER ═══════════════ -->
 <header class="site-header">
   <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-    <div class="min-w-0">
-      <h1 class="text-lg sm:text-2xl" style="font-family:'Syne',sans-serif;font-weight:800;letter-spacing:-.5px">
-        📱 <span style="color:var(--indigo)">COMPARITY</span> <span style="color:var(--amber);font-size:.8em">· Recomendador</span>
-      </h1>
-      <span id="statusBadge" class="status-badge status-badge-compact">
-        <span class="status-dot"></span>
-        <span id="statusText">⏳ Cargando datos...</span>
-      </span>
-    </div>
+    <h1 class="text-lg sm:text-2xl" style="font-family:'Syne',sans-serif;font-weight:800;letter-spacing:-.5px">
+      📱 <span style="color:var(--indigo)">COMPARITY</span> <span style="color:var(--amber);font-size:.8em">· Recomendador</span>
+    </h1>
     <div class="flex items-center gap-2">
       <label class="cursor-pointer">
         <input id="fileInput" type="file" accept=".xlsx,.xls" class="hidden" />
@@ -628,44 +565,33 @@
 <!-- ═══════════════ MAIN ═══════════════ -->
 <main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
 
+  <!-- Status -->
+  <div>
+    <span id="statusBadge" class="status-badge">
+      <span class="status-dot"></span>
+      <span id="statusText">⏳ Cargando datos...</span>
+    </span>
+  </div>
+
   <!-- Selección de equipos -->
-  <section class="bg-white border border-[--border] rounded-[20px] p-5 shadow-sm">
+  <section class="bg-white border border-[--border] rounded-2xl p-5 shadow-sm">
     <h2 class="text-base font-bold mb-4" style="font-family:'Syne',sans-serif">Selecciona hasta 3 equipos</h2>
 
-    <div class="grid sm:grid-cols-2 gap-4 mb-4 pb-4 border-b border-[--border]">
-      <!-- Filtros -->
-      <div class="bg-[--surface] border border-[--border] rounded-2xl p-4">
-        <div class="flex flex-wrap items-end gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Precio mín.</label>
-            <input id="filtroPrecioMin" type="number" min="0" step="10" placeholder="S/ 0" class="ac-input" style="width:100px" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Precio máx.</label>
-            <input id="filtroPrecioMax" type="number" min="0" step="10" placeholder="S/ 5000" class="ac-input" style="width:100px" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Almacenamiento mín.</label>
-            <select id="filtroRom" class="ac-select" style="width:150px"><option value="">Cualquiera</option></select>
-          </div>
-          <button id="btnLimpiarFiltros" class="btn-ghost whitespace-nowrap">✕ Limpiar filtros</button>
-        </div>
-        <div class="mt-2">
-          <span id="filtroContador" class="text-xs text-slate-500"></span>
-        </div>
+    <div class="flex flex-wrap items-end gap-3 mb-4 pb-4 border-b border-[--border]">
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Precio mín.</label>
+        <input id="filtroPrecioMin" type="number" min="0" step="10" placeholder="S/ 0" class="ac-input" style="width:100px" />
       </div>
-
-      <!-- Lista de precios Entel -->
-      <div id="comercialBox" class="hidden bg-[--surface] border border-[--border] rounded-2xl p-4">
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Lista de precios Entel (renovación · contado regular)</label>
-        <div class="flex flex-wrap gap-2">
-          <label class="btn-ghost cursor-pointer whitespace-nowrap">
-            📊 Subir .xlsm de Entel
-            <input id="entelInput" type="file" accept=".xlsm,.xlsx,.xls" class="hidden" />
-          </label>
-          <button id="btnExportCSV" class="btn-ghost hidden whitespace-nowrap" title="Descarga el CSV para pegarlo en la pestaña RENO CONT del Sheet">⬇ CSV para RENO CONT</button>
-        </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Precio máx.</label>
+        <input id="filtroPrecioMax" type="number" min="0" step="10" placeholder="S/ 5000" class="ac-input" style="width:100px" />
       </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Almacenamiento mín.</label>
+        <select id="filtroRom" class="ac-select" style="width:150px"><option value="">Cualquiera</option></select>
+      </div>
+      <button id="btnLimpiarFiltros" class="btn-ghost whitespace-nowrap">✕ Limpiar filtros</button>
+      <span id="filtroContador" class="text-xs text-slate-500 ml-auto"></span>
     </div>
 
     <div class="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b border-[--border]">
@@ -687,6 +613,18 @@
         <div class="ac-wrap" id="wrap3"></div>
       </div>
     </div>
+    <div id="comercialBox" class="hidden flex flex-wrap items-end gap-3 mb-4 pt-4 border-t border-[--border]">
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Lista de precios Entel (renovación · contado regular)</label>
+        <div class="flex gap-2">
+          <label class="btn-ghost cursor-pointer whitespace-nowrap">
+            📊 Subir .xlsm de Entel
+            <input id="entelInput" type="file" accept=".xlsm,.xlsx,.xls" class="hidden" />
+          </label>
+          <button id="btnExportCSV" class="btn-ghost hidden whitespace-nowrap" title="Descarga el CSV para pegarlo en la pestaña RENO CONT del Sheet">⬇ CSV para RENO CONT</button>
+        </div>
+      </div>
+    </div>
     <div class="flex gap-2 pt-2 border-t border-[--border]">
       <button id="btnComparar" class="btn-primary">⚡ Comparar</button>
       <button id="btnReset" class="btn-ghost">↺ Limpiar</button>
@@ -697,8 +635,8 @@
   <section id="cards3D" class="grid sm:grid-cols-3 gap-5"></section>
 
   <!-- Tabla comparativa -->
-  <section id="tblWrap" class="hidden bg-white border border-[--border] rounded-[20px] overflow-hidden shadow-sm">
-    <div class="px-5 py-4" style="background:linear-gradient(90deg,var(--indigo),#3730a3)">
+  <section id="tblWrap" class="hidden bg-white border border-[--border] rounded-2xl overflow-hidden shadow-sm">
+    <div class="px-5 py-4" style="background:linear-gradient(90deg,#1d4ed8,#6d28d9)">
       <h2 class="text-lg text-white" style="font-family:'Syne',sans-serif">Comparativa Detallada</h2>
       <p class="text-xs text-blue-200 mt-0.5">Haz clic en cualquier especificación para ver su explicación</p>
     </div>
@@ -834,9 +772,7 @@ function buildFromImagen(A) {
     const row = A[r] || [], nombre = clean(row[0]);
     if (!nombre) continue;
     let link3D = row[2] ? clean(row[2]) : '';
-    // Se conserva el query string completo (?...) del link: puede traer parámetros
-    // del proveedor del visor (autostart, calidad, fondo transparente, etc.) que antes
-    // se perdían al cortar todo lo que viniera después del "?".
+    if (link3D) link3D = link3D.split('?')[0];
     links.push({ nombre, link3D });
   }
   return links;
@@ -886,7 +822,7 @@ function processWorkbook(wb) {
 function setStatus(msg, type = '') {
   const badge = document.getElementById('statusBadge');
   const text = document.getElementById('statusText');
-  badge.className = 'status-badge status-badge-compact' + (type ? ' ' + type : '');
+  badge.className = 'status-badge' + (type ? ' ' + type : '');
   text.innerHTML = msg;
 }
 
@@ -1169,127 +1105,76 @@ document.getElementById('btnLimpiarFiltros')?.addEventListener('click', () => {
 // ─────────────────────────────────────────
 const hints = ["🖱️ Click + arrastra para girar 360°", "✨ Explora la vista en 3D", "🔍 Haz clic y mueve para rotar"];
 
-// Construye el markup del visor 3D ya "activo" (iframe real cargando).
-// Se usa tanto al reabrir un visor que ya se había cargado antes (cachedSrc)
-// como cuando el usuario hace clic en "Cargar visor 3D" desde la fachada.
-function build3DViewerHTML(viewerId, nombre, src, hint) {
-  const nombreEsc = nombre.replace(/'/g, "\\'");
-  return `
-    <div class="viewer-loader" id="loader-${viewerId}">
-      <div class="loader-ring"></div>
-      <span style="font-size:11px;color:#94a3b8">Cargando visor...</span>
-    </div>
-    <iframe
-      src="${src}"
-      frameborder="0"
-      allowfullscreen
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
-      onload="
-  document.getElementById('loader-${viewerId}')?.remove();
-  const c = document.getElementById('${viewerId}');
-  const fr = c?.querySelector('iframe');
-  if (fr) { visoresGuardados['${nombreEsc}'] = fr.src; }
-  if (fr && fr.dataset.zoom) {
-    fr.style.transform = 'scale(' + fr.dataset.zoom + ')';
-  }
-  if (typeof habilitarZoomEnVisores === 'function') habilitarZoomEnVisores();
-">
-    </iframe>
-    <button class="viewer-fs-btn" onclick="abrirFullscreen('${nombreEsc}','${src}')" title="Ver en pantalla completa">⛶</button>
-    <div class="floating-hint">${hint}</div>
-  `;
-}
-
-// Carga bajo demanda: el iframe del visor 3D solo se monta cuando el usuario
-// pulsa "Cargar visor 3D". Evita descargar 3 escenas 3D pesadas a la vez
-// apenas se selecciona la comparación.
-function cargarVisor3D(viewerId, nombre, link3D, hint) {
-  const container = document.getElementById(viewerId);
-  if (!container) return;
-  container.innerHTML = build3DViewerHTML(viewerId, nombre, link3D, hint);
-  if (typeof habilitarZoomEnVisores === 'function') habilitarZoomEnVisores();
-}
-
-function render3DCard(p, cachedSrc) {
+function render3DCard(p) {
   const has3D = p.link3D && p.link3D.trim() !== '';
   const viewerId = `viewer-${p.nombre.replace(/[^a-zA-Z0-9]/g, '-')}`;
   const hint = hints[Math.floor(Math.random() * hints.length)];
-  const nombreEsc = p.nombre.replace(/'/g, "\\'");
   const card = document.createElement('div');
   card.className = 'phone-card';
-  let viewerInner = '';
-  if (has3D && cachedSrc) {
-    // Ya se había cargado en esta sesión: se restaura directo, sin pedir clic de nuevo.
-    viewerInner = build3DViewerHTML(viewerId, p.nombre, cachedSrc, hint);
-  } else if (has3D) {
-    viewerInner = `
-        <div class="viewer-facade">
-          <div class="viewer-facade-icon">📱</div>
-          <button class="viewer-load-btn" onclick="cargarVisor3D('${viewerId}','${nombreEsc}','${p.link3D}','${hint.replace(/'/g,"\\'")}')">
-            ▶ Cargar visor 3D
-          </button>
-          <p class="viewer-facade-hint">Se carga solo cuando lo pides — así no espera de más</p>
+  card.innerHTML = `
+    <div class="phone-card-title${esDescontinuado(p.nombre) ? ' descontinuado' : ''}">${nombreConEtiqueta(p.nombre)}</div>
+    <div class="viewer-shell" id="${viewerId}">
+      ${has3D ? `
+        <div class="viewer-loader" id="loader-${viewerId}">
+          <div class="loader-ring"></div>
+          <span style="font-size:11px;color:#94a3b8">Cargando visor...</span>
         </div>
-      `;
-  } else {
-    viewerInner = `
+        <iframe
+          src="${p.link3D}"
+          frameborder="0"
+          allowfullscreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
+          loading="lazy"
+          onload="
+  document.getElementById('loader-${viewerId}')?.remove();
+  const c = document.getElementById('${viewerId}');
+  const fr = c?.querySelector('iframe');
+  if (fr && !visoresGuardados['${p.nombre}']) {
+    visoresGuardados['${p.nombre}'] = fr.cloneNode(true);
+  }
+  // Restaurar zoom si existía
+  if (fr && fr.dataset.zoom) {
+    fr.style.transform = 'scale(' + fr.dataset.zoom + ')';
+  }
+">
+        </iframe>
+        <button class="viewer-fs-btn" onclick="abrirFullscreen('${p.nombre.replace(/'/g,"\\'")}','${p.link3D}')" title="Ver en pantalla completa">⛶</button>
+        <div class="floating-hint">${hint}</div>
+      ` : `
         <div class="viewer-no3d">
           <svg width="56" height="56" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           <p style="font-size:13px;color:#94a3b8;font-weight:500">Sin visor 3D</p>
           <p style="font-size:11px;color:#cbd5e1">Agrega el link en la pestaña <b>Imagen3D</b></p>
         </div>
-      `;
-  }
-  card.innerHTML = `
-    <div class="phone-card-title${esDescontinuado(p.nombre) ? ' descontinuado' : ''}">${nombreConEtiqueta(p.nombre)}</div>
-    <div class="viewer-shell" id="${viewerId}">${viewerInner}</div>
+      `}
+    </div>
   `;
   return card;
 }
 
-// renderCards3D recibe el array COMPLETO de 3 slots (selections), no la lista
-// compactada de nombres. Mantiene 3 "slots" fijos en el DOM (uno por Equipo 1/2/3)
-// que nunca se reordenan ni se destruyen entre sí: solo se reconstruye el slot
-// cuyo equipo realmente cambió. Así, si solo cambias el Equipo 2, los visores 3D
-// ya cargados de los Equipos 1 y 3 quedan intactos (sin recargar, sin perder
-// rotación/zoom) en vez de refrescarse los 3 cada vez.
-function renderCards3D(selectionsArr) {
+function renderCards3D(names) {
   const wrap = document.getElementById('cards3D');
-
-  // Asegura que existan los 3 contenedores de slot, en orden fijo.
-  while (wrap.children.length < 3) {
-    const slot = document.createElement('div');
-    slot.className = 'card-slot';
-    slot.dataset.currentName = '';
-    slot.hidden = true;
-    wrap.appendChild(slot);
-  }
-
-  for (let i = 0; i < 3; i++) {
-    const slot = wrap.children[i];
-    const name = selectionsArr[i] || null;
-
-    // Nada cambió en este slot: no tocar su contenido (el visor 3D sigue cargado tal cual).
-    if (slot.dataset.currentName === (name || '')) continue;
-
-    // Antes de reemplazar, guarda el src actual por si ese equipo vuelve a aparecer luego.
-    const prevIframe = slot.querySelector('iframe');
-    if (prevIframe && prevIframe.src && slot.dataset.currentName) {
-      visoresGuardados[slot.dataset.currentName] = prevIframe.src;
-    }
-
-    slot.dataset.currentName = name || '';
-    slot.innerHTML = '';
-    slot.hidden = !name;
-
-    if (name) {
-      const p = DATA.find(d => d.nombre === name);
-      if (p) {
-        const cachedSrc = visoresGuardados[name] || null;
-        slot.appendChild(render3DCard(p, cachedSrc));
+  // Save live iframes before clearing (store src URL, not DOM clone, to avoid losing state)
+  document.querySelectorAll('.phone-card').forEach(card => {
+    const t = card.querySelector('.phone-card-title')?.innerText?.trim();
+    const fr = card.querySelector('iframe');
+    if (t && fr && fr.src) visoresGuardados[t] = fr.src;
+  });
+  wrap.innerHTML = '';
+  names.forEach(n => {
+    const p = DATA.find(d => d.nombre === n);
+    if (!p) return;
+    const card = render3DCard(p);
+    wrap.appendChild(card);
+    // Restore cached iframe src — only replace the <iframe>, keep the rest (button, hint, loader gone)
+    if (visoresGuardados[p.nombre] && p.link3D) {
+      const container = card.querySelector('.viewer-shell');
+      const existingIframe = container?.querySelector('iframe');
+      if (existingIframe && visoresGuardados[p.nombre] !== existingIframe.src) {
+        existingIframe.src = visoresGuardados[p.nombre];
       }
     }
-  }
+  });
 }
 
 // ─────────────────────────────────────────
@@ -1413,6 +1298,7 @@ function renderTable() {
   const tb = document.getElementById('tbody');
   tb.innerHTML = '';
   pintarFilasComerciales(tb, names);
+  pintarFilaSKU(tb, names);
 
   FIELDS.forEach(field => {
     const has = names.some(n => { const v = (byName(n) || {})[field.k]; return v != null && String(v).trim() !== ''; });
@@ -2890,7 +2776,7 @@ function runRecommender(names) {
 // ─────────────────────────────────────────
 function update() {
   const names = selections.filter(Boolean);
-  renderCards3D(selections); // array completo de 3 slots: preserva los visores no cambiados
+  renderCards3D(names);
   renderTable();
   runRecommender(names);
 }
@@ -2916,11 +2802,12 @@ const CONFIG = {
     precios:         'RENO CONT',     // renovación · oferta contado regular
     equivalencias:   'EQUIVALENCIAS', // opcional: si existe, pisa la tabla de abajo
     descontinuados:  'DESCONTINUADOS', // opcional: una columna EQUIPO, uno por fila
-    vigentes:        'VIGENTES'        // opcional: excepciones que NO se marcan en rojo
+    vigentes:        'VIGENTES',       // opcional: excepciones que NO se marcan en rojo
+    sku:             'SKU'             // opcional: columnas EQUIPO | SKU | DETALLE
   },
   // Plan B: solo si el navegador bloquea gviz por CORS.
   // Publica las pestañas (Archivo → Compartir → Publicar en la web → CSV) y completa esto.
-  publicado: { base: '', gid: { caracteristicas: '', imagen: '', precios: '', equivalencias: '', descontinuados: '', vigentes: '' } },
+  publicado: { base: '', gid: { caracteristicas: '', imagen: '', precios: '', equivalencias: '', descontinuados: '', vigentes: '', sku: '' } },
   ttlMinutos: 10,
   fallbackXlsx: 'COMP.xlsx',
   hojaEntel: /RENOVACION.*CONTADO.*OFERTA/i
@@ -3176,6 +3063,141 @@ async function cargarVigentes() {
   } catch { /* la pestaña es opcional */ }
 }
 
+// ─────────────────────────────────────────
+// SKU del punto de venta (MARCA+MODELO+CAPACIDAD+COLOR sin separadores).
+// Solo incluye equipos que el usuario realmente tiene en su PDV — no se
+// infiere ni se inventa SKU para el resto del catálogo.
+//
+// Los datos viven en una pestaña del Sheet llamada "SKU" con columnas
+// EQUIPO | SKU | DETALLE (una fila por color/variante) -- ver SKU.xlsx, que
+// trae ya cargados los equipos que se analizaron. Así el usuario mantiene su
+// inventario de SKU directamente en el Sheet, sin inflar este archivo ni
+// tener que pedir cambios aquí cada vez que cambie de equipos.
+// SKU_RAW_BASE queda como respaldo fijo (vacío por defecto) para el caso en
+// que la pestaña "SKU" no exista todavía.
+//
+// "base"    = SKU recortado hasta la capacidad (256GB, etc.), sin el color:
+//             lo que se muestra en la tabla comparativa.
+// "detalle" = texto completo (incluye color) que se muestra en la ventana
+//             emergente cuando el equipo tiene más de una variante.
+// ─────────────────────────────────────────
+const SKU_RAW_BASE = [];
+// (El respaldo fijo se movió a una pestaña "SKU" del Sheet para no inflar
+//  este archivo -- ver SKU.xlsx. Si esa pestaña no existe todavía, esta fila
+//  del comparador simplemente no aparece hasta que la crees.)
+
+function skuBaseTruncado(sku) {
+  const m = String(sku).match(/\d+(GB|TB)/i);
+  return m ? sku.slice(0, m.index + m[0].length) : sku;
+}
+
+function buildSkuMap(lista) {
+  // Dedupea por código de SKU (case/espacio-insensible): si el Sheet repite un
+  // SKU que ya está en el respaldo, la entrada que venga DESPUÉS en la lista
+  // gana -- por eso el Sheet siempre se concatena al final.
+  const porCodigo = new Map();
+  lista.forEach(item => { if (item.equipo && item.sku) porCodigo.set(norm(item.sku), item); });
+  const map = {};
+  porCodigo.forEach(item => {
+    const key = norm(item.equipo);
+    if (!map[key]) map[key] = [];
+    map[key].push({ sku: item.sku, base: skuBaseTruncado(item.sku), detalle: item.detalle || item.sku });
+  });
+  return map;
+}
+
+let SKU_MAP_NORM = buildSkuMap(SKU_RAW_BASE);
+function skuDe(nombre) { return SKU_MAP_NORM[norm(nombre)] || null; }
+
+async function cargarSku() {
+  try {
+    const A = await leerHoja('sku');
+    let filaEnc = -1, colEquipo = -1, colSku = -1, colDetalle = -1;
+    for (let r = 0; r < Math.min(A.length, 10); r++) {
+      const fila = A[r] || [];
+      for (let c = 0; c < fila.length; c++) {
+        const h = norm(clean(fila[c]));
+        if (h === 'EQUIPO') { filaEnc = r; colEquipo = c; }
+        if (h === 'SKU') colSku = c;
+        if (h.startsWith('DETALLE') || h.startsWith('DESCRIPCION')) colDetalle = c;
+      }
+      if (filaEnc >= 0 && colSku >= 0) break;
+    }
+    if (filaEnc < 0 || colEquipo < 0 || colSku < 0) return; // pestaña opcional o mal formada
+    const extra = [];
+    for (let r = filaEnc + 1; r < A.length; r++) {
+      const fila = A[r] || [];
+      const equipo = clean(fila[colEquipo]);
+      const sku = clean(fila[colSku]);
+      const detalle = colDetalle >= 0 ? clean(fila[colDetalle]) : '';
+      if (equipo && sku) extra.push({ equipo, sku, detalle: detalle || sku });
+    }
+    if (extra.length) {
+      SKU_MAP_NORM = buildSkuMap([...SKU_RAW_BASE, ...extra]);
+      console.info(`SKU del Sheet: ${extra.length} filas adicionales`);
+    }
+  } catch { /* la pestaña es opcional */ }
+}
+
+
+function mostrarSkuEquipo(nombre) {
+  const variantes = skuDe(nombre);
+  if (!variantes || !variantes.length) return;
+  const modal = document.getElementById('modalExplicacion');
+  const tituloEl = document.getElementById('modalTitulo');
+  const contenidoEl = document.getElementById('modalContenido');
+
+  const filas = variantes.map(v => `
+    <div class="rounded-xl mb-3 overflow-hidden border border-slate-200">
+      <div class="px-4 py-2 bg-slate-50">
+        <p class="font-mono font-bold text-sm" style="color:var(--indigo)">${escapeHtml(v.sku)}</p>
+      </div>
+      <div class="px-4 py-2 bg-white"><p class="text-sm text-slate-700">${escapeHtml(v.detalle)}</p></div>
+    </div>`).join('');
+
+  contenidoEl.innerHTML = `
+    <p class="mb-4 text-sm text-slate-600">Este equipo tiene ${variantes.length} variante${variantes.length > 1 ? 's' : ''} de color en tu punto de venta. Cada una usa un SKU distinto (el color va al final del código):</p>
+    ${filas}`;
+  tituloEl.innerHTML = `🏷️ SKU: ${escapeHtml(nombre)}`;
+  modal.classList.remove('hidden');
+}
+
+function pintarFilaSKU(tb, names) {
+  const datos = names.map(n => skuDe(n));
+  if (!datos.some(Boolean)) return;
+
+  const tr = document.createElement('tr');
+  const tdLabel = document.createElement('td');
+  tdLabel.className = 'p-3 font-medium whitespace-nowrap';
+  tdLabel.textContent = '🏷️ SKU (PDV)';
+  tr.appendChild(tdLabel);
+
+  names.forEach((n, i) => {
+    const td = document.createElement('td');
+    td.className = 'p-3 text-center';
+    const variantes = datos[i];
+    if (!variantes || !variantes.length) {
+      td.textContent = '—';
+      tr.appendChild(td);
+      return;
+    }
+    const basesUnicas = [...new Set(variantes.map(v => v.base))];
+    const span = document.createElement('span');
+    span.className = 'val-clickable font-mono text-xs';
+    span.tabIndex = 0;
+    span.setAttribute('role', 'button');
+    span.textContent = variantes.length > 1
+      ? `${basesUnicas[0]}${basesUnicas.length > 1 ? '…' : ''} (${variantes.length} colores)`
+      : basesUnicas[0];
+    span.addEventListener('click', e => { e.stopPropagation(); mostrarSkuEquipo(n); });
+    span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarSkuEquipo(n); });
+    td.appendChild(span);
+    tr.appendChild(td);
+  });
+  for (let i = names.length; i < 3; i++) tr.appendChild(document.createElement('td'));
+  tb.appendChild(tr);
+}
+
 const MESES_ES = { enero:0, febrero:1, marzo:2, abril:3, mayo:4, junio:5, julio:6,
   agosto:7, septiembre:8, setiembre:8, octubre:9, noviembre:10, diciembre:11 };
 
@@ -3373,6 +3395,7 @@ async function cargarDesdeSheet() {
   reconstruir(Acar, Aimg);
   await cargarDescontinuados();
   await cargarVigentes();
+  await cargarSku();
 
   let nPrecios = 0, avisoPrecios = '';
   try {
