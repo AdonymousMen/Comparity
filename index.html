@@ -250,17 +250,49 @@
 
     /* ── Comparison table ── */
     /* --header-h se recalcula por JS (el header tiene alto variable: en móvil
-       puede pasar a 2 líneas). Así el nombre del equipo queda pegado justo
-       debajo del header al bajar, en vez de desaparecer detrás de él. */
+       puede pasar a 2 líneas). Lo usa la barra flotante de abajo. */
     :root { --header-h: 64px; }
     .cmp-table thead th {
-      position: sticky; top: var(--header-h);
       background: #fff;
-      z-index: 15;
       font-family: 'Syne', sans-serif;
-      box-shadow: 0 1px 0 var(--border);
     }
     .cmp-table tbody tr:nth-child(even) td { background: #fafafa; }
+
+    /* Barra flotante con los nombres de los equipos: aparece SOLO cuando el
+       encabezado real de la tabla ya se salió de vista por scroll, y
+       desaparece de nuevo en cuanto la tabla completa queda atrás (o si
+       subes y el encabezado real vuelve a verse). No usamos position:sticky
+       en el <thead> porque el contenedor con scroll horizontal (overflow-x)
+       rompe el sticky vertical en varios navegadores. */
+    .bar-equipos-flotante {
+      position: fixed;
+      top: var(--header-h);
+      left: 0; right: 0;
+      z-index: 35;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 10px rgba(0,0,0,.06);
+      padding: 8px 16px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      transition: opacity .12s ease;
+    }
+    .bar-equipos-flotante[hidden] { display: none; }
+    .bef-item {
+      padding: 4px 12px;
+      background: var(--indigo-pale);
+      color: var(--indigo);
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      white-space: nowrap;
+      max-width: 32vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .spec-label {
       cursor: pointer;
       color: var(--indigo);
@@ -567,6 +599,10 @@
   <span class="status-dot"></span>
   <span id="statusText">⏳ Cargando datos...</span>
 </span>
+
+<!-- Barra flotante con los nombres de los equipos que se compara: solo aparece
+     cuando bajas y el encabezado real de la tabla ya no se ve. -->
+<div id="barEquiposFlotante" class="bar-equipos-flotante" hidden></div>
 
 <!-- ═══════════════ HEADER ═══════════════ -->
 <header class="site-header">
@@ -1309,6 +1345,7 @@ function renderTable() {
     th.innerHTML = nombreConEtiqueta(names[i]);
     th.classList.toggle('descontinuado', !!names[i] && esDescontinuado(names[i]));
   });
+  actualizarBarraFlotante(names);
   const tb = document.getElementById('tbody');
   tb.innerHTML = '';
   pintarFilasComerciales(tb, names);
@@ -3652,9 +3689,8 @@ renderCards3D = function(names) {
 
 // ─────────────────────────────────────────
 // Alto real del header (dinámico: en pantallas angostas el header puede
-// pasar a 2 líneas) para que la fila con los nombres de los equipos en la
-// tabla comparativa se quede pegada justo debajo, en vez de perderse detrás
-// del header al bajar a ver las especificaciones.
+// pasar a 2 líneas). Lo usa la barra flotante de los equipos para saber
+// justo debajo de dónde debe aparecer.
 // ─────────────────────────────────────────
 function actualizarAltoHeader() {
   const header = document.querySelector('.site-header');
@@ -3664,6 +3700,58 @@ actualizarAltoHeader();
 window.addEventListener('resize', actualizarAltoHeader);
 window.addEventListener('load', actualizarAltoHeader);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(actualizarAltoHeader);
+
+// ─────────────────────────────────────────
+// Barra flotante con los nombres de los equipos que se están comparando.
+// No usamos position:sticky en el <thead> de la tabla porque vive dentro de
+// un contenedor con scroll horizontal (overflow-x-auto) -- y por una regla
+// del CSS, eso convierte también su overflow-y en "auto", rompiendo el
+// sticky vertical en varios navegadores (el encabezado terminaba tapando o
+// solapando filas en vez de quedarse quieto).
+//
+// En su lugar: al hacer scroll, si el encabezado real de la tabla (con los
+// nombres) ya salió de vista por arriba y la tabla en sí todavía no terminó
+// de pasar, mostramos esta barra flotante justo debajo del header del sitio.
+// En cuanto el encabezado real vuelve a verse (subes) o la tabla completa ya
+// quedó atrás (sigues bajando), la barra se oculta -- se "mueve" tal como
+// pediste, no se queda fija todo el tiempo.
+// ─────────────────────────────────────────
+let nombresComparando = [];
+
+function actualizarBarraFlotante(names) {
+  nombresComparando = names || [];
+  const bar = document.getElementById('barEquiposFlotante');
+  if (!nombresComparando.length) { bar.hidden = true; bar.innerHTML = ''; return; }
+  bar.innerHTML = nombresComparando.map(n =>
+    `<span class="bef-item">${nombreConEtiqueta(n)}</span>`).join('');
+  sincronizarBarraFlotante();
+}
+
+function sincronizarBarraFlotante() {
+  const bar = document.getElementById('barEquiposFlotante');
+  const thead = document.querySelector('.cmp-table thead');
+  const tabla = document.querySelector('.cmp-table');
+  if (!bar || !thead || !tabla || !nombresComparando.length) { if (bar) bar.hidden = true; return; }
+
+  const headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 64;
+  const theadRect = thead.getBoundingClientRect();
+  const tablaRect = tabla.getBoundingClientRect();
+
+  // Mostrar solo si: el encabezado real ya se salió por arriba (su borde
+  // inferior quedó por encima de donde terminaría el header del sitio) Y la
+  // tabla todavía no terminó de pasar (su borde inferior sigue por debajo).
+  const debeMostrar = theadRect.bottom <= headerH && tablaRect.bottom > headerH + 20;
+  bar.hidden = !debeMostrar;
+}
+
+let tickBarraFlotante = false;
+function onScrollBarraFlotante() {
+  if (tickBarraFlotante) return;
+  tickBarraFlotante = true;
+  requestAnimationFrame(() => { sincronizarBarraFlotante(); tickBarraFlotante = false; });
+}
+window.addEventListener('scroll', onScrollBarraFlotante, { passive: true });
+window.addEventListener('resize', onScrollBarraFlotante);
 </script>
 
 <footer style="text-align:center;padding:18px 10px;opacity:.6;font-size:.85rem;font-family:'Syne',sans-serif">
