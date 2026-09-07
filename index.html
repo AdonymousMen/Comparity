@@ -3505,6 +3505,93 @@ document.getElementById('fileInput').addEventListener('change', async e => {
 // ─────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────
+// ─────────────────────────────────────────
+// Alto real del header (dinámico: en pantallas angostas el header puede
+// pasar a 2 líneas). Lo usa la barra flotante de los equipos para saber
+// justo debajo de dónde debe aparecer.
+// ─────────────────────────────────────────
+function actualizarAltoHeader() {
+  const header = document.querySelector('.site-header');
+  if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+}
+actualizarAltoHeader();
+window.addEventListener('resize', actualizarAltoHeader);
+window.addEventListener('load', actualizarAltoHeader);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(actualizarAltoHeader);
+
+// ─────────────────────────────────────────
+// Barra flotante con los nombres de los equipos que se están comparando.
+// No usamos position:sticky en el <thead> de la tabla porque vive dentro de
+// un contenedor con scroll horizontal (overflow-x-auto) -- y por una regla
+// del CSS, eso convierte también su overflow-y en "auto", rompiendo el
+// sticky vertical en varios navegadores (el encabezado terminaba tapando o
+// solapando filas en vez de quedarse quieto).
+//
+// En su lugar: al hacer scroll, si el encabezado real de la tabla (con los
+// nombres) ya salió de vista por arriba y la tabla en sí todavía no terminó
+// de pasar, mostramos esta barra flotante justo debajo del header del sitio.
+// En cuanto el encabezado real vuelve a verse (subes) o la tabla completa ya
+// quedó atrás (sigues bajando), la barra se oculta -- se "mueve" tal como
+// pediste, no se queda fija todo el tiempo.
+// ─────────────────────────────────────────
+let nombresComparando = [];
+
+function actualizarBarraFlotante(names) {
+  nombresComparando = names || [];
+  const bar = document.getElementById('barEquiposFlotante');
+  if (!nombresComparando.length) { bar.hidden = true; bar.innerHTML = ''; return; }
+  bar.innerHTML = nombresComparando.map((n, i) =>
+    `<span class="bef-item" id="befItem${i}">${nombreConEtiqueta(n)}</span>`).join('');
+  sincronizarBarraFlotante();
+}
+
+function sincronizarBarraFlotante() {
+  const bar = document.getElementById('barEquiposFlotante');
+  const thead = document.querySelector('.cmp-table thead');
+  const tabla = document.querySelector('.cmp-table');
+  if (!bar || !thead || !tabla || !nombresComparando.length) { if (bar) bar.hidden = true; return; }
+
+  const headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 64;
+  const theadRect = thead.getBoundingClientRect();
+  const tablaRect = tabla.getBoundingClientRect();
+
+  // Mostrar solo si: el encabezado real ya se salió por arriba (su borde
+  // inferior quedó por encima de donde terminaría el header del sitio) Y la
+  // tabla todavía no terminó de pasar (su borde inferior sigue por debajo).
+  const debeMostrar = theadRect.bottom <= headerH && tablaRect.bottom > headerH + 20;
+  bar.hidden = !debeMostrar;
+  if (!debeMostrar) return;
+
+  // Alinear cada nombre EXACTAMENTE con la posición y el ancho reales de su
+  // columna en la tabla (medidos en vivo), en vez de solo centrar el grupo
+  // -- así no se ve "desalineado" respecto a las filas de especificaciones.
+  [0, 1, 2].forEach(i => {
+    const th = document.getElementById(`h${i + 1}`);
+    const item = document.getElementById(`befItem${i}`);
+    if (!th || !item) return;
+    const r = th.getBoundingClientRect();
+    if (r.width <= 0) { item.style.display = 'none'; return; }
+    item.style.display = '';
+    item.style.left = Math.round(r.left) + 'px';
+    item.style.width = Math.round(r.width) + 'px';
+  });
+}
+
+let tickBarraFlotante = false;
+function onScrollBarraFlotante() {
+  if (tickBarraFlotante) return;
+  tickBarraFlotante = true;
+  requestAnimationFrame(() => { sincronizarBarraFlotante(); tickBarraFlotante = false; });
+}
+window.addEventListener('scroll', onScrollBarraFlotante, { passive: true });
+window.addEventListener('resize', onScrollBarraFlotante);
+// El scroll horizontal de la tabla (en pantallas angostas) pasa por el
+// contenedor con overflow-x, no por la ventana -- hay que escucharlo aparte
+// para que la barra no se desalinee al desplazarte de lado.
+document.addEventListener('scroll', e => {
+  if (e.target instanceof Element && e.target.closest && e.target.closest('.cmp-table')) onScrollBarraFlotante();
+}, { passive: true, capture: true });
+
 (async function init() {
   rebuildAllAC();
   engancharControlesComerciales();
@@ -3703,92 +3790,6 @@ renderCards3D = function(names) {
   setTimeout(habilitarZoomEnVisores, 100); // Esperar a que los iframes se carguen
 };
 
-// ─────────────────────────────────────────
-// Alto real del header (dinámico: en pantallas angostas el header puede
-// pasar a 2 líneas). Lo usa la barra flotante de los equipos para saber
-// justo debajo de dónde debe aparecer.
-// ─────────────────────────────────────────
-function actualizarAltoHeader() {
-  const header = document.querySelector('.site-header');
-  if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
-}
-actualizarAltoHeader();
-window.addEventListener('resize', actualizarAltoHeader);
-window.addEventListener('load', actualizarAltoHeader);
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(actualizarAltoHeader);
-
-// ─────────────────────────────────────────
-// Barra flotante con los nombres de los equipos que se están comparando.
-// No usamos position:sticky en el <thead> de la tabla porque vive dentro de
-// un contenedor con scroll horizontal (overflow-x-auto) -- y por una regla
-// del CSS, eso convierte también su overflow-y en "auto", rompiendo el
-// sticky vertical en varios navegadores (el encabezado terminaba tapando o
-// solapando filas en vez de quedarse quieto).
-//
-// En su lugar: al hacer scroll, si el encabezado real de la tabla (con los
-// nombres) ya salió de vista por arriba y la tabla en sí todavía no terminó
-// de pasar, mostramos esta barra flotante justo debajo del header del sitio.
-// En cuanto el encabezado real vuelve a verse (subes) o la tabla completa ya
-// quedó atrás (sigues bajando), la barra se oculta -- se "mueve" tal como
-// pediste, no se queda fija todo el tiempo.
-// ─────────────────────────────────────────
-let nombresComparando = [];
-
-function actualizarBarraFlotante(names) {
-  nombresComparando = names || [];
-  const bar = document.getElementById('barEquiposFlotante');
-  if (!nombresComparando.length) { bar.hidden = true; bar.innerHTML = ''; return; }
-  bar.innerHTML = nombresComparando.map((n, i) =>
-    `<span class="bef-item" id="befItem${i}">${nombreConEtiqueta(n)}</span>`).join('');
-  sincronizarBarraFlotante();
-}
-
-function sincronizarBarraFlotante() {
-  const bar = document.getElementById('barEquiposFlotante');
-  const thead = document.querySelector('.cmp-table thead');
-  const tabla = document.querySelector('.cmp-table');
-  if (!bar || !thead || !tabla || !nombresComparando.length) { if (bar) bar.hidden = true; return; }
-
-  const headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 64;
-  const theadRect = thead.getBoundingClientRect();
-  const tablaRect = tabla.getBoundingClientRect();
-
-  // Mostrar solo si: el encabezado real ya se salió por arriba (su borde
-  // inferior quedó por encima de donde terminaría el header del sitio) Y la
-  // tabla todavía no terminó de pasar (su borde inferior sigue por debajo).
-  const debeMostrar = theadRect.bottom <= headerH && tablaRect.bottom > headerH + 20;
-  bar.hidden = !debeMostrar;
-  if (!debeMostrar) return;
-
-  // Alinear cada nombre EXACTAMENTE con la posición y el ancho reales de su
-  // columna en la tabla (medidos en vivo), en vez de solo centrar el grupo
-  // -- así no se ve "desalineado" respecto a las filas de especificaciones.
-  [0, 1, 2].forEach(i => {
-    const th = document.getElementById(`h${i + 1}`);
-    const item = document.getElementById(`befItem${i}`);
-    if (!th || !item) return;
-    const r = th.getBoundingClientRect();
-    if (r.width <= 0) { item.style.display = 'none'; return; }
-    item.style.display = '';
-    item.style.left = Math.round(r.left) + 'px';
-    item.style.width = Math.round(r.width) + 'px';
-  });
-}
-
-let tickBarraFlotante = false;
-function onScrollBarraFlotante() {
-  if (tickBarraFlotante) return;
-  tickBarraFlotante = true;
-  requestAnimationFrame(() => { sincronizarBarraFlotante(); tickBarraFlotante = false; });
-}
-window.addEventListener('scroll', onScrollBarraFlotante, { passive: true });
-window.addEventListener('resize', onScrollBarraFlotante);
-// El scroll horizontal de la tabla (en pantallas angostas) pasa por el
-// contenedor con overflow-x, no por la ventana -- hay que escucharlo aparte
-// para que la barra no se desalinee al desplazarte de lado.
-document.addEventListener('scroll', e => {
-  if (e.target instanceof Element && e.target.closest && e.target.closest('.cmp-table')) onScrollBarraFlotante();
-}, { passive: true, capture: true });
 </script>
 
 <footer style="text-align:center;padding:18px 10px;opacity:.6;font-size:.85rem;font-family:'Syne',sans-serif">
