@@ -262,34 +262,38 @@
        subes y el encabezado real vuelve a verse). No usamos position:sticky
        en el <thead> porque el contenedor con scroll horizontal (overflow-x)
        rompe el sticky vertical en varios navegadores. */
+    /* La barra es una franja fija de ancho completo; cada nombre (.bef-item)
+       se posiciona por JS con la misma coordenada X y el mismo ancho que su
+       columna real en la tabla (medida en vivo con getBoundingClientRect),
+       así queda alineado con su columna en vez de aparecer centrado como
+       grupo -- que es lo que se veía "desalineado". */
     .bar-equipos-flotante {
       position: fixed;
       top: var(--header-h);
       left: 0; right: 0;
+      height: 42px;
       z-index: 35;
       background: #fff;
       border-bottom: 1px solid var(--border);
       box-shadow: 0 4px 10px rgba(0,0,0,.06);
-      padding: 8px 16px;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      transition: opacity .12s ease;
     }
     .bar-equipos-flotante[hidden] { display: none; }
     .bef-item {
-      padding: 4px 12px;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 4px 10px;
       background: var(--indigo-pale);
       color: var(--indigo);
       border-radius: 8px;
       font-family: 'Syne', sans-serif;
       font-weight: 700;
       font-size: 12px;
+      text-align: center;
       white-space: nowrap;
-      max-width: 32vw;
       overflow: hidden;
       text-overflow: ellipsis;
+      box-sizing: border-box;
     }
     .spec-label {
       cursor: pointer;
@@ -2901,6 +2905,21 @@ async function leerHoja(clave) {
   }
 }
 
+/** Igual que leerHoja, pero con un reintento tras una pausa corta. Se usa
+ * para las pestañas opcionales (DESCONTINUADOS, VIGENTES, SKU): como se
+ * piden varias pestañas seguidas apenas carga la página, a veces gviz
+ * devuelve un error pasajero (no porque la pestaña no exista) -- sin esto,
+ * el error se traga en silencio (la pestaña "no existía") y esos datos
+ * simplemente no aparecen, sin aviso. */
+async function leerHojaConReintento(clave, espera = 500) {
+  try {
+    return await leerHoja(clave);
+  } catch (err) {
+    await new Promise(r => setTimeout(r, espera));
+    return await leerHoja(clave);
+  }
+}
+
 /** Ubica la fila de encabezado que contiene una etiqueta y la columna donde está. */
 function ubicarEncabezado(A, etiqueta) {
   const objetivo = norm(etiqueta);
@@ -3069,7 +3088,7 @@ let DESCONTINUADOS = new Set(DESCONTINUADOS_BASE.map(norm));
 
 async function cargarDescontinuados() {
   try {
-    const A = await leerHoja('descontinuados');
+    const A = await leerHojaConReintento('descontinuados');
     const enc = ubicarEncabezado(A, 'EQUIPO');
     const desde = enc ? enc.fila + 1 : 0;
     const extra = [];
@@ -3098,7 +3117,7 @@ let VIGENTES = new Set(VIGENTES_BASE.map(norm));
 
 async function cargarVigentes() {
   try {
-    const A = await leerHoja('vigentes');
+    const A = await leerHojaConReintento('vigentes');
     const enc = ubicarEncabezado(A, 'EQUIPO');
     const desde = enc ? enc.fila + 1 : 0;
     const extra = [];
@@ -3159,7 +3178,7 @@ function skuDe(nombre) { return SKU_MAP_NORM[norm(nombre)] || null; }
 
 async function cargarSku() {
   try {
-    const A = await leerHoja('sku');
+    const A = await leerHojaConReintento('sku');
     let filaEnc = -1, colEquipo = -1, colSku = -1, colDetalle = -1;
     for (let r = 0; r < Math.min(A.length, 10); r++) {
       const fila = A[r] || [];
@@ -3441,9 +3460,9 @@ function reconstruir(Acar, Aimg) {
 async function cargarDesdeSheet() {
   const [Acar, Aimg] = await Promise.all([leerHoja('caracteristicas'), leerHoja('imagen')]);
   reconstruir(Acar, Aimg);
-  await cargarDescontinuados();
-  await cargarVigentes();
-  await cargarSku();
+  // En paralelo: son independientes entre sí y así el tiempo total de carga
+  // no se acumula uno detrás de otro.
+  await Promise.all([cargarDescontinuados(), cargarVigentes(), cargarSku()]);
 
   let nPrecios = 0, avisoPrecios = '';
   try {
@@ -3719,8 +3738,8 @@ function actualizarBarraFlotante(names) {
   nombresComparando = names || [];
   const bar = document.getElementById('barEquiposFlotante');
   if (!nombresComparando.length) { bar.hidden = true; bar.innerHTML = ''; return; }
-  bar.innerHTML = nombresComparando.map(n =>
-    `<span class="bef-item">${nombreConEtiqueta(n)}</span>`).join('');
+  bar.innerHTML = nombresComparando.map((n, i) =>
+    `<span class="bef-item" id="befItem${i}">${nombreConEtiqueta(n)}</span>`).join('');
   sincronizarBarraFlotante();
 }
 
@@ -3739,6 +3758,21 @@ function sincronizarBarraFlotante() {
   // tabla todavía no terminó de pasar (su borde inferior sigue por debajo).
   const debeMostrar = theadRect.bottom <= headerH && tablaRect.bottom > headerH + 20;
   bar.hidden = !debeMostrar;
+  if (!debeMostrar) return;
+
+  // Alinear cada nombre EXACTAMENTE con la posición y el ancho reales de su
+  // columna en la tabla (medidos en vivo), en vez de solo centrar el grupo
+  // -- así no se ve "desalineado" respecto a las filas de especificaciones.
+  [0, 1, 2].forEach(i => {
+    const th = document.getElementById(`h${i + 1}`);
+    const item = document.getElementById(`befItem${i}`);
+    if (!th || !item) return;
+    const r = th.getBoundingClientRect();
+    if (r.width <= 0) { item.style.display = 'none'; return; }
+    item.style.display = '';
+    item.style.left = Math.round(r.left) + 'px';
+    item.style.width = Math.round(r.width) + 'px';
+  });
 }
 
 let tickBarraFlotante = false;
@@ -3749,6 +3783,12 @@ function onScrollBarraFlotante() {
 }
 window.addEventListener('scroll', onScrollBarraFlotante, { passive: true });
 window.addEventListener('resize', onScrollBarraFlotante);
+// El scroll horizontal de la tabla (en pantallas angostas) pasa por el
+// contenedor con overflow-x, no por la ventana -- hay que escucharlo aparte
+// para que la barra no se desalinee al desplazarte de lado.
+document.addEventListener('scroll', e => {
+  if (e.target instanceof Element && e.target.closest && e.target.closest('.cmp-table')) onScrollBarraFlotante();
+}, { passive: true, capture: true });
 </script>
 
 <footer style="text-align:center;padding:18px 10px;opacity:.6;font-size:.85rem;font-family:'Syne',sans-serif">
