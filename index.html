@@ -3445,7 +3445,7 @@ function engancharControlesComerciales() {
 // ─────────────────────────────────────────
 // CARGA PRINCIPAL
 // ─────────────────────────────────────────
-const CACHE_KEY = 'comparity_sheet_v11';
+const CACHE_KEY = 'comparity_sheet_v12';
 
 const guardarCache = p => { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), ...p })); } catch {} };
 const leerCache = () => { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch { return null; } };
