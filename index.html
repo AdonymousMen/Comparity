@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- COMPARITY CORREGIDO 2026-09-13 · IP/RAM/PANTALLA · SIN TEXTO "SAMSUNG 10M" -->
-  <meta name="comparity-build" content="2026-09-13-ip-ram-pantalla-corregido" />
+  <!-- COMPARITY V2 2026-09-13 · CARGA COMERCIAL + IP/RAM/PANTALLA CORREGIDOS -->
+  <meta name="comparity-build" content="2026-09-13-v2-carga-comercial" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -2562,19 +2562,27 @@ function mostrarExplicacionCargaEspecifica(valor, nombreCelular, inalambrica = f
   }
 
   const info = inalambrica
-    ? (w >= 50 ? { color:'#7c3aed', emoji:'🏆', label:`${w}W inalámbrica — Alta potencia`, nota:`${w}W es una potencia inalámbrica alta. Para alcanzarla se necesita una base, adaptador y condiciones compatibles con el estándar o sistema indicado por la marca.`, tags:['✔ Alta potencia sin cable','ℹ Requiere accesorios compatibles'] }
-     : w >= 15 ? { color:'#4f46e5', emoji:'🚀', label:`${w}W inalámbrica — Cómoda`, nota:`${w}W permite cargar apoyando el equipo sobre una base compatible. La velocidad real depende de la alineación, la temperatura, la base y el protocolo; el cable suele ofrecer mayor eficiencia.`, tags:['✔ Cómoda para escritorio o mesa de noche','ℹ Depende de la base y la alineación'] }
-     : { color:'#0ea5e9', emoji:'🔌', label:`${w}W inalámbrica — Básica`, nota:`${w}W sin cable es una carga lenta, pensada más para mantener el celular cargado mientras no lo usas que para recuperar batería con prisa. Ideal para dejarlo en la base toda la noche.`, tags:['✔ Práctica para cargar de noche','— Muy lenta si tienes apuro'] })
-    : (w >= 100 ? { color:'#7c3aed', emoji:'🏆', label:`${w}W — Potencia muy alta`, nota:`${w}W ofrece un gran potencial para recuperar batería en pausas cortas. La velocidad máxima suele mantenerse solo durante una parte de la carga y requiere cargador, cable y protocolo compatibles.`, tags:['✔ Gran potencial de recuperación','ℹ Requiere accesorios compatibles','ℹ La potencia varía durante la carga'] }
-     : w >= 66 ? { color:'#4f46e5', emoji:'🚀', label:`${w}W — Potencia alta`, nota:`${w}W puede recuperar una parte importante de batería en poco tiempo. El resultado real depende de la capacidad, la temperatura y la curva de carga definida por la marca.`, tags:['✔ Útil para cargas breves','ℹ El tiempo depende del modelo'] }
-     : w >= 33 ? { color:'#0ea5e9', emoji:'✅', label:`${w}W — Carga rápida`, nota:`${w}W ofrece una carga cómoda para el uso diario. La potencia anunciada es el máximo compatible, no una velocidad constante desde 0 hasta 100%.`, tags:['✔ Buen equilibrio para uso diario','ℹ La potencia disminuye según la carga y temperatura'] }
-     : w >= 18 ? { color:'#0ea5e9', emoji:'⚡', label:`${w}W — Carga funcional`, nota:`${w}W cubre bien una rutina de carga planificada. El tiempo total varía según la capacidad de la batería y la gestión térmica del equipo.`, tags:['✔ Adecuada para una rutina diaria','ℹ El tiempo varía por batería y cargador'] }
-     : { color:'#f59e0b', emoji:'🔌', label:`${w}W — Carga básica`, nota:`${w}W prioriza una carga sencilla. Conviene conectarlo con anticipación; el tiempo concreto debe tomarse de la prueba o cifra oficial del modelo.`, tags:['✔ Cumple para carga programada','ℹ Requiere más anticipación'] });
+    ? (w >= 50 ? { color:'#7c3aed', emoji:'🏆', label:`Hasta ${w}W inalámbrica — Muy rápida`, nota:`La marca declara hasta ${w}W sin cable: una propuesta potente y cómoda para recuperar energía con solo apoyar el equipo en una base compatible.`, ritmo:'Recuperación rápida sin conectar cables', uso:'Ideal para escritorio, oficina o mesa de noche', tags:['✔ Alta potencia inalámbrica','✔ Comodidad de apoyar y cargar','ℹ Requiere base y adaptador compatibles'] }
+     : w >= 15 ? { color:'#4f46e5', emoji:'🚀', label:`Hasta ${w}W inalámbrica — Ágil y cómoda`, nota:`La marca declara hasta ${w}W de carga inalámbrica. Es una forma práctica de mantener el teléfono con energía mientras trabajas, descansas o conduces.`, ritmo:'Carga cómoda durante pausas y actividades diarias', uso:'Ideal para tener una base en el escritorio o dormitorio', tags:['✔ Sin conectar y desconectar el cable','✔ Muy práctica durante el día','ℹ La alineación y la base influyen en la velocidad'] }
+     : { color:'#0ea5e9', emoji:'🔌', label:`Hasta ${w}W inalámbrica — Carga cómoda`, nota:`La marca declara hasta ${w}W sin cable. Está pensada para que el teléfono recupere energía mientras permanece apoyado, sin interrumpir tu rutina.`, ritmo:'Recuperación gradual y sin cables', uso:'Ideal para dejarlo cargando mientras trabajas o duermes', tags:['✔ Comodidad por encima de la prisa','✔ Útil para mantener la batería durante el día'] })
+    : (w >= 100 ? { color:'#7c3aed', emoji:'🏆', label:`Hasta ${w}W — Carga ultrarrápida`, nota:`La marca declara una potencia máxima de ${w}W. Es una ventaja pensada para quien tiene poco tiempo: una pausa breve puede devolver una cantidad importante de energía y ayudarte a continuar el día.`, ritmo:'Recuperación exprés en pausas cortas', uso:'Ideal para jornadas intensas y personas que olvidan cargar de noche', tags:['✔ Potencia sobresaliente','✔ Gran recuperación en pocos minutos','ℹ Usa cargador y cable compatibles'] }
+     : w >= 66 ? { color:'#4f46e5', emoji:'🚀', label:`Hasta ${w}W — Carga muy rápida`, nota:`La marca declara hasta ${w}W. Puedes aprovechar una comida, una reunión o el tiempo antes de salir para recuperar una parte importante de la batería.`, ritmo:'Muy buena recuperación durante una pausa', uso:'Ideal para usuarios activos que cargan por momentos', tags:['✔ Menos tiempo conectado','✔ Excelente para cargas breves','ℹ El porcentaje exacto depende del modelo'] }
+     : w >= 33 ? { color:'#0ea5e9', emoji:'✅', label:`Hasta ${w}W — Carga rápida`, nota:`La marca declara hasta ${w}W. Ofrece un ritmo cómodo para el día a día: conectarlo mientras te preparas, almuerzas o descansas puede darte un buen impulso de batería.`, ritmo:'Recuperación cómoda en pausas cotidianas', uso:'Ideal para una rutina diaria sin largas esperas', tags:['✔ Buen equilibrio de velocidad','✔ Práctica para el uso diario','ℹ La potencia máxima varía durante la carga'] }
+     : w >= 18 ? { color:'#0ea5e9', emoji:'⚡', label:`Hasta ${w}W — Carga estándar`, nota:`La marca declara hasta ${w}W. Cumple bien para mantener el equipo listo si acostumbras cargarlo con anticipación, durante el trabajo o al finalizar el día.`, ritmo:'Carga progresiva para una rutina planificada', uso:'Ideal para cargar mientras trabajas o descansas', tags:['✔ Cumple bien en una rutina organizada','✔ Fácil de aprovechar durante tiempos largos'] }
+     : { color:'#f59e0b', emoji:'🔌', label:`Hasta ${w}W — Carga básica`, nota:`La marca declara hasta ${w}W. Está orientada a una carga tranquila y constante; funciona bien para quienes suelen dejar el equipo conectado durante la noche o mientras realizan otras actividades.`, ritmo:'Carga gradual', uso:'Ideal para usuarios que cargan con anticipación', tags:['✔ Sencilla y funcional','✔ Adecuada para carga nocturna'] });
 
-  const bloqueTiempo = `<div class="bg-slate-50 rounded-xl p-4 mb-4 border-l-4" style="border-color:${info.color}"><p class="text-sm text-slate-700"><strong>⏱️ Sobre el tiempo de carga:</strong> no se calcula solo con mAh y W. La curva cambia según el porcentaje, la temperatura, el cargador, el cable y el protocolo. Cuando la marca publique un tiempo oficial para este modelo, esa será la referencia adecuada.</p></div>`;
+  const bloqueTiempo = `
+  <div class="rounded-xl p-4 mb-4 border" style="background:${info.color}0d;border-color:${info.color}33">
+    <p class="text-xs font-bold uppercase tracking-wide mb-2" style="color:${info.color}">⚡ Referencia de velocidad</p>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div class="bg-white rounded-lg p-3 border border-slate-200"><p class="text-xs text-slate-500">Ritmo de carga</p><p class="text-sm font-semibold text-slate-800 mt-1">${info.ritmo}</p></div>
+      <div class="bg-white rounded-lg p-3 border border-slate-200"><p class="text-xs text-slate-500">¿Para quién conviene?</p><p class="text-sm font-semibold text-slate-800 mt-1">${info.uso}</p></div>
+    </div>
+    <p class="text-xs text-slate-500 mt-3">La potencia indicada es el máximo declarado. Si la marca publica “X% en X minutos” para este modelo, esa cifra oficial es la referencia exacta; puede requerir cargador y cable específicos.</p>
+  </div>`;
 
   const html = `
-  <p class="mb-4">Este equipo carga a <strong style="color:var(--indigo)">${w}W</strong>${inalambrica ? ' de forma inalámbrica' : ' con cable'}. Te explicamos qué significa en el día a día:</p>
+  <p class="mb-4">Este equipo admite <strong style="color:var(--indigo)">hasta ${w}W</strong>${inalambrica ? ' de carga inalámbrica' : ' de carga por cable'}. Más que una cifra, esta potencia te indica cuánto puede ayudarte una pausa de carga durante el día:</p>
   <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
     <div class="px-4 py-3 flex items-center gap-3" style="background:${info.color}">
       <span class="text-2xl">${info.emoji}</span>
@@ -2591,9 +2599,9 @@ function mostrarExplicacionCargaEspecifica(valor, nombreCelular, inalambrica = f
     </div>
   </div>
   ${bloqueTiempo}
-  <div class="bg-indigo-50 p-4 rounded-xl"><p class="text-sm text-indigo-900"><strong>💡 Tip:</strong> ${inalambrica
-    ? 'La carga inalámbrica prioriza comodidad y puede generar más calor que el cable. Usa una base compatible y bien alineada; cuando tengas prisa, normalmente el cable será la opción más rápida.'
-    : 'Para que la batería dure más años, evita cargarla al máximo de velocidad todos los días si no lo necesitas. Muchos equipos traen un modo de "carga optimizada" que conviene dejar activado.'}</p></div>`;
+  <div class="bg-indigo-50 p-4 rounded-xl"><p class="text-sm text-indigo-900"><strong>💡 Para recomendar:</strong> ${inalambrica
+    ? 'Véndela como comodidad: el cliente llega, apoya el teléfono y sigue con su rutina. Para alcanzar la potencia anunciada debe usar una base compatible y colocar bien el equipo.'
+    : 'Véndela como tiempo recuperado: mientras más alta sea la potencia compatible, menos necesita organizar su día alrededor del cargador. La carga optimizada puede mantenerse activa para cuidar la batería.'}</p></div>`;
 
   tituloEl.innerHTML = `${inalambrica ? '🔌 Carga Inalámbrica' : '⚡ Carga Rápida'}: ${w}W`;
   contenidoEl.innerHTML = html;
