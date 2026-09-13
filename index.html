@@ -733,7 +733,7 @@
     .visual-toggle-action { color:var(--indigo); font-size:11px; font-weight:800; white-space:nowrap; }
     details[open] .visual-toggle-action { font-size:0; }
     details[open] .visual-toggle-action::after { content:'Cerrar vista 3D −'; font-size:11px; }
-    #visualSection #cards3D { margin-top:12px; }
+    #visualSection #cards3D { margin-top:0; }
     .phone-card { border-radius:18px; box-shadow:0 10px 28px rgba(30,41,59,.07); padding:9px; }
     .phone-card-title { padding:6px 7px 3px; min-height:34px; display:flex; align-items:center; justify-content:center; }
     .viewer-shell { height:340px; border:1px solid #eef1f6; background:linear-gradient(180deg,#fff,#f8fafc); }
@@ -872,7 +872,6 @@
   <!-- Selección de equipos -->
   <section id="compareStudio" class="compare-studio">
     <div class="filter-drawer" style="margin-top:0">
-      <div class="filter-title"><span>⌁</span> Filtros rápidos del catálogo</div>
       <div class="flex flex-wrap items-end gap-3">
       <div>
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Precio mín.</label>
@@ -940,9 +939,6 @@
 
   <!-- Visores 3D -->
   <section id="visualSection" class="hidden">
-    <div class="visual-toggle" style="cursor:default">
-      <div><div class="section-kicker">Exploración visual</div><div class="font-bold text-sm mt-0.5">Conoce los equipos desde todos los ángulos</div></div>
-    </div>
     <div id="cards3D" class="grid sm:grid-cols-3 gap-5"></div>
   </section>
 
