@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- COMPARITY V11.1 2026-09-13 · EXPERIENCIA ASESOR + CLIENTE -->
-  <meta name="comparity-build" content="2026-09-13-v11.1-experiencia-hibrida" />
+  <!-- COMPARITY V11.2 2026-09-13 · PUNTAJE EXPLICADO -->
+  <meta name="comparity-build" content="2026-09-13-v11.2-puntaje-explicado" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -450,6 +450,17 @@
     .duel-track { display: block; width: 100%; height: 7px; border-radius: 99px; background: var(--paper-2); overflow: hidden; margin-top: 10px; }
     .duel-fill { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--brand-2), var(--brand)); width: 0; transition: width .9s var(--ease); }
     .duel-card.is-top .duel-fill { background: linear-gradient(90deg, #2FB98A, var(--win)); }
+    .score-breakdown { margin-top:14px; border-top:1px solid var(--line); padding-top:11px; }
+    .score-breakdown summary { display:flex; align-items:center; gap:7px; color:var(--brand); cursor:pointer; list-style:none; font-size:12.5px; font-weight:700; }
+    .score-breakdown summary::-webkit-details-marker { display:none; }
+    .score-breakdown summary::after { content:'+'; margin-left:auto; font-size:16px; line-height:1; }
+    .score-breakdown[open] summary::after { content:'−'; }
+    .breakdown-list { display:grid; gap:7px; margin-top:11px; }
+    .breakdown-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:9px; padding:7px 8px; border-radius:8px; background:var(--card); }
+    .breakdown-label { display:flex; align-items:center; gap:6px; min-width:0; color:var(--ink-2); font-size:11.5px; font-weight:600; }
+    .breakdown-label .i { color:var(--brand); }
+    .breakdown-points { color:var(--brand-deep); font-size:11.5px; font-weight:800; font-variant-numeric:tabular-nums; }
+    .breakdown-value { grid-column:1 / 3; color:var(--ink-3); font-size:10.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
     /* ── Quién gana qué ── */
     .category-versus { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; margin-top: 20px; }
@@ -1084,7 +1095,7 @@
       <span class="profile-question">El cliente prioriza:</span>
       <button type="button" class="profile-btn active" data-profile="equilibrado">Equilibrio</button>
       <button type="button" class="profile-btn" data-profile="camara">Cámara</button>
-      <button type="button" class="profile-btn" data-profile="rendimiento">Rendimiento</button>
+      <button type="button" class="profile-btn" data-profile="rendimiento" title="Considera procesador, RAM física y almacenamiento">Rendimiento</button>
       <button type="button" class="profile-btn" data-profile="bateria">Batería</button>
       <button type="button" class="profile-btn" data-profile="precio">Precio</button>
     </div>
@@ -1100,7 +1111,7 @@
 
     <p class="advice-note">
       <svg class="i" aria-hidden="true"><use href="#i-info"/></svg>
-      <span>El puntaje cambia según la prioridad elegida y sirve para orientar la conversación. Confirma siempre presupuesto, disponibilidad y preferencia personal.</span>
+      <span>Abre “Ver cómo se forma el puntaje” para revisar el aporte de cada criterio. Un dato no publicado se trata de forma neutral, no como una característica inferior.</span>
     </p>
   </section>
 
@@ -3284,7 +3295,7 @@ function mostrarExplicacionNfcEspecifica(valor, nombreCelular) {
 const PERFILES_VENTA = {
   equilibrado: { label:'equilibrio general', pesos:{ cpu:.25, cam:.18, screen:.10, ram:.12, storage:.07, battery:.12, resist:.06, bt:.04, price:.06 } },
   camara:      { label:'fotografía y video', pesos:{ cpu:.18, cam:.32, screen:.12, ram:.08, storage:.07, battery:.08, resist:.05, bt:.03, price:.07 } },
-  rendimiento: { label:'rendimiento',        pesos:{ cpu:.37, cam:.07, screen:.10, ram:.18, storage:.14, battery:.06, resist:.03, bt:.02, price:.03 } },
+  rendimiento: { label:'rendimiento integral —procesador, RAM y almacenamiento—', pesos:{ cpu:.37, cam:.07, screen:.10, ram:.18, storage:.14, battery:.06, resist:.03, bt:.02, price:.03 } },
   bateria:     { label:'batería y resistencia', pesos:{ cpu:.15, cam:.08, screen:.08, ram:.08, storage:.06, battery:.32, resist:.12, bt:.03, price:.08 } },
   precio:      { label:'precio',             pesos:{ cpu:.17, cam:.13, screen:.08, ram:.10, storage:.06, battery:.09, resist:.04, bt:.03, price:.30 } }
 };
@@ -3303,15 +3314,49 @@ function priceNum(s) { const z = ('' + (s || '')).replace(/[^\d.]/g,''); const v
 function waterScore(v) { const s = String(v||'').toUpperCase(); if (s.includes('IP69')) return 1; if (s.includes('IP68')) return .95; if (s.includes('IP67')) return .9; if (s.includes('IP66')) return .85; if (s.includes('IP65')) return .8; if (s.includes('IP54')) return .55; if (s.includes('IP')) return .5; return .3; }
 function btVer(v) { const m = String(v||'').match(/(\d(?:\.\d)?)/); return m ? parseFloat(m[1]) : 0; }
 
+function storageScore(v) {
+  const txt = String(v || '');
+  const gb = numFromText(txt) || 0;
+  const capacidad = gb >= 1024 ? 1 : gb >= 512 ? .9 : gb >= 256 ? .75 : gb >= 128 ? .58 : gb >= 64 ? .42 : .3;
+  // Si la ficha no publica la tecnología, usamos un valor neutral: ausencia de dato no significa almacenamiento lento.
+  const tecnologia = /UFS\s*4\.[01]/i.test(txt) ? 1
+    : /UFS\s*3\.[01]/i.test(txt) ? .93
+    : /UFS\s*2\.2/i.test(txt) ? .84
+    : /UFS\s*2\.1/i.test(txt) ? .76
+    : /NVMe/i.test(txt) ? .95
+    : /eMMC/i.test(txt) ? .55
+    : /UFS/i.test(txt) ? .78
+    : .75;
+  return clamp01(.6 * capacidad + .4 * tecnologia);
+}
+
+function cameraScore(p) {
+  const mpx = [...String(p.camSistema || '').matchAll(/(\d+(?:[.,]\d+)?)\s*(?:MPX|MP)\b/gi)]
+    .map(m => parseFloat(m[1].replace(',','.'))).filter(Number.isFinite);
+  const principal = clamp01((mpx[0] || 0) / 200);
+  const secundaria = clamp01(Math.max(0, ...mpx.slice(1)) / 50);
+  const frontal = clamp01((numFromText(p.camFrontal) || 0) / 50);
+  const videoTxt = String(p.video || '').toUpperCase();
+  const video = /8K/.test(videoTxt) ? 1 : /4K/.test(videoTxt) ? .85 : /1080/.test(videoTxt) ? .6 : .4;
+  return clamp01(.35*principal + .15*secundaria + .15*frontal + .20*(hasOIS(p.ois)?1:0) + .15*video);
+}
+
+function screenScore(p) {
+  const txt = String(p.pantalla || '').toUpperCase();
+  const rate = hz(p.refresco) || 60;
+  const fluidez = rate >= 144 ? 1 : rate >= 120 ? .95 : rate >= 90 ? .78 : .55;
+  const panel = /LTPO/.test(txt) ? 1 : /AMOLED|OLED/.test(txt) ? .94 : /MINI\s*LED/.test(txt) ? .9 : /IPS/.test(txt) ? .72 : /LCD/.test(txt) ? .64 : .7;
+  const resolucion = /QHD|2K/.test(txt) ? 1 : /FHD/.test(txt) ? .86 : /HD/.test(txt) ? .58 : .72;
+  return clamp01(.45*fluidez + .35*panel + .20*resolucion);
+}
+
 function rawScore(p, W = perfilVenta().pesos) {
   const scores = {
     cpu: .7*(parseAnTuTu(p.antutu)||0)/1250000 + .3*(nm(p.procesador)?(14-Math.min(nm(p.procesador),14))/10:.5),
-    cam: .4*(numFromText(p.camSistema)||0)/200 + .2*(numFromText(p.camFrontal)||0)/32 + .4*(hasOIS(p.ois)?1:0),
-    screen: (hz(p.refresco)||60)>=120?1:(hz(p.refresco)||60)>=90?.75:.5,
+    cam: cameraScore(p),
+    screen: screenScore(p),
     ram: Math.max(0,Math.min(1,((numFromText(p.ram)||0)-2)/10)),
-    storage: /UFS/i.test(String(p.rom||''))
-      ? (/4\.[01]/i.test(p.rom)?1:/3\.[01]/i.test(p.rom)?.93:/2\.2/i.test(p.rom)?.84:/2\.1/i.test(p.rom)?.76:.7)
-      : (/NVMe/i.test(String(p.rom||''))?.95:/eMMC/i.test(String(p.rom||''))?.55:.65),
+    storage: storageScore(p.rom),
     battery: .65*Math.max(0,Math.min(1,((numFromText(p.bateria)||0)-4500)/2200))+.35*Math.max(0,Math.min(1,(numFromText(p.carga)||0)/66)),
     resist: waterScore(p.resistencia),
     bt: (v=>v>=5.4?1:v>=5.3?.9:v>=5.1?.75:v>=5.0?.7:.6)(btVer(p.bt)),
@@ -3319,6 +3364,35 @@ function rawScore(p, W = perfilVenta().pesos) {
   };
   Object.keys(scores).forEach(k => { scores[k] = clamp01(scores[k]); });
   return { total: Object.keys(W).reduce((a,k)=>a+W[k]*scores[k],0), parts: scores };
+}
+
+const SCORE_META = {
+  cpu:     { label:'Procesador',   icon:'cpu',     valor:p => `${p.procesador || 'No declarado'}${p.antutu ? ` · ${p.antutu} AnTuTu` : ''}` },
+  cam:     { label:'Cámaras',      icon:'camera',  valor:p => `${p.camSistema || 'No declarado'}${p.ois ? ` · OIS ${p.ois}` : ''}` },
+  screen:  { label:'Pantalla',     icon:'phone',   valor:p => `${p.pantalla || 'No declarada'}${p.refresco ? ` · ${p.refresco}` : ''}` },
+  ram:     { label:'RAM física',   icon:'memory',  valor:p => p.ram || 'No declarada' },
+  storage: { label:'Almacenamiento',icon:'drive',  valor:p => p.rom || 'No declarado' },
+  battery: { label:'Batería',      icon:'battery', valor:p => `${p.bateria || 'No declarada'}${p.carga ? ` · ${p.carga}` : ''}` },
+  resist:  { label:'Resistencia',  icon:'droplet', valor:p => p.resistencia || 'No declarada' },
+  bt:      { label:'Bluetooth',    icon:'wave',    valor:p => p.bt || 'No declarado' },
+  price:   { label:'Precio',       icon:'price',   valor:p => precioEfectivo(p) != null ? money(precioEfectivo(p)) : 'No publicado' }
+};
+
+function weightedParts(parts, W) {
+  return Object.fromEntries(Object.keys(W).map(k => [k, clamp01(parts[k]) * W[k] * 100]));
+}
+
+function breakdownHtml(r, W) {
+  return Object.keys(W)
+    .sort((a,b) => r.weighted[b] - r.weighted[a])
+    .map(k => {
+      const meta = SCORE_META[k];
+      return `<div class="breakdown-row">
+        <span class="breakdown-label">${svgIcon(meta.icon)}${meta.label}</span>
+        <span class="breakdown-points">+${r.weighted[k].toFixed(1)} pts</span>
+        <span class="breakdown-value" title="${escapeHtml(meta.valor(r.p))}">${escapeHtml(meta.valor(r.p))} · peso ${Math.round(W[k]*100)}%</span>
+      </div>`;
+    }).join('');
 }
 
 const gama = price => price<=599?'0-599':price<=899?'600-899':price<=1299?'900-1299':price<=1599?'1300-1599':price<=1999?'1600-1999':'2000+';
@@ -3334,38 +3408,56 @@ function runRecommender(names) {
   const W = perfil.pesos;
   const scored = chosen.map(p => {
     const { total, parts } = rawScore(p, W);
-    return { name: p.nombre, p, parts, score: Math.round(clamp01(total) * 100), price: precioEfectivo(p)||0 };
-  }).sort((a,b) => b.score - a.score);
+    return { name: p.nombre, p, parts, total, weighted:weightedParts(parts, W), score:Number((clamp01(total) * 100).toFixed(1)), price:precioEfectivo(p)||0 };
+  }).sort((a,b) => b.total - a.total);
   const top = scored[0];
-  document.getElementById('winnerText').innerHTML = scored.length > 1
-    ? `Si lo que más pesa es <strong>${escapeHtml(perfil.label)}</strong>, <strong>${escapeHtml(top.name)}</strong> es el que mejor encaja de los que están sobre la mesa.`
-    : `<strong>${escapeHtml(top.name)}</strong>, medido contra el criterio de <strong>${escapeHtml(perfil.label)}</strong>.`;
-  const avg = k => scored.slice(1).reduce((s,r)=>s+r.parts[k],0)/Math.max(1,scored.length-1);
+  const runner = scored[1];
+  const brecha = Math.max(0, (top.total - runner.total) * 100);
+  const empateTecnico = brecha < 1.5;
+  document.getElementById('winnerText').innerHTML = empateTecnico
+    ? `El resultado está <strong>muy parejo</strong> para ${escapeHtml(perfil.label)}. <strong>${escapeHtml(top.name)}</strong> queda ligeramente arriba con ${top.score} frente a ${runner.score}, una diferencia de solo ${brecha.toFixed(1)} puntos.`
+    : `Para ${escapeHtml(perfil.label)}, <strong>${escapeHtml(top.name)}</strong> obtiene ${top.score} puntos frente a ${runner.score} de <strong>${escapeHtml(runner.name)}</strong>. La ventaja es de ${brecha.toFixed(1)} puntos y se explica así:`;
+
+  const deltas = Object.keys(W).map(k => ({
+    key:k,
+    delta:top.weighted[k] - runner.weighted[k],
+    meta:SCORE_META[k]
+  }));
+  const favor = deltas.filter(x => x.delta > .25).sort((a,b) => b.delta - a.delta);
+  const contra = deltas.filter(x => x.delta < -.25).sort((a,b) => a.delta - b.delta);
   const reasons = [];
-  if (top.parts.price>=.7) reasons.push(['price','Mantiene una relación atractiva entre lo que cuesta y lo que entrega.']);
-  if (top.parts.resist>avg('resist')+.05) reasons.push(['droplet','Su protección contra agua y polvo es la más completa del grupo.']);
-  if (top.parts.screen>=.95) reasons.push(['wave','La pantalla va a más cuadros por segundo: se siente más suave al deslizar.']);
-  if (top.parts.cpu>avg('cpu')+.03) reasons.push(['cpu','Tiene más margen para juegos, multitarea y apps pesadas.']);
-  if (top.parts.ram>avg('ram')+.10) reasons.push(['memory','Más memoria real, así que aguanta más apps abiertas sin recargarlas.']);
-  if (top.parts.battery>avg('battery')+.06) reasons.push(['battery','La combinación de batería y velocidad de carga es la mejor aquí.']);
-  if (top.parts.cam>avg('cam')+.05) reasons.push(['camera','Su conjunto de cámaras es el que más destaca entre los elegidos.']);
+  if (PERFIL_VENTA_ACTUAL === 'camara' && Math.abs(top.parts.cam - runner.parts.cam) < .01) {
+    reasons.push(['camera',`En cámaras quedan empatados con los datos comparables del Sheet; la posición final se define por los demás criterios del perfil.`]);
+  }
+  favor.slice(0,3).forEach(x => reasons.push([
+    x.meta.icon,
+    `${x.meta.label} aporta ${x.delta.toFixed(1)} puntos más: ${x.meta.valor(top.p)} frente a ${x.meta.valor(runner.p)}.`
+  ]));
+  if (contra.length) {
+    const c = contra.slice(0,2).map(x => `${x.meta.label.toLowerCase()} (${x.meta.valor(runner.p)})`).join(' y ');
+    reasons.push(['scale',`Aun así, ${runner.name} tiene ventaja en ${c}; el primer lugar no significa que gane en todo.`]);
+  }
   document.getElementById('winnerReasons').innerHTML = reasons.length
-    ? reasons.map(([ic,txt]) => `<li>${svgIcon(ic)}<span>${txt}</span></li>`).join('')
-    : `<li>${svgIcon('scale')}<span>Van muy parejos: la decisión se define por presupuesto y gusto, no por ficha técnica.</span></li>`;
+    ? reasons.map(([ic,txt]) => `<li>${svgIcon(ic)}<span>${escapeHtml(txt)}</span></li>`).join('')
+    : `<li>${svgIcon('scale')}<span>No hay una diferencia técnica suficiente para declarar una ventaja clara. Conviene decidir por presupuesto, diseño y preferencia personal.</span></li>`;
 
   const hayDuelo = scored.length > 1;
   document.getElementById('rankList').innerHTML = scored.map((r, i) => `
     <article class="duel-card${i === 0 && hayDuelo ? ' is-top' : ''}" title="${escapeHtml(r.name)}: ${r.score} de 100">
-      ${i === 0 && hayDuelo ? `<span class="duel-crown">${svgIcon('award')}Mejor encaje</span>` : ''}
+      ${i === 0 && hayDuelo ? `<span class="duel-crown">${svgIcon('award')}${empateTecnico ? 'Ligera ventaja' : 'Mejor encaje'}</span>` : ''}
       <div class="duel-name">${nombreConEtiqueta(r.name)}</div>
       <div class="duel-price">${precioEfectivo(r.p) != null ? 'desde ' + money(precioEfectivo(r.p)) : 'Precio no publicado'}</div>
       <div class="duel-score-row"><span class="duel-score" data-score="${r.score}">0</span><span class="duel-score-max">/ 100</span></div>
       <span class="duel-track"><span class="duel-fill" data-score="${r.score}"></span></span>
+      <details class="score-breakdown">
+        <summary>${svgIcon('chart')}Ver cómo se forma el puntaje</summary>
+        <div class="breakdown-list">${breakdownHtml(r, W)}</div>
+      </details>
     </article>`).join('');
   animarPuntajes();
 
   const categorias = [
-    ['cpu','Potencia','cpu'], ['cam','Cámara','camera'], ['screen','Pantalla','phone'],
+    ['cpu','Procesador','cpu'], ['cam','Cámara','camera'], ['screen','Pantalla','phone'],
     ['battery','Batería','battery'], ['price','Precio','price']
   ];
   document.getElementById('categoryVersus').innerHTML = categorias.map(([key, label, ic]) => {
@@ -4304,11 +4396,12 @@ function animarPuntajes() {
   });
   document.querySelectorAll('#rankList .duel-score').forEach(el => {
     const meta = +el.dataset.score || 0;
-    if (quieto) { el.textContent = meta; return; }
+    if (quieto) { el.textContent = meta.toFixed(1); return; }
     const t0 = performance.now(), dur = 780;
     const paso = ahora => {
       const k = Math.min(1, (ahora - t0) / dur);
-      el.textContent = Math.round(meta * (1 - Math.pow(1 - k, 3)));
+      const actual = meta * (1 - Math.pow(1 - k, 3));
+      el.textContent = k >= 1 ? meta.toFixed(1) : Math.round(actual);
       if (k < 1) requestAnimationFrame(paso);
     };
     requestAnimationFrame(paso);
