@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- COMPARITY V7 2026-09-13 · ACCESO DIRECTO AL COMPARADOR -->
-  <meta name="comparity-build" content="2026-09-13-v7-comparador-directo" />
+  <!-- COMPARITY V8 2026-09-13 · COMPARACIÓN COMERCIAL LIMPIA -->
+  <meta name="comparity-build" content="2026-09-13-v8-comparacion-comercial" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -716,6 +716,10 @@
     .summary-index { font-size:10px; text-transform:uppercase; letter-spacing:.13em; color:#bae6fd; font-weight:800; }
     .summary-name { font-family:'Syne',sans-serif; font-size:17px; line-height:1.18; margin-top:8px; max-width:88%; }
     .summary-price { display:inline-flex; margin-top:12px; padding:5px 9px; border-radius:8px; background:rgba(255,255,255,.13); font-size:12px; font-weight:700; }
+    .summary-meta-row { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-top:11px; }
+    .summary-meta-row .summary-price { margin-top:0; }
+    .summary-sku { border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:5px 9px; background:rgba(255,255,255,.08); color:#e0f2fe; font:600 10px/1.2 monospace; cursor:pointer; transition:background .15s; }
+    .summary-sku:hover { background:rgba(255,255,255,.18); }
     .summary-body { padding:18px; }
     .summary-metrics { display:grid;grid-template-columns:1fr 1fr;gap:9px; }
     .summary-metric { min-height:66px; padding:10px 11px; border-radius:12px; background:#f7f8fb; border:1px solid #edf0f5; }
@@ -743,11 +747,16 @@
     .cmp-standout { background:#ecfdf5!important; box-shadow:inset 0 0 0 1px #a7f3d0; color:#065f46; font-weight:700; }
     .cmp-standout::after { content:' DESTACA'; display:inline-block; margin-left:6px; padding:2px 5px; border-radius:5px; background:#d1fae5; color:#047857; font-size:8px; letter-spacing:.06em; vertical-align:middle; }
 
-    .winner-card { position:relative; border-radius:28px; padding:clamp(24px,4vw,42px)!important; background:radial-gradient(circle at 88% 20%,rgba(34,211,238,.25),transparent 23%),linear-gradient(125deg,#101a35,#293b84 60%,#4338ca); box-shadow:0 25px 60px rgba(37,50,110,.25); }
-    .winner-card::before { content:'VEREDICTO COMERCIAL'; display:inline-flex; padding:6px 10px; border-radius:99px; background:rgba(255,255,255,.12); font-size:9px; font-weight:800; letter-spacing:.13em; color:#bfdbfe; margin-bottom:10px; }
-    #winnerText { font-family:'Syne',sans-serif; font-size:clamp(1.25rem,3vw,2rem); letter-spacing:-.035em; }
+    .winner-card { position:relative; color:var(--text); border-radius:22px; padding:clamp(22px,3vw,32px)!important; background:#fff; border:1px solid var(--border); border-left:5px solid var(--amber); box-shadow:0 16px 40px rgba(30,41,59,.08); }
+    .winner-card::before { content:none; }
+    .advice-heading { display:flex; align-items:center; gap:13px; margin-bottom:16px; }
+    .advice-icon { width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#fff7ed;font-size:20px; }
+    #winnerText { font-family:'DM Sans',sans-serif; color:#26314b; font-size:clamp(1rem,2vw,1.2rem); letter-spacing:0; line-height:1.5; }
     #winnerReasons { display:grid; gap:7px; list-style:none; padding-left:0; }
-    #winnerReasons li { padding:9px 11px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.08); border-radius:10px; }
+    #winnerReasons li { padding:9px 11px; border:1px solid #e7eaf1; background:#f8fafc; color:#475569; border-radius:10px; }
+    .alternative-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; padding:0; list-style:none; }
+    .alternative-list li { padding:7px 10px; border-radius:9px; background:#eef2ff; color:#4338ca; font-size:11px; font-weight:600; }
+    .advice-note { margin-top:14px; padding-top:12px; border-top:1px solid var(--border); color:#7c879d; font-size:10px; line-height:1.45; }
 
     .trust-footer { padding:27px 0 10px; color:#7c879d; font-size:11px; text-align:center; }
     .trust-footer strong { color:#475569; }
@@ -816,13 +825,7 @@
 
   <!-- Selección de equipos -->
   <section id="compareStudio" class="compare-studio">
-    <div>
-      <div class="section-kicker">Arma tu comparación</div>
-      <h2 class="section-title">¿Qué equipos quiere evaluar el cliente?</h2>
-      <p class="section-copy">Puedes comparar uno, dos o tres modelos. Usa los filtros solamente cuando quieras reducir las opciones.</p>
-    </div>
-
-    <div class="filter-drawer">
+    <div class="filter-drawer" style="margin-top:0">
       <div class="filter-title"><span>⌁</span> Filtros rápidos del catálogo</div>
       <div class="flex flex-wrap items-end gap-3">
       <div>
@@ -919,19 +922,18 @@
 
   <!-- Recomendador -->
   <section id="winnerSection" class="winner-card p-6 hidden">
-    <h3 class="text-xl mb-1" style="font-family:'Syne',sans-serif">La recomendación más equilibrada</h3>
-    <p id="winnerText" class="text-lg font-semibold mt-2"></p>
-    <ul id="winnerReasons" class="mt-3 text-sm list-disc pl-5 space-y-0.5 opacity-90"></ul>
-    <div class="mt-4 bg-white/15 rounded-xl p-4 text-sm">
-      <div class="font-semibold mb-2" style="font-family:'Syne',sans-serif">Cómo queda la comparación:</div>
-      <ol id="rankList" class="list-decimal pl-5 space-y-2"></ol>
-      <p class="text-xs mt-3 opacity-75">CPU 25% · Cámara 18% · Pantalla 10% · RAM 12% · Almacenamiento 7% · Batería/Carga 12% · Resistencia 6% · Bluetooth 4% · Precio 6%</p>
+    <div class="advice-heading">
+      <span class="advice-icon">💬</span>
+      <div><div class="section-kicker">Orientación de venta</div><h3 class="text-xl" style="font-family:'Syne',sans-serif">Una recomendación para conversar</h3></div>
     </div>
+    <p id="winnerText" class="text-lg font-semibold mt-2"></p>
+    <ul id="winnerReasons" class="mt-3 text-sm"></ul>
+    <ol id="rankList" class="alternative-list"></ol>
+    <p class="advice-note">Es una orientación basada en los datos comparados. La mejor elección depende de qué valore más el cliente y de la disponibilidad vigente.</p>
   </section>
 
   <footer class="trust-footer">
     <p><strong>COMPARITY</strong> ayuda a interpretar datos; la recomendación final debe considerar necesidades, presupuesto y disponibilidad real.</p>
-    <span class="version-stamp">V7 · comparador-directo · 2026-09-13</span>
   </footer>
 
 </main>
@@ -1513,7 +1515,9 @@ function pintarFilasComerciales(tb, names) {
   tr.style.background = 'var(--indigo-pale)';
   const td = document.createElement('td');
   td.className = 'p-3 font-medium whitespace-nowrap';
-  td.textContent = '💰 Precio del equipo';
+  td.textContent = PRECIOS?.fechaLista
+    ? `💰 Precio según lista del ${PRECIOS.fechaLista} desde`
+    : '💰 Precio según lista desde';
   tr.appendChild(td);
   datos.forEach(d => {
     const c = document.createElement('td');
@@ -1596,7 +1600,12 @@ function renderQuickSummary(names) {
     return;
   }
   grid.innerHTML = phones.map((p, i) => {
-    const precio = money(precioEfectivo(p));
+    const precioTexto = textoPrecioLista(precioEfectivo(p));
+    const variantesSku = typeof skuDe === 'function' ? skuDe(p.nombre) : null;
+    const basesSku = variantesSku?.length ? [...new Set(variantesSku.map(v => v.base))] : [];
+    const skuHtml = basesSku.length
+      ? `<button type="button" class="summary-sku" onclick="mostrarSkuEquipo(decodeURIComponent('${encodeURIComponent(p.nombre)}'))" title="Ver variantes y colores">SKU · ${escapeHtml(basesSku[0])}${variantesSku.length > 1 ? ` · ${variantesSku.length} colores` : ''}</button>`
+      : '';
     const metrics = [
       ['Pantalla', p.pantalla], ['Rendimiento', p.procesador],
       ['RAM', p.ram], ['Almacenamiento', p.rom],
@@ -1606,7 +1615,7 @@ function renderQuickSummary(names) {
       <div class="summary-top">
         <div class="summary-index">Opción ${i + 1}</div>
         <h3 class="summary-name">${nombreConEtiqueta(p.nombre)}</h3>
-        <span class="summary-price">${precio ? `Precio referencial: ${precio}` : 'Precio no publicado'}</span>
+        <div class="summary-meta-row"><span class="summary-price">${precioTexto}</span>${skuHtml}</div>
       </div>
       <div class="summary-body">
         <div class="summary-metrics">${metrics.map(([label,value]) => `<div class="summary-metric" title="${escapeHtml(String(value || 'No publicado'))}"><div class="summary-metric-label">${label}</div><div class="summary-metric-value">${escapeHtml(compactSpec(value))}</div></div>`).join('')}</div>
@@ -1644,6 +1653,13 @@ function renderTable() {
   actualizarBarraFlotante(names);
   const tb = document.getElementById('tbody');
   tb.innerHTML = '';
+  const hayInfoComercial = names.some(n => precioEfectivo(byName(n) || {}) != null || skuDe(n));
+  if (hayInfoComercial) {
+    const groupRow = document.createElement('tr');
+    groupRow.className = 'spec-group-row';
+    groupRow.innerHTML = '<td colspan="4">Información comercial</td>';
+    tb.appendChild(groupRow);
+  }
   pintarFilasComerciales(tb, names);
   pintarFilaSKU(tb, names);
 
@@ -3104,7 +3120,7 @@ const gama = price => price<=599?'0-599':price<=899?'600-899':price<=1299?'900-1
 
 function runRecommender(names) {
   const sec = document.getElementById('winnerSection');
-  if (!names.length) { sec.classList.add('hidden'); return; }
+  if (names.length < 2) { sec.classList.add('hidden'); return; }
   const chosen = names.map(byName).filter(Boolean);
   const bands = new Set(chosen.map(x => gama(precioEfectivo(x)||0)));
   const bonus = bands.size === 1 ? 0.02 : 0;
@@ -3113,27 +3129,21 @@ function runRecommender(names) {
     return { name: p.nombre, p, parts, score: total + bonus, bonus, price: precioEfectivo(p)||0 };
   }).sort((a,b) => b.score - a.score);
   const top = scored[0];
-  document.getElementById('winnerText').textContent = `Recomendación sugerida: ${top.name}${top.bonus>0?' · comparación en la misma gama':''}`;
+  document.getElementById('winnerText').textContent = `Entre los modelos seleccionados, ${top.name} aparece como la alternativa más equilibrada para iniciar la conversación con el cliente.`;
   const avg = k => scored.slice(1).reduce((s,r)=>s+r.parts[k],0)/Math.max(1,scored.length-1);
   const reasons = [];
-  if (top.parts.price>=.7) reasons.push(`💰 Mejor relación precio (${money(precioEfectivo(top.p)) || 's/d'})`);
-  if (top.parts.resist>avg('resist')+.05) reasons.push(`💧 Mejor resistencia IP`);
-  if (top.parts.screen>=.95) reasons.push(`📱 Pantalla muy fluida (120 Hz)`);
-  if (top.parts.cpu>avg('cpu')+.03) reasons.push(`⚡ CPU/AnTuTu superior`);
-  if (top.parts.ram>avg('ram')+.10) reasons.push(`🧠 Más RAM utilizable`);
-  if (top.parts.battery>avg('battery')+.06) reasons.push(`🔋 Mayor autonomía/carga rápida`);
-  if (top.parts.cam>avg('cam')+.05) reasons.push(`📸 Mejor cámara/frontal u OIS`);
-  document.getElementById('winnerReasons').innerHTML = reasons.map(r=>`<li>${r}</li>`).join('')||'<li>✨ Equilibrio general</li>';
-  const pct = x => (x*100).toFixed(1);
-  document.getElementById('rankList').innerHTML = scored.map(r=>`
-    <li>
-      <span class="font-semibold">${escapeHtml(r.name)}</span> — <span class="mono text-white/90">${pct(r.score)}</span>
-      <div class="text-xs opacity-75 mt-0.5">
-        CPU ${pct(r.parts.cpu*W.cpu)} · Cámara ${pct(r.parts.cam*W.cam)} · Pantalla ${pct(r.parts.screen*W.screen)} · RAM ${pct(r.parts.ram*W.ram)} · ROM ${pct(r.parts.storage*W.storage)} · Batería ${pct(r.parts.battery*W.battery)} · Resistencia ${pct(r.parts.resist*W.resist)} · BT ${pct(r.parts.bt*W.bt)} · Precio ${pct(r.parts.price*W.price)}
-        <br>💰 ${money(precioEfectivo(r.p)) || '—'}
-      </div>
-    </li>
-  `).join('');
+  if (top.parts.price>=.7) reasons.push('💰 Mantiene una relación atractiva entre precio y prestaciones.');
+  if (top.parts.resist>avg('resist')+.05) reasons.push('💧 Ofrece una protección IP más completa dentro de esta comparación.');
+  if (top.parts.screen>=.95) reasons.push('📱 Su pantalla de alta frecuencia se siente más fluida al navegar.');
+  if (top.parts.cpu>avg('cpu')+.03) reasons.push('⚡ Tiene mayor margen para multitarea y aplicaciones exigentes.');
+  if (top.parts.ram>avg('ram')+.10) reasons.push('🧠 Brinda más memoria física para mantener aplicaciones abiertas.');
+  if (top.parts.battery>avg('battery')+.06) reasons.push('🔋 Presenta una combinación favorable de batería y velocidad de carga.');
+  if (top.parts.cam>avg('cam')+.05) reasons.push('📸 Su propuesta de cámara destaca entre los modelos elegidos.');
+  document.getElementById('winnerReasons').innerHTML = reasons.map(r=>`<li>${r}</li>`).join('')||'<li>✨ Presenta un balance parejo entre las características comparadas.</li>';
+  document.getElementById('rankList').innerHTML = scored.slice(1).map(r => {
+    const precio = money(precioEfectivo(r.p));
+    return `<li>También considera ${escapeHtml(r.name)}${precio ? ` · ${precio}` : ''}</li>`;
+  }).join('');
   sec.classList.remove('hidden');
 }
 
@@ -3197,6 +3207,33 @@ const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c =>
 const num = v => { const n = parseFloat(String(v ?? '').replace(/[^\d.,-]/g,'').replace(',', '.')); return isNaN(n) ? null : n; };
 const money = v => v == null ? null : 'S/ ' + Number(v).toLocaleString('es-PE', { maximumFractionDigits: 0 });
 const norm = s => deaccent(String(s ?? '')).toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
+
+function fechaListaLegible(valor) {
+  const s = String(valor || '').trim();
+  let m = s.match(/\b(0?[1-9]|[12]\d|3[01])[\/.\-](0?[1-9]|1[0-2])[\/.\-](20\d{2})\b/);
+  if (m) return `${m[1].padStart(2,'0')}/${m[2].padStart(2,'0')}/${m[3]}`;
+  m = s.match(/\b(20\d{2})[\/.\-](0?[1-9]|1[0-2])[\/.\-](0?[1-9]|[12]\d|3[01])\b/);
+  if (m) return `${m[3].padStart(2,'0')}/${m[2].padStart(2,'0')}/${m[1]}`;
+  return '';
+}
+
+function detectarFechaLista(A = [], pistas = []) {
+  const enc = ubicarEncabezado(A, 'MODELO');
+  const limite = enc ? enc.fila + 1 : Math.min(A.length, 20);
+  const textos = [...pistas, ...A.slice(0, limite).flat()].map(v => String(v || '').trim()).filter(Boolean);
+  for (const t of textos) {
+    const f = fechaListaLegible(t);
+    if (f) return f;
+  }
+  return '';
+}
+
+function textoPrecioLista(precio) {
+  const importe = money(precio);
+  if (!importe) return 'Precio no publicado';
+  const fecha = PRECIOS?.fechaLista;
+  return fecha ? `Precio según lista del ${fecha} · desde ${importe}` : `Precio según lista desde ${importe}`;
+}
 
 // ─────────────────────────────────────────
 // LECTURA DE HOJAS
@@ -3358,7 +3395,7 @@ function armarPrecios(A) {
     });
   }
   if (!filas.size) throw new Error('no encontré filas de modelos');
-  return { filas };
+  return { filas, fechaLista: detectarFechaLista(A) };
 }
 
 /** Si existe una pestaña EQUIVALENCIAS (EQUIPO | MODELO), pisa la tabla incrustada. */
@@ -3687,7 +3724,7 @@ const precioEfectivo = p => comercial(p).precio ?? null;
 // ─────────────────────────────────────────
 // LISTA DE PRECIOS DE ENTEL (.xlsm)
 // ─────────────────────────────────────────
-function parseEntel(wb) {
+function parseEntel(wb, nombreArchivo = '') {
   const hoja = wb.SheetNames.find(n => CONFIG.hojaEntel.test(deaccent(String(n))));
   if (!hoja) throw new Error('no encontré la hoja de renovación contado regular. Hojas: ' + wb.SheetNames.join(', '));
   const A = XLSX.utils.sheet_to_json(wb.Sheets[hoja], { header: 1, defval: '', blankrows: false });
@@ -3703,7 +3740,7 @@ function parseEntel(wb) {
                 ...bandas.map((_, k) => A[r][enc.col + 1 + k])]);
   }
   if (!filas.length) throw new Error('no encontré filas de modelos debajo del encabezado');
-  return { hoja, bandas, filas };
+  return { hoja, bandas, filas, fechaLista: detectarFechaLista(A, [nombreArchivo, hoja]) };
 }
 
 function descargarCSV(nombre, filas) {
@@ -3724,7 +3761,7 @@ let ULTIMO_ENTEL = null;
 function aplicarEntel(parsed) {
   const filas = new Map();
   parsed.filas.forEach(f => filas.set(f[2], { precio: num(f[3]), gama: f[0] }));
-  PRECIOS = { filas };
+  PRECIOS = { filas, fechaLista: parsed.fechaLista || '' };
   ULTIMO_ENTEL = parsed;
   document.getElementById('btnExportCSV')?.classList.remove('hidden');
 }
@@ -3742,11 +3779,11 @@ function engancharControlesComerciales() {
     if (!f) return;
     setStatus('⏳ Leyendo la lista de Entel...', 'info');
     try {
-      const parsed = parseEntel(XLSX.read(await f.arrayBuffer()));
+      const parsed = parseEntel(XLSX.read(await f.arrayBuffer()), f.name);
       aplicarEntel(parsed);
       update();
       const con = DATA.filter(p => precioEfectivo(p) != null).length;
-      setStatus(`✅ Precios de Entel cargados · hoja "${escapeHtml(parsed.hoja)}" · ${parsed.filas.length} modelos · ` +
+      setStatus(`✅ Precios de Entel cargados${parsed.fechaLista ? ` · lista del ${parsed.fechaLista}` : ''} · hoja "${escapeHtml(parsed.hoja)}" · ${parsed.filas.length} modelos · ` +
                 `${con} de tus ${DATA.length} equipos con precio. Descarga el CSV y pégalo en RENO CONT para que lo vean todos.`, 'ok');
     } catch (err) {
       setStatus(`⚠️ No pude leer el archivo de Entel: ${escapeHtml(err.message)}`, 'warn');
