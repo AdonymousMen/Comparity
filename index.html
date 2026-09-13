@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- COMPARITY V2 2026-09-13 · CARGA COMERCIAL + IP/RAM/PANTALLA CORREGIDOS -->
-  <meta name="comparity-build" content="2026-09-13-v2-carga-comercial" />
+  <!-- COMPARITY V3 2026-09-13 · TIEMPOS APROXIMADOS DE CARGA SEGÚN W Y mAh -->
+  <meta name="comparity-build" content="2026-09-13-v3-tiempos-carga" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -2571,14 +2571,46 @@ function mostrarExplicacionCargaEspecifica(valor, nombreCelular, inalambrica = f
      : w >= 18 ? { color:'#0ea5e9', emoji:'⚡', label:`Hasta ${w}W — Carga estándar`, nota:`La marca declara hasta ${w}W. Cumple bien para mantener el equipo listo si acostumbras cargarlo con anticipación, durante el trabajo o al finalizar el día.`, ritmo:'Carga progresiva para una rutina planificada', uso:'Ideal para cargar mientras trabajas o descansas', tags:['✔ Cumple bien en una rutina organizada','✔ Fácil de aprovechar durante tiempos largos'] }
      : { color:'#f59e0b', emoji:'🔌', label:`Hasta ${w}W — Carga básica`, nota:`La marca declara hasta ${w}W. Está orientada a una carga tranquila y constante; funciona bien para quienes suelen dejar el equipo conectado durante la noche o mientras realizan otras actividades.`, ritmo:'Carga gradual', uso:'Ideal para usuarios que cargan con anticipación', tags:['✔ Sencilla y funcional','✔ Adecuada para carga nocturna'] });
 
+  // Estimación comercial basada en potencia y capacidad. Usa rangos amplios porque
+  // cada marca aplica una curva distinta y la potencia máxima no se mantiene al 100%.
+  const equipoCarga = typeof byName === 'function' ? byName(nombreCelular) : null;
+  const mahCarga = equipoCarga ? numFromText(equipoCarga.bateria) : null;
+  const capacidadReferencia = mahCarga && mahCarga >= 2000 ? mahCarga : 5000;
+  const escalaCapacidad = Math.max(0.85, Math.min(1.30, Math.sqrt(capacidadReferencia / 5000)));
+  const rangoBase = inalambrica
+    ? (w >= 50 ? [40, 65] : w >= 25 ? [65, 105] : w >= 15 ? [100, 160] : [150, 240])
+    : (w >= 120 ? [15, 25] : w >= 100 ? [20, 32] : w >= 80 ? [25, 40]
+      : w >= 66 ? [30, 50] : w >= 45 ? [45, 70] : w >= 33 ? [60, 90]
+      : w >= 25 ? [80, 120] : w >= 18 ? [100, 150] : w >= 10 ? [150, 240] : [210, 360]);
+  const redondear5 = n => Math.max(5, Math.round(n / 5) * 5);
+  const totalMin = redondear5(rangoBase[0] * escalaCapacidad);
+  const totalMax = redondear5(rangoBase[1] * escalaCapacidad);
+  const mitadMin = redondear5(totalMin * 0.32);
+  const mitadMax = redondear5(totalMax * 0.52);
+  const tiempoLegible = (a, b) => {
+    if (b <= 90) return `${a}–${b} minutos`;
+    const horas = n => (n / 60).toFixed(1).replace('.0', '').replace('.', ',');
+    return `${horas(a)}–${horas(b)} horas`;
+  };
+  const capacidadTexto = mahCarga && mahCarga >= 2000
+    ? `calculado para la batería de ${mahCarga} mAh de este equipo`
+    : 'calculado con una batería de referencia de 5000 mAh';
+
   const bloqueTiempo = `
   <div class="rounded-xl p-4 mb-4 border" style="background:${info.color}0d;border-color:${info.color}33">
     <p class="text-xs font-bold uppercase tracking-wide mb-2" style="color:${info.color}">⚡ Referencia de velocidad</p>
     <div class="grid sm:grid-cols-2 gap-3">
-      <div class="bg-white rounded-lg p-3 border border-slate-200"><p class="text-xs text-slate-500">Ritmo de carga</p><p class="text-sm font-semibold text-slate-800 mt-1">${info.ritmo}</p></div>
-      <div class="bg-white rounded-lg p-3 border border-slate-200"><p class="text-xs text-slate-500">¿Para quién conviene?</p><p class="text-sm font-semibold text-slate-800 mt-1">${info.uso}</p></div>
+      <div class="bg-white rounded-lg p-3 border border-slate-200">
+        <p class="text-xs text-slate-500">De 0 a 50% aproximadamente</p>
+        <p class="text-lg font-bold mt-1" style="color:${info.color}">${tiempoLegible(mitadMin, mitadMax)}</p>
+      </div>
+      <div class="bg-white rounded-lg p-3 border border-slate-200">
+        <p class="text-xs text-slate-500">De 0 a 100% aproximadamente</p>
+        <p class="text-lg font-bold mt-1" style="color:${info.color}">${tiempoLegible(totalMin, totalMax)}</p>
+      </div>
     </div>
-    <p class="text-xs text-slate-500 mt-3">La potencia indicada es el máximo declarado. Si la marca publica “X% en X minutos” para este modelo, esa cifra oficial es la referencia exacta; puede requerir cargador y cable específicos.</p>
+    <p class="text-sm font-semibold text-slate-700 mt-3">${info.ritmo}. ${info.uso}.</p>
+    <p class="text-xs text-slate-500 mt-2">Rango orientativo, ${capacidadTexto}, usando cargador y cable compatibles. El tiempo publicado por la marca para el modelo prevalece; temperatura, uso durante la carga y configuración pueden modificarlo.</p>
   </div>`;
 
   const html = `
