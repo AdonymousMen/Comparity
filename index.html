@@ -733,7 +733,7 @@
     .visual-toggle-action { color:var(--indigo); font-size:11px; font-weight:800; white-space:nowrap; }
     details[open] .visual-toggle-action { font-size:0; }
     details[open] .visual-toggle-action::after { content:'Cerrar vista 3D −'; font-size:11px; }
-    details[open] #cards3D { margin-top:12px; }
+    #visualSection #cards3D { margin-top:12px; }
     .phone-card { border-radius:18px; box-shadow:0 10px 28px rgba(30,41,59,.07); padding:9px; }
     .phone-card-title { padding:6px 7px 3px; min-height:34px; display:flex; align-items:center; justify-content:center; }
     .viewer-shell { height:340px; border:1px solid #eef1f6; background:linear-gradient(180deg,#fff,#f8fafc); }
@@ -788,11 +788,27 @@
     .trust-footer strong { color:#475569; }
     .version-stamp { display:inline-flex; margin-top:8px; padding:4px 8px; border-radius:7px; background:#e9edf5; color:#64748b; font-family:monospace; font-size:9px; }
 
+    /* Lectura normal: más legible sin volver a agrandar contenedores ni espacios */
+    body { font-size:16px; }
+    .journey-title, .slot-label { font-size:13px; }
+    .journey-copy, .selection-help, .summary-index, .summary-price { font-size:11px; }
+    .summary-name { font-size:16px; }
+    .summary-metric-label { font-size:10px; }
+    .summary-metric-value, .cmp-table tbody td { font-size:13px; }
+    .summary-tip, #winnerReasons li, .score-panel-title { font-size:12px; }
+    .spec-group-row td { font-size:10px!important; }
+    #winnerText { font-size:14px; }
+    .profile-question, .category-name, .advice-note { font-size:10px; }
+    .profile-btn, .score-name { font-size:12px; }
+    .score-value { font-size:13px; }
+    .category-label { font-size:9px; }
+    .trust-footer { font-size:12px; }
+
     @media (max-width: 800px) {
       .journey-strip { grid-template-columns:repeat(3,1fr); width:94%; }
       .journey-step { padding:10px 7px; gap:6px; justify-content:center; }
-      .journey-number { width:23px; height:23px; flex-basis:23px; border-radius:7px; font-size:9px; }
-      .journey-title { font-size:10px; line-height:1.15; }
+      .journey-number { width:23px; height:23px; flex-basis:23px; border-radius:7px; font-size:10px; }
+      .journey-title { font-size:12px; line-height:1.15; }
       .journey-copy { display:none; }
       .summary-grid { grid-template-columns:1fr; }
       .summary-head { align-items:start; flex-direction:column; }
@@ -923,13 +939,12 @@
   </section>
 
   <!-- Visores 3D -->
-  <details id="visualSection" class="hidden">
-    <summary class="visual-toggle">
+  <section id="visualSection" class="hidden">
+    <div class="visual-toggle" style="cursor:default">
       <div><div class="section-kicker">Exploración visual</div><div class="font-bold text-sm mt-0.5">Conoce los equipos desde todos los ángulos</div></div>
-      <span class="visual-toggle-action">Explorar vista 3D +</span>
-    </summary>
+    </div>
     <div id="cards3D" class="grid sm:grid-cols-3 gap-5"></div>
-  </details>
+  </section>
 
   <!-- Tabla comparativa -->
   <section id="tblWrap" class="hidden bg-white border border-[--border] rounded-2xl overflow-hidden shadow-sm">
