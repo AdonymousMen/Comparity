@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- COMPARITY V6 2026-09-13 · COMPARACIÓN DIRECTA -->
-  <meta name="comparity-build" content="2026-09-13-v6-comparacion-directa" />
+  <!-- COMPARITY V7 2026-09-13 · ACCESO DIRECTO AL COMPARADOR -->
+  <meta name="comparity-build" content="2026-09-13-v7-comparador-directo" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -623,7 +623,7 @@
       var(--surface);
     }
     .page-main > * + * { margin-top:24px; }
-    .page-main > .journey-strip { margin-top:-14px; }
+    .page-main > .journey-strip { margin-top:0; }
 
     .site-header {
       background: rgba(248,250,255,.88);
@@ -673,7 +673,7 @@
 
     .journey-strip {
       display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
-      margin-top:-14px; position:relative; z-index:2; width:min(780px,92%); margin-left:auto; margin-right:auto;
+      margin-top:0; position:relative; z-index:2; width:min(900px,100%); margin-left:auto; margin-right:auto;
       background:#dce2ee; border:1px solid #dce2ee; border-radius:18px; overflow:hidden;
       box-shadow:0 14px 35px rgba(15,23,42,.12);
     }
@@ -807,20 +807,7 @@
 <!-- ═══════════════ MAIN ═══════════════ -->
 <main class="page-main max-w-7xl mx-auto px-4 py-5">
 
-  <!-- Presentación: explica el valor antes de mostrar controles -->
-  <section class="hero-shell">
-    <span class="hero-eyebrow"><span class="hero-dot"></span> Asistente de venta y elección</span>
-    <h1 class="hero-title">Compara claro. <span class="hero-accent">Recomienda mejor.</span></h1>
-    <p class="hero-copy">Elige hasta tres equipos y convierte sus características en argumentos fáciles de explicar al cliente.</p>
-    <div class="hero-bottom">
-      <a class="hero-cta" href="#compareStudio">Ir a comparar ↓</a>
-      <div class="hero-proof">
-        <span class="proof-pill"><span class="proof-icon">✓</span> Catálogo conectado</span>
-        <span class="proof-pill"><span class="proof-icon">✓</span> Explicaciones claras</span>
-        <span class="proof-pill"><span class="proof-icon">✓</span> Enfoque comercial</span>
-      </div>
-    </div>
-  </section>
+  <!-- Guía breve: el comparador comienza inmediatamente después -->
   <div class="journey-strip" aria-label="Cómo usar el comparador">
     <div class="journey-step"><span class="journey-number">01</span><div><div class="journey-title">Elige los equipos</div><div class="journey-copy">Busca por nombre o filtra el catálogo.</div></div></div>
     <div class="journey-step"><span class="journey-number">02</span><div><div class="journey-title">Mira lo importante</div><div class="journey-copy">Capacidad, pantalla, cámara y autonomía.</div></div></div>
@@ -944,7 +931,7 @@
 
   <footer class="trust-footer">
     <p><strong>COMPARITY</strong> ayuda a interpretar datos; la recomendación final debe considerar necesidades, presupuesto y disponibilidad real.</p>
-    <span class="version-stamp">V6 · comparación-directa · 2026-09-13</span>
+    <span class="version-stamp">V7 · comparador-directo · 2026-09-13</span>
   </footer>
 
 </main>
