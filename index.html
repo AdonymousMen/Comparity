@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- COMPARITY V10 2026-09-13 · SELECTOR COMPACTO -->
-  <meta name="comparity-build" content="2026-09-13-v10-selector-compacto" />
+  <!-- COMPARITY V9 2026-09-13 · VERSUS COMERCIAL COMPACTO -->
+  <meta name="comparity-build" content="2026-09-13-v9-versus-comercial" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -684,36 +684,21 @@
 
     .compare-studio {
       position:relative; background:rgba(255,255,255,.94); border:1px solid rgba(226,232,240,.9);
-      border-radius:20px; padding:14px 16px; box-shadow:0 14px 35px rgba(30,41,59,.07);
+      border-radius:25px; padding:clamp(18px,3vw,30px); box-shadow:0 18px 45px rgba(30,41,59,.08);
       scroll-margin-top:90px;
     }
     .section-kicker { color:var(--indigo); font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:800; }
     .section-title { font-size:clamp(1.35rem,2vw,1.8rem); letter-spacing:-.035em; margin-top:4px; }
     .section-copy { color:var(--text-muted); font-size:13px; margin-top:4px; }
-    .filter-drawer { margin-top:20px; padding:0; border-radius:14px; background:#f8fafc; border:1px solid #e9edf4; overflow:visible; }
-    .filter-summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 11px; cursor:pointer; color:#475569; font-size:11px; font-weight:800; }
-    .filter-summary::-webkit-details-marker { display:none; }
-    .filter-summary-action { color:var(--indigo); font-size:10px; white-space:nowrap; }
-    .filter-drawer[open] .filter-summary-action { font-size:0; }
-    .filter-drawer[open] .filter-summary-action::after { content:'Ocultar filtros −'; font-size:10px; }
-    .filter-content { padding:11px; border-top:1px solid #e9edf4; }
+    .filter-drawer { margin-top:20px; padding:16px; border-radius:18px; background:#f8fafc; border:1px solid #e9edf4; }
     .filter-title { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800; color:#475569; margin-bottom:12px; }
-    .slot-card { padding:9px 10px; border-radius:13px; background:#fff; border:1.5px solid #e5e9f1; transition:border-color .2s,box-shadow .2s,transform .2s; }
+    .slot-card { padding:15px; border-radius:17px; background:#fff; border:1.5px solid #e5e9f1; transition:border-color .2s,box-shadow .2s,transform .2s; }
     .slot-card:focus-within { border-color:#818cf8; box-shadow:0 10px 25px rgba(79,70,229,.10); transform:translateY(-2px); }
-    .slot-head { display:flex; align-items:center; gap:7px; margin-bottom:6px; }
-    .slot-number { width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:var(--navy);color:#fff;font-weight:800;font-size:9px; }
-    .slot-label { font-size:11px;font-weight:800;color:#475569; }
-    .slot-card .ac-input { padding:8px 10px; }
-    .slot-card .ac-select { display:none; }
-    .commercial-tools { margin-top:10px; border-top:1px solid var(--border); }
-    .commercial-summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 2px 0; cursor:pointer; color:#64748b; font-size:10px; font-weight:700; }
-    .commercial-summary::-webkit-details-marker { display:none; }
-    .commercial-summary span { color:var(--indigo); font-weight:800; }
-    .commercial-tools[open] .commercial-summary span { font-size:0; }
-    .commercial-tools[open] .commercial-summary span::after { content:'Cerrar −'; font-size:10px; }
-    .commercial-content { display:flex; flex-wrap:wrap; align-items:end; gap:10px; padding-top:10px; }
-    .compare-actions { display:flex; align-items:center; gap:10px; padding-top:10px; margin-top:10px; border-top:1px solid var(--border); }
-    .btn-compare-main { min-width:175px; min-height:40px; border-radius:12px; background:linear-gradient(135deg,#4338ca,#2563eb); box-shadow:0 8px 18px rgba(67,56,202,.22); }
+    .slot-head { display:flex; align-items:center; gap:9px; margin-bottom:9px; }
+    .slot-number { width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--navy);color:#fff;font-weight:800;font-size:11px; }
+    .slot-label { font-size:12px;font-weight:800;color:#475569; }
+    .compare-actions { display:flex; align-items:center; gap:10px; padding-top:18px; margin-top:18px; border-top:1px solid var(--border); }
+    .btn-compare-main { min-width:175px; min-height:46px; border-radius:14px; background:linear-gradient(135deg,#4338ca,#2563eb); box-shadow:0 10px 24px rgba(67,56,202,.25); }
     .btn-compare-main:hover { background:linear-gradient(135deg,#3730a3,#1d4ed8); transform:translateY(-1px); }
     .selection-help { margin-left:auto; font-size:11px; color:var(--text-muted); text-align:right; }
 
@@ -870,9 +855,8 @@
 
   <!-- Selección de equipos -->
   <section id="compareStudio" class="compare-studio">
-    <details class="filter-drawer" style="margin-top:0">
-      <summary class="filter-summary"><span>⌁ Filtros rápidos del catálogo</span><span class="filter-summary-action">Mostrar filtros +</span></summary>
-      <div class="filter-content">
+    <div class="filter-drawer" style="margin-top:0">
+      <div class="filter-title"><span>⌁</span> Filtros rápidos del catálogo</div>
       <div class="flex flex-wrap items-end gap-3">
       <div>
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Precio mín.</label>
@@ -894,10 +878,9 @@
       <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide mr-1">Marca:</span>
       <div id="filtroMarcaChips" class="flex flex-wrap gap-2"></div>
     </div>
-      </div>
-    </details>
+    </div>
 
-    <div class="grid sm:grid-cols-3 gap-3 mt-3">
+    <div class="grid sm:grid-cols-3 gap-4 mt-5">
       <div class="slot-card">
         <div class="slot-head"><span class="slot-number">1</span><label class="slot-label">Primer equipo</label></div>
         <div class="ac-wrap" id="wrap1"></div>
@@ -911,10 +894,8 @@
         <div class="ac-wrap" id="wrap3"></div>
       </div>
     </div>
-    <details id="comercialBox" class="hidden commercial-tools">
-      <summary class="commercial-summary"><span>📊 Actualizar lista de precios Entel</span><span>Abrir +</span></summary>
-      <div class="commercial-content">
-        <div>
+    <div id="comercialBox" class="hidden flex flex-wrap items-end gap-3 mb-4 pt-4 border-t border-[--border]">
+      <div>
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Lista de precios Entel (renovación · contado regular)</label>
         <div class="flex gap-2">
           <label class="btn-ghost cursor-pointer whitespace-nowrap">
@@ -923,9 +904,8 @@
           </label>
           <button id="btnExportCSV" class="btn-ghost hidden whitespace-nowrap" title="Descarga el CSV para pegarlo en la pestaña RENO CONT del Sheet">⬇ CSV para RENO CONT</button>
         </div>
-        </div>
       </div>
-    </details>
+    </div>
     <div class="compare-actions">
       <button id="btnComparar" class="btn-primary btn-compare-main">Comparar equipos →</button>
       <button id="btnReset" class="btn-ghost">↺ Limpiar</button>
@@ -973,7 +953,7 @@
     </div>
   </section>
 
-  <!-- Cierre comercial: aparece al final, después de revisar toda la comparación -->
+  <!-- Orientación comercial: cierre final de la comparación -->
   <section id="winnerSection" class="winner-card hidden">
     <div class="advice-heading">
       <span class="advice-icon">VS</span>
