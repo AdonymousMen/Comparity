@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- COMPARITY V3 2026-09-13 · TIEMPOS APROXIMADOS DE CARGA SEGÚN W Y mAh -->
-  <meta name="comparity-build" content="2026-09-13-v3-tiempos-carga" />
+  <!-- COMPARITY V4 2026-09-13 · GUÍA COMERCIAL UFS / eMMC / NVMe -->
+  <meta name="comparity-build" content="2026-09-13-v4-memoria-ufs-nvme" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -2650,6 +2650,7 @@ function mostrarExplicacionAlmacenamientoEspecifica(valor, nombreCelular) {
   const txt = String(valor || '').trim();
 
   const mUfs = txt.match(/UFS\s*([\d.]+)/i);
+  const tieneUfs = /\bUFS\b/i.test(txt);
   const mEmmc = txt.match(/eMMC\s*([\d.]+)/i);
   const mNvme = txt.match(/NVMe/i);
   const mCap = txt.match(/(\d+)\s*(GB|TB)/i);
@@ -2658,11 +2659,17 @@ function mostrarExplicacionAlmacenamientoEspecifica(valor, nombreCelular) {
   let bloqueTipo = '';
   if (mUfs) {
     const v = parseFloat(mUfs[1]);
-    const info = v >= 4.0
-      ? { color:'#7c3aed', emoji:'🏆', label:`UFS ${mUfs[1]} — Muy rápido`, nota:'Es una generación de almacenamiento de alto rendimiento. Puede reducir tiempos de carga, instalación y transferencia, aunque la velocidad real depende del controlador, la capacidad y la implementación del equipo.' }
+    const info = v >= 4.1
+      ? { color:'#7c3aed', emoji:'🏆', label:`UFS ${mUfs[1]} — Rendimiento premium`, nota:'Es una generación de almacenamiento muy avanzada, pensada para mover archivos pesados, instalar juegos grandes, procesar video de alta resolución y responder con rapidez. UFS 4.1 mejora la administración y consistencia frente a generaciones anteriores; el resultado final depende de la implementación del equipo.', venta:'Para el cliente exigente: menos espera al instalar, abrir, guardar y transferir contenido pesado.' }
+      : v >= 4.0
+      ? { color:'#7c3aed', emoji:'🏆', label:`UFS ${mUfs[1]} — Muy alto rendimiento`, nota:'Ofrece gran ancho de banda y buena eficiencia para equipos de alto desempeño. Se aprovecha especialmente con juegos pesados, grabación de alta resolución, edición y transferencias grandes.', venta:'Una memoria preparada para acompañar procesadores potentes y tareas exigentes.' }
+      : v >= 3.1
+      ? { color:'#4f46e5', emoji:'🚀', label:`UFS ${mUfs[1]} — Rápido y solvente`, nota:'UFS 3.1 ofrece una respuesta rápida al abrir aplicaciones, instalar juegos, grabar video y mover archivos grandes. Es una tecnología muy cómoda para clientes que usan intensamente el equipo.', venta:'Buena elección para multitarea, juegos y contenido de alta resolución.' }
       : v >= 3.0
-      ? { color:'#4f46e5', emoji:'🚀', label:`UFS ${mUfs[1]} — Rápido`, nota:'Es la velocidad de almacenamiento más común hoy en equipos de gama media y alta. Instala apps rápido y no se siente lento al copiar archivos grandes o grabar video en alta calidad.' }
-      : { color:'#0ea5e9', emoji:'✅', label:`UFS ${mUfs[1]} — Estándar`, nota:'Es más rápido que el eMMC de gama de entrada, aunque ya no es lo último. Para uso diario (redes sociales, fotos, apps comunes) se siente ágil.' };
+      ? { color:'#4f46e5', emoji:'🚀', label:`UFS ${mUfs[1]} — Alto rendimiento`, nota:'Esta generación ofrece mayor velocidad y eficiencia que la familia UFS 2.x. Puede ayudar a que instalaciones, cargas y transferencias se sientan más ágiles.', venta:'Recomendable para quien busca rapidez más allá del uso básico.' }
+      : v >= 2.2
+      ? { color:'#0ea5e9', emoji:'✅', label:`UFS ${mUfs[1]} — Ágil para el día a día`, nota:'UFS 2.2 ofrece una experiencia rápida para aplicaciones, redes, fotografía y juegos populares. Puede incorporar WriteBooster para agilizar determinadas escrituras; su desempeño concreto depende del fabricante.', venta:'Un buen equilibrio: respuesta ágil sin necesidad de pagar por almacenamiento de gama premium.' }
+      : { color:'#0ea5e9', emoji:'✅', label:`UFS ${mUfs[1]} — Respuesta fluida`, nota:'UFS 2.1 ya permite leer y escribir al mismo tiempo y suele responder mejor que eMMC en multitarea, instalaciones y transferencias. La velocidad concreta cambia según el equipo.', venta:'Cumple bien para un uso diario fluido y varias aplicaciones.' };
     bloqueTipo = `
     <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
       <div class="px-4 py-3 flex items-center gap-3" style="background:${info.color}">
@@ -2672,19 +2679,25 @@ function mostrarExplicacionAlmacenamientoEspecifica(valor, nombreCelular) {
           <p class="text-white/75 text-xs">Tipo de memoria interna</p>
         </div>
       </div>
-      <div class="p-4 bg-white"><p class="text-sm text-slate-700 leading-relaxed">${info.nota}</p></div>
+      <div class="p-4 bg-white"><p class="text-sm text-slate-700 leading-relaxed">${info.nota}</p><div class="bg-indigo-50 rounded-lg p-3 mt-3"><p class="text-sm text-indigo-900"><strong>🗣️ Para explicarlo al cliente:</strong> ${info.venta}</p></div></div>
+    </div>`;
+  } else if (tieneUfs) {
+    bloqueTipo = `
+    <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
+      <div class="px-4 py-3 flex items-center gap-3" style="background:#0ea5e9"><span class="text-2xl">✅</span><div><p class="text-white font-bold text-base leading-tight">Tecnología UFS</p><p class="text-white/75 text-xs">La ficha no precisa la generación</p></div></div>
+      <div class="p-4 bg-white"><p class="text-sm text-slate-700 leading-relaxed">UFS permite operaciones simultáneas de lectura y escritura, favoreciendo una respuesta ágil al abrir aplicaciones, instalar contenido y mover archivos. Sin una versión indicada por la marca, no corresponde presentarlo como UFS 2.2, 3.1 o 4.1.</p></div>
     </div>`;
   } else if (mEmmc) {
     bloqueTipo = `
     <div class="rounded-xl mb-4 overflow-hidden border border-slate-200">
       <div class="px-4 py-3 flex items-center gap-3" style="background:#f59e0b">
-        <span class="text-2xl">🐢</span>
+        <span class="text-2xl">📦</span>
         <div>
-          <p class="text-white font-bold text-base leading-tight">eMMC ${mEmmc[1]} — Básico</p>
+          <p class="text-white font-bold text-base leading-tight">eMMC ${mEmmc[1]} — Funcional</p>
           <p class="text-white/75 text-xs">Tipo de memoria interna</p>
         </div>
       </div>
-      <div class="p-4 bg-white"><p class="text-sm text-slate-700 leading-relaxed">Es un tipo de memoria más antiguo y más lento que el UFS, típico de equipos de entrada. No es un problema para llamadas, WhatsApp o redes sociales, pero se nota más al instalar apps pesadas, actualizar el sistema o mover muchos archivos a la vez.</p></div>
+      <div class="p-4 bg-white"><p class="text-sm text-slate-700 leading-relaxed">eMMC es una solución funcional y económica, frecuente en equipos accesibles. Responde bien para comunicación, redes, video y aplicaciones cotidianas; frente a UFS puede requerir más tiempo al instalar juegos grandes, actualizar el sistema o mover muchos archivos.</p><div class="bg-amber-50 rounded-lg p-3 mt-3"><p class="text-sm text-amber-900"><strong>🗣️ Para explicarlo al cliente:</strong> prioriza capacidad y precio; cumple bien para uso cotidiano sin pagar por velocidades pensadas para tareas pesadas.</p></div></div>
     </div>`;
   } else if (mNvme) {
     bloqueTipo = `
@@ -2696,17 +2709,17 @@ function mostrarExplicacionAlmacenamientoEspecifica(valor, nombreCelular) {
           <p class="text-white/75 text-xs">Tecnología NVMe indicada en la ficha</p>
         </div>
       </div>
-      <div class="p-4 bg-white"><p class="text-sm text-slate-700 leading-relaxed">Está orientado a responder con rapidez al abrir aplicaciones, guardar contenido y trabajar con archivos pesados. La velocidad concreta depende de la implementación del equipo y no solo del nombre de la tecnología.</p></div>
+      <div class="p-4 bg-white"><p class="text-sm text-slate-700 leading-relaxed">NVMe es un protocolo de almacenamiento de alto rendimiento que trabaja sobre una conexión PCIe. En móviles puede formar parte de una implementación propia del fabricante y favorecer una respuesta rápida al abrir aplicaciones, capturar contenido y trabajar con archivos pesados.</p><div class="bg-indigo-50 rounded-lg p-3 mt-3"><p class="text-sm text-indigo-900"><strong>🗣️ Para explicarlo al cliente:</strong> está diseñado para que el sistema y las aplicaciones respondan con rapidez. No se traduce directamente a una versión de UFS: son tecnologías y diseños distintos, y el rendimiento final depende del equipo completo.</p></div></div>
     </div>`;
   }
 
   const html = `
-  <p class="mb-4">Este equipo trae <strong style="color:var(--indigo)">${cap || txt}</strong> de almacenamiento${(mUfs||mEmmc||mNvme) ? ', usando la tecnología indicada en su ficha:' : '.'}</p>
+  <p class="mb-4">Este equipo trae <strong style="color:var(--indigo)">${cap || txt}</strong> de almacenamiento${(mUfs||tieneUfs||mEmmc||mNvme) ? ', usando la tecnología indicada en su ficha:' : '.'}</p>
   ${bloqueTipo}
-  ${!mUfs && !mEmmc && !mNvme ? `<div class="bg-slate-50 rounded-xl p-4 mb-4"><p class="text-sm text-slate-500">La ficha indica la capacidad, pero no especifica la tecnología interna de almacenamiento.</p></div>` : ''}
+  ${!mUfs && !tieneUfs && !mEmmc && !mNvme ? `<div class="bg-slate-50 rounded-xl p-4 mb-4"><p class="text-sm text-slate-700"><strong>La marca indica la capacidad, pero no publica la tecnología interna.</strong></p><p class="text-sm text-slate-500 mt-2">Esto no significa que sea lenta: simplemente no hay base oficial para llamarla eMMC, UFS o NVMe. El comparador evita inventar una categoría.</p></div>` : ''}
   <h4 class="font-bold text-base mt-4 mb-2">💾 ¿Para qué te alcanza?</h4>
   <p class="text-sm text-slate-700 leading-relaxed">El almacenamiento guarda fotos, videos, aplicaciones y archivos. Más capacidad da mayor margen antes de tener que limpiar contenido, pero el espacio adecuado depende de cuánto video se graba, el tamaño de las apps y el uso de nube o memoria externa.</p>
-  <div class="bg-indigo-50 p-4 rounded-xl mt-4"><p class="text-sm text-indigo-900"><strong>💡 Tip:</strong> El tipo de memoria (UFS o eMMC) afecta qué tan rápido el celular abre apps y copia archivos — no cuánto espacio tienes, sino qué tan rápido lo usas.</p></div>`;
+  <div class="bg-indigo-50 p-4 rounded-xl mt-4"><p class="text-sm text-indigo-900"><strong>💡 Para recomendar:</strong> la capacidad responde “cuánto puedes guardar”; la tecnología responde “con qué agilidad puede leer y escribir”. También influyen el procesador, la RAM, la optimización y la cantidad de espacio libre.</p></div>`;
 
   tituloEl.innerHTML = `💾 Almacenamiento: ${cap || txt}`;
   contenidoEl.innerHTML = html;
