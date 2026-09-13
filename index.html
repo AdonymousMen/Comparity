@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- COMPARITY V5 2026-09-13 · EXPERIENCIA COMERCIAL PREMIUM -->
-  <meta name="comparity-build" content="2026-09-13-v5-experiencia-comercial" />
+  <!-- COMPARITY V6 2026-09-13 · COMPARACIÓN DIRECTA -->
+  <meta name="comparity-build" content="2026-09-13-v6-comparacion-directa" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -620,8 +620,10 @@
       background:
         radial-gradient(circle at 10% 0%, rgba(99,102,241,.11), transparent 27rem),
         radial-gradient(circle at 92% 18%, rgba(34,211,238,.09), transparent 24rem),
-        var(--surface);
+      var(--surface);
     }
+    .page-main > * + * { margin-top:24px; }
+    .page-main > .journey-strip { margin-top:-14px; }
 
     .site-header {
       background: rgba(248,250,255,.88);
@@ -640,7 +642,7 @@
 
     .hero-shell {
       position:relative; overflow:hidden; isolation:isolate;
-      color:#fff; border-radius:30px; padding:clamp(26px,5vw,58px);
+      color:#fff; border-radius:24px; padding:clamp(20px,3vw,32px);
       background:
         radial-gradient(circle at 84% 18%, rgba(34,211,238,.28), transparent 24%),
         radial-gradient(circle at 68% 95%, rgba(249,115,22,.22), transparent 27%),
@@ -659,20 +661,23 @@
       font-weight:700; letter-spacing:.1em; text-transform:uppercase;
     }
     .hero-dot { width:7px; height:7px; border-radius:50%; background:var(--cyan); box-shadow:0 0 14px var(--cyan); }
-    .hero-title { font-size:clamp(2rem,5vw,4.65rem); line-height:.98; letter-spacing:-.055em; max-width:820px; margin-top:18px; }
+    .hero-title { font-size:clamp(1.75rem,3.5vw,3rem); line-height:1.03; letter-spacing:-.05em; max-width:980px; margin-top:12px; }
     .hero-accent { color:#7dd3fc; }
-    .hero-copy { max-width:690px; color:#cbd5e1; font-size:clamp(.95rem,1.5vw,1.12rem); line-height:1.65; margin-top:18px; }
-    .hero-proof { display:flex; flex-wrap:wrap; gap:10px; margin-top:25px; }
+    .hero-copy { max-width:820px; color:#cbd5e1; font-size:clamp(.88rem,1.25vw,1rem); line-height:1.5; margin-top:10px; }
+    .hero-bottom { display:flex; align-items:center; flex-wrap:wrap; gap:14px; margin-top:16px; }
+    .hero-proof { display:flex; flex-wrap:wrap; gap:8px; }
     .proof-pill { display:flex; align-items:center; gap:8px; padding:9px 13px; border-radius:12px; background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.12); font-size:12px; color:#e2e8f0; }
     .proof-icon { color:#86efac; font-weight:800; }
+    .hero-cta { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:9px 16px; border-radius:12px; background:#fff; color:#293b84; font-size:12px; font-weight:800; text-decoration:none; box-shadow:0 8px 20px rgba(0,0,0,.16); transition:transform .18s,box-shadow .18s; }
+    .hero-cta:hover { transform:translateY(-2px); box-shadow:0 12px 25px rgba(0,0,0,.22); }
 
     .journey-strip {
       display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
-      margin-top:-18px; position:relative; z-index:2; width:min(780px,92%); margin-left:auto; margin-right:auto;
+      margin-top:-14px; position:relative; z-index:2; width:min(780px,92%); margin-left:auto; margin-right:auto;
       background:#dce2ee; border:1px solid #dce2ee; border-radius:18px; overflow:hidden;
       box-shadow:0 14px 35px rgba(15,23,42,.12);
     }
-    .journey-step { background:#fff; padding:15px 18px; display:flex; align-items:center; gap:11px; }
+    .journey-step { background:#fff; padding:12px 16px; display:flex; align-items:center; gap:10px; }
     .journey-number { width:29px; height:29px; flex:0 0 29px; border-radius:9px; display:grid; place-items:center; background:var(--indigo-pale); color:var(--indigo); font-weight:800; font-size:12px; }
     .journey-title { font-size:12px; font-weight:800; color:var(--text); }
     .journey-copy { font-size:10px; color:var(--text-muted); margin-top:1px; }
@@ -680,6 +685,7 @@
     .compare-studio {
       position:relative; background:rgba(255,255,255,.94); border:1px solid rgba(226,232,240,.9);
       border-radius:25px; padding:clamp(18px,3vw,30px); box-shadow:0 18px 45px rgba(30,41,59,.08);
+      scroll-margin-top:90px;
     }
     .section-kicker { color:var(--indigo); font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:800; }
     .section-title { font-size:clamp(1.35rem,2vw,1.8rem); letter-spacing:-.035em; margin-top:4px; }
@@ -748,8 +754,11 @@
     .version-stamp { display:inline-flex; margin-top:8px; padding:4px 8px; border-radius:7px; background:#e9edf5; color:#64748b; font-family:monospace; font-size:9px; }
 
     @media (max-width: 800px) {
-      .journey-strip { grid-template-columns:1fr; width:88%; }
-      .journey-step { padding:11px 14px; }
+      .journey-strip { grid-template-columns:repeat(3,1fr); width:94%; }
+      .journey-step { padding:10px 7px; gap:6px; justify-content:center; }
+      .journey-number { width:23px; height:23px; flex-basis:23px; border-radius:7px; font-size:9px; }
+      .journey-title { font-size:10px; line-height:1.15; }
+      .journey-copy { display:none; }
       .summary-grid { grid-template-columns:1fr; }
       .summary-head { align-items:start; flex-direction:column; }
       .selection-help { display:none; }
@@ -757,7 +766,9 @@
       .btn-compare-main { flex:1; }
       .hero-shell { border-radius:22px; }
       .hero-copy { line-height:1.5; }
-      .proof-pill { width:100%; }
+      .hero-bottom { align-items:stretch; }
+      .hero-cta { width:100%; order:-1; }
+      .proof-pill { display:none; }
       .cmp-table thead th:first-child, .cmp-table tbody td:first-child { min-width:145px; max-width:145px; white-space:normal!important; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -794,17 +805,20 @@
 </header>
 
 <!-- ═══════════════ MAIN ═══════════════ -->
-<main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
+<main class="page-main max-w-7xl mx-auto px-4 py-5">
 
   <!-- Presentación: explica el valor antes de mostrar controles -->
   <section class="hero-shell">
     <span class="hero-eyebrow"><span class="hero-dot"></span> Asistente de venta y elección</span>
-    <h1 class="hero-title">Compara claro.<br><span class="hero-accent">Recomienda mejor.</span></h1>
-    <p class="hero-copy">Convierte especificaciones técnicas en argumentos claros. Elige hasta tres equipos, descubre sus diferencias y encuentra la alternativa que mejor encaja con lo que el cliente realmente necesita.</p>
-    <div class="hero-proof">
-      <span class="proof-pill"><span class="proof-icon">✓</span> Datos conectados a tu catálogo</span>
-      <span class="proof-pill"><span class="proof-icon">✓</span> Explicaciones en lenguaje sencillo</span>
-      <span class="proof-pill"><span class="proof-icon">✓</span> Comparación técnica y comercial</span>
+    <h1 class="hero-title">Compara claro. <span class="hero-accent">Recomienda mejor.</span></h1>
+    <p class="hero-copy">Elige hasta tres equipos y convierte sus características en argumentos fáciles de explicar al cliente.</p>
+    <div class="hero-bottom">
+      <a class="hero-cta" href="#compareStudio">Ir a comparar ↓</a>
+      <div class="hero-proof">
+        <span class="proof-pill"><span class="proof-icon">✓</span> Catálogo conectado</span>
+        <span class="proof-pill"><span class="proof-icon">✓</span> Explicaciones claras</span>
+        <span class="proof-pill"><span class="proof-icon">✓</span> Enfoque comercial</span>
+      </div>
     </div>
   </section>
   <div class="journey-strip" aria-label="Cómo usar el comparador">
@@ -814,7 +828,7 @@
   </div>
 
   <!-- Selección de equipos -->
-  <section class="compare-studio">
+  <section id="compareStudio" class="compare-studio">
     <div>
       <div class="section-kicker">Arma tu comparación</div>
       <h2 class="section-title">¿Qué equipos quiere evaluar el cliente?</h2>
@@ -930,7 +944,7 @@
 
   <footer class="trust-footer">
     <p><strong>COMPARITY</strong> ayuda a interpretar datos; la recomendación final debe considerar necesidades, presupuesto y disponibilidad real.</p>
-    <span class="version-stamp">V5 · experiencia-comercial · 2026-09-13</span>
+    <span class="version-stamp">V6 · comparación-directa · 2026-09-13</span>
   </footer>
 
 </main>
