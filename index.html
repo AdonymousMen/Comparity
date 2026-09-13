@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <!-- COMPARITY V11.2 2026-09-13 · PUNTAJE EXPLICADO -->
-  <meta name="comparity-build" content="2026-09-13-v11.2-puntaje-explicado" />
+  <meta name="comparity-build" content="2026-09-13-v11.3-precios-visibles" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -382,9 +382,12 @@
     @keyframes dropIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
     .ac-option {
       width: 100%; text-align: left; padding: 10px 12px; font-size: 14px; font-family: inherit;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
       cursor: pointer; border: none; background: none; color: var(--ink-2);
       border-radius: 9px; transition: background .1s, color .1s;
     }
+    .ac-option-name { min-width: 0; }
+    .ac-option-price { flex: 0 0 auto; color: var(--brand-deep); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
     .ac-option:hover, .ac-option.focused { background: var(--brand-soft); color: var(--brand-deep); }
     .ac-option-selected { background: var(--brand-soft); color: var(--brand-deep); font-weight: 700; }
     .ac-chip {
@@ -504,7 +507,7 @@
     .summary-price {
       display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px;
       background: var(--brand-soft); color: var(--brand-deep);
-      font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+      border: 1px solid var(--brand-line); font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums;
     }
     .summary-sku {
       display: inline-flex; align-items: center; gap: 6px;
@@ -1356,7 +1359,8 @@ function buildAC(wrapId, slot) {
     focusedIdx = -1;
     dropdown.innerHTML = list.map((n, i) => {
       const isSel = n === selectedName;
-      return `<button class="ac-option${isSel ? ' ac-option-selected' : ''}${esDescontinuado(n) ? ' descontinuado' : ''}" type="button" data-idx="${i}" data-name="${encodeURIComponent(n)}">${isSel ? '✓ ' : ''}${nombreConEtiqueta(n)}</button>`;
+      const precio = precioEfectivo(byName(n) || {});
+      return `<button class="ac-option${isSel ? ' ac-option-selected' : ''}${esDescontinuado(n) ? ' descontinuado' : ''}" type="button" data-idx="${i}" data-name="${encodeURIComponent(n)}"><span class="ac-option-name">${isSel ? '✓ ' : ''}${nombreConEtiqueta(n)}</span><span class="ac-option-price">${precio != null ? money(precio) : 'Sin precio'}</span></button>`;
     }).join('');
     dropdown.classList.add('open');
     input.setAttribute('aria-expanded', 'true');
@@ -1377,7 +1381,8 @@ function buildAC(wrapId, slot) {
     focusedIdx = -1;
     dropdown.innerHTML = list.map((n, i) => {
       const isSel = n === selections[slot];
-      return `<button class="ac-option${isSel ? ' ac-option-selected' : ''}${esDescontinuado(n) ? ' descontinuado' : ''}" type="button" data-idx="${i}" data-name="${encodeURIComponent(n)}">${isSel ? '✓ ' : ''}${nombreConEtiqueta(n)}</button>`;
+      const precio = precioEfectivo(byName(n) || {});
+      return `<button class="ac-option${isSel ? ' ac-option-selected' : ''}${esDescontinuado(n) ? ' descontinuado' : ''}" type="button" data-idx="${i}" data-name="${encodeURIComponent(n)}"><span class="ac-option-name">${isSel ? '✓ ' : ''}${nombreConEtiqueta(n)}</span><span class="ac-option-price">${precio != null ? money(precio) : 'Sin precio'}</span></button>`;
     }).join('');
     dropdown.classList.add('open');
     input.setAttribute('aria-expanded', 'true');
@@ -1705,9 +1710,10 @@ function formatAnTuTu(v) {
 }
 
 function pintarFilasComerciales(tb, names) {
-  if (!PRECIOS || !names.length) return;
+  if (!names.length) return;
   const datos = names.map(n => comercial(byName(n) || {}));
-  if (!datos.some(d => d.precio != null || d.estado)) return;
+  const precios = names.map(n => precioEfectivo(byName(n) || {}));
+  if (!precios.some(v => v != null)) return;
 
   const tr = document.createElement('tr');
   tr.style.background = 'var(--indigo-pale)';
@@ -1716,11 +1722,11 @@ function pintarFilasComerciales(tb, names) {
     ? `Precio de lista · ${escapeHtml(PRECIOS.fechaLista)}`
     : 'Precio de lista'}</span>`;
   tr.appendChild(td);
-  datos.forEach(d => {
+  precios.forEach(precio => {
     const c = document.createElement('td');
     c.className = 'p-3 text-center font-bold';
     c.style.color = 'var(--indigo)';
-    c.textContent = money(d.precio) || '—';
+    c.textContent = money(precio) || '—';
     tr.appendChild(c);
   });
   for (let i = names.length; i < 3; i++) tr.appendChild(document.createElement('td'));
@@ -1772,19 +1778,6 @@ function compactSpec(v, max = 58) {
   return s.length > max ? s.slice(0, max - 1).trim() + '…' : s;
 }
 
-function argumentoComercial(p) {
-  const at = parseAnTuTu(p.antutu) || 0;
-  const bat = numFromText(p.bateria) || 0;
-  const cam = numFromText(p.camSistema) || 0;
-  const hzv = hz(p.refresco) || 0;
-  if (at >= 1200000) return 'Buen candidato para quien prioriza potencia, multitarea y aplicaciones exigentes.';
-  if (cam >= 100 && hasOIS(p.ois)) return 'Una opción atractiva para quien valora fotografía con buen detalle y estabilización.';
-  if (bat >= 6000) return 'Destaca para clientes que buscan pasar más tiempo lejos del cargador.';
-  if (/IP6[789]/i.test(String(p.resistencia || ''))) return 'Aporta un margen adicional de tranquilidad frente a accidentes cotidianos.';
-  if (hzv >= 120) return 'Su pantalla fluida favorece redes sociales, navegación y contenido en movimiento.';
-  return 'Una propuesta equilibrada para revisar junto con el presupuesto y el uso del cliente.';
-}
-
 function renderQuickSummary(names) {
   const section = document.getElementById('quickSummary');
   const grid = document.getElementById('quickSummaryGrid');
@@ -1817,7 +1810,6 @@ function renderQuickSummary(names) {
       </div>
       <div class="summary-body">
         <div class="summary-metrics">${metrics.map(([label,value,ic]) => `<div class="summary-metric" title="${escapeHtml(String(value || 'No publicado'))}"><div class="summary-metric-label">${svgIcon(ic)}${label}</div><div class="summary-metric-value">${escapeHtml(compactSpec(value))}</div></div>`).join('')}</div>
-        <div class="summary-tip">${svgIcon('bulb')}<span><strong>Cómo presentarlo:</strong> ${argumentoComercial(p)}</span></div>
       </div>
     </article>`;
   }).join('');
@@ -3446,7 +3438,7 @@ function runRecommender(names) {
     <article class="duel-card${i === 0 && hayDuelo ? ' is-top' : ''}" title="${escapeHtml(r.name)}: ${r.score} de 100">
       ${i === 0 && hayDuelo ? `<span class="duel-crown">${svgIcon('award')}${empateTecnico ? 'Ligera ventaja' : 'Mejor encaje'}</span>` : ''}
       <div class="duel-name">${nombreConEtiqueta(r.name)}</div>
-      <div class="duel-price">${precioEfectivo(r.p) != null ? 'desde ' + money(precioEfectivo(r.p)) : 'Precio no publicado'}</div>
+      <div class="duel-price">${precioEfectivo(r.p) != null ? 'Precio según lista desde ' + money(precioEfectivo(r.p)) : 'Precio no publicado'}</div>
       <div class="duel-score-row"><span class="duel-score" data-score="${r.score}">0</span><span class="duel-score-max">/ 100</span></div>
       <span class="duel-track"><span class="duel-fill" data-score="${r.score}"></span></span>
       <details class="score-breakdown">
@@ -4064,7 +4056,9 @@ function comercial(p) {
   return { precio: fila.precio, gama: fila.gama, modeloEntel: modelo, estado: 'OK' };
 }
 
-const precioEfectivo = p => comercial(p).precio ?? null;
+// Prioriza la lista comercial de Entel; si un nombre no cruza, conserva como
+// respaldo el precio contado informado en la propia ficha del equipo.
+const precioEfectivo = p => comercial(p).precio ?? priceNum(p?.contado) ?? null;
 
 // ─────────────────────────────────────────
 // LISTA DE PRECIOS DE ENTEL (.xlsm)
