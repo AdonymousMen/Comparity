@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- COMPARITY V4 2026-09-13 · GUÍA COMERCIAL UFS / eMMC / NVMe -->
-  <meta name="comparity-build" content="2026-09-13-v4-memoria-ufs-nvme" />
+  <!-- COMPARITY V5 2026-09-13 · EXPERIENCIA COMERCIAL PREMIUM -->
+  <meta name="comparity-build" content="2026-09-13-v5-experiencia-comercial" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -594,6 +594,175 @@
       .viewer-shell { height: 360px; }
       .spec-label::after { display: none; }
     }
+
+    /* ═══════════════════════════════════════════════════════════════
+       COMPARITY V5 · EXPERIENCIA COMERCIAL PREMIUM
+       El Sheet conserva los datos; esta capa organiza cómo se venden.
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --indigo: #4338ca;
+      --indigo-light: #5b5ce2;
+      --indigo-pale: #eef2ff;
+      --amber: #f97316;
+      --surface: #f4f6fb;
+      --border: #e3e7ef;
+      --text: #172033;
+      --text-muted: #677187;
+      --navy: #111a33;
+      --navy-2: #1b2750;
+      --cyan: #22d3ee;
+      --success: #10b981;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(99,102,241,.11), transparent 27rem),
+        radial-gradient(circle at 92% 18%, rgba(34,211,238,.09), transparent 24rem),
+        var(--surface);
+    }
+
+    .site-header {
+      background: rgba(248,250,255,.88);
+      border-bottom-color: rgba(203,213,225,.72);
+      box-shadow: 0 8px 28px rgba(15,23,42,.05);
+    }
+    .brand-lockup { display:flex; align-items:center; gap:11px; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 12px;
+      display:grid; place-items:center; color:#fff; font-weight:800;
+      background: linear-gradient(145deg, #4338ca, #2563eb 60%, #06b6d4);
+      box-shadow: 0 8px 20px rgba(67,56,202,.28);
+    }
+    .brand-name { font-family:'Syne',sans-serif; font-weight:800; letter-spacing:-.04em; line-height:1; }
+    .brand-sub { font-size:10px; color:var(--text-muted); margin-top:3px; letter-spacing:.08em; text-transform:uppercase; }
+
+    .hero-shell {
+      position:relative; overflow:hidden; isolation:isolate;
+      color:#fff; border-radius:30px; padding:clamp(26px,5vw,58px);
+      background:
+        radial-gradient(circle at 84% 18%, rgba(34,211,238,.28), transparent 24%),
+        radial-gradient(circle at 68% 95%, rgba(249,115,22,.22), transparent 27%),
+        linear-gradient(125deg, #0f1730 0%, #18285a 52%, #3437a7 100%);
+      box-shadow: 0 28px 70px rgba(25,35,76,.22);
+    }
+    .hero-shell::before {
+      content:''; position:absolute; inset:0; z-index:-1; opacity:.23;
+      background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);
+      background-size:32px 32px; mask-image:linear-gradient(to right,transparent,#000);
+    }
+    .hero-eyebrow {
+      display:inline-flex; align-items:center; gap:8px; padding:7px 12px;
+      border:1px solid rgba(255,255,255,.18); border-radius:99px;
+      background:rgba(255,255,255,.09); color:#dbeafe; font-size:11px;
+      font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    }
+    .hero-dot { width:7px; height:7px; border-radius:50%; background:var(--cyan); box-shadow:0 0 14px var(--cyan); }
+    .hero-title { font-size:clamp(2rem,5vw,4.65rem); line-height:.98; letter-spacing:-.055em; max-width:820px; margin-top:18px; }
+    .hero-accent { color:#7dd3fc; }
+    .hero-copy { max-width:690px; color:#cbd5e1; font-size:clamp(.95rem,1.5vw,1.12rem); line-height:1.65; margin-top:18px; }
+    .hero-proof { display:flex; flex-wrap:wrap; gap:10px; margin-top:25px; }
+    .proof-pill { display:flex; align-items:center; gap:8px; padding:9px 13px; border-radius:12px; background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.12); font-size:12px; color:#e2e8f0; }
+    .proof-icon { color:#86efac; font-weight:800; }
+
+    .journey-strip {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+      margin-top:-18px; position:relative; z-index:2; width:min(780px,92%); margin-left:auto; margin-right:auto;
+      background:#dce2ee; border:1px solid #dce2ee; border-radius:18px; overflow:hidden;
+      box-shadow:0 14px 35px rgba(15,23,42,.12);
+    }
+    .journey-step { background:#fff; padding:15px 18px; display:flex; align-items:center; gap:11px; }
+    .journey-number { width:29px; height:29px; flex:0 0 29px; border-radius:9px; display:grid; place-items:center; background:var(--indigo-pale); color:var(--indigo); font-weight:800; font-size:12px; }
+    .journey-title { font-size:12px; font-weight:800; color:var(--text); }
+    .journey-copy { font-size:10px; color:var(--text-muted); margin-top:1px; }
+
+    .compare-studio {
+      position:relative; background:rgba(255,255,255,.94); border:1px solid rgba(226,232,240,.9);
+      border-radius:25px; padding:clamp(18px,3vw,30px); box-shadow:0 18px 45px rgba(30,41,59,.08);
+    }
+    .section-kicker { color:var(--indigo); font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:800; }
+    .section-title { font-size:clamp(1.35rem,2vw,1.8rem); letter-spacing:-.035em; margin-top:4px; }
+    .section-copy { color:var(--text-muted); font-size:13px; margin-top:4px; }
+    .filter-drawer { margin-top:20px; padding:16px; border-radius:18px; background:#f8fafc; border:1px solid #e9edf4; }
+    .filter-title { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800; color:#475569; margin-bottom:12px; }
+    .slot-card { padding:15px; border-radius:17px; background:#fff; border:1.5px solid #e5e9f1; transition:border-color .2s,box-shadow .2s,transform .2s; }
+    .slot-card:focus-within { border-color:#818cf8; box-shadow:0 10px 25px rgba(79,70,229,.10); transform:translateY(-2px); }
+    .slot-head { display:flex; align-items:center; gap:9px; margin-bottom:9px; }
+    .slot-number { width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--navy);color:#fff;font-weight:800;font-size:11px; }
+    .slot-label { font-size:12px;font-weight:800;color:#475569; }
+    .compare-actions { display:flex; align-items:center; gap:10px; padding-top:18px; margin-top:18px; border-top:1px solid var(--border); }
+    .btn-compare-main { min-width:175px; min-height:46px; border-radius:14px; background:linear-gradient(135deg,#4338ca,#2563eb); box-shadow:0 10px 24px rgba(67,56,202,.25); }
+    .btn-compare-main:hover { background:linear-gradient(135deg,#3730a3,#1d4ed8); transform:translateY(-1px); }
+    .selection-help { margin-left:auto; font-size:11px; color:var(--text-muted); text-align:right; }
+
+    .quick-summary { scroll-margin-top:90px; }
+    .summary-head { display:flex; align-items:end; justify-content:space-between; gap:18px; margin-bottom:15px; }
+    .summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+    .summary-card {
+      overflow:hidden; position:relative; border-radius:22px; background:#fff; border:1px solid var(--border);
+      box-shadow:0 13px 35px rgba(30,41,59,.07); transition:transform .25s,box-shadow .25s;
+    }
+    .summary-card:hover { transform:translateY(-4px); box-shadow:0 20px 42px rgba(30,41,59,.12); }
+    .summary-top { min-height:122px; padding:21px; color:#fff; background:linear-gradient(145deg,#17203c,#303b75); position:relative; }
+    .summary-card:nth-child(2) .summary-top { background:linear-gradient(145deg,#1e3a5f,#0369a1); }
+    .summary-card:nth-child(3) .summary-top { background:linear-gradient(145deg,#3b255d,#6d28d9); }
+    .summary-index { font-size:10px; text-transform:uppercase; letter-spacing:.13em; color:#bae6fd; font-weight:800; }
+    .summary-name { font-family:'Syne',sans-serif; font-size:17px; line-height:1.18; margin-top:8px; max-width:88%; }
+    .summary-price { display:inline-flex; margin-top:12px; padding:5px 9px; border-radius:8px; background:rgba(255,255,255,.13); font-size:12px; font-weight:700; }
+    .summary-body { padding:18px; }
+    .summary-metrics { display:grid;grid-template-columns:1fr 1fr;gap:9px; }
+    .summary-metric { min-height:66px; padding:10px 11px; border-radius:12px; background:#f7f8fb; border:1px solid #edf0f5; }
+    .summary-metric-label { font-size:9px; color:#7c879d; text-transform:uppercase; letter-spacing:.08em; font-weight:800; }
+    .summary-metric-value { font-size:12px; line-height:1.25; font-weight:700; color:#26314b; margin-top:4px; display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+    .summary-tip { margin-top:12px; padding:11px 12px; border-left:3px solid var(--amber); background:#fff7ed; color:#9a3412; font-size:11px; line-height:1.4; border-radius:8px; }
+
+    #cards3D { scroll-margin-top:95px; }
+    .phone-card { border-radius:22px; box-shadow:0 12px 32px rgba(30,41,59,.07); padding:12px; }
+    .phone-card-title { padding:9px 8px 4px; min-height:42px; display:flex; align-items:center; justify-content:center; }
+    .viewer-shell { border:1px solid #eef1f6; background:linear-gradient(180deg,#fff,#f8fafc); }
+
+    #tblWrap { scroll-margin-top:96px; border-radius:24px; box-shadow:0 18px 48px rgba(30,41,59,.09); }
+    .table-banner { padding:22px 24px; background:linear-gradient(120deg,#111a33,#25346f 62%,#4338ca); }
+    .cmp-table { min-width:850px; border-collapse:separate; border-spacing:0; }
+    .cmp-table thead th { padding:16px 14px; color:#334155; }
+    .cmp-table thead th:first-child, .cmp-table tbody td:first-child { position:sticky; left:0; z-index:3; box-shadow:1px 0 0 #e8ebf1; }
+    .cmp-table thead th:first-child { z-index:5; }
+    .cmp-table tbody tr:nth-child(odd):not(.spec-group-row) td:first-child { background:#fff; }
+    .cmp-table tbody tr:nth-child(even):not(.spec-group-row) td:first-child { background:#fafafa; }
+    .cmp-table tbody tr:not(.spec-group-row):hover td { background:#f6f8ff; }
+    .cmp-table tbody tr:not(.spec-group-row):hover td:first-child { background:#f0f3ff; }
+    .spec-group-row td { padding:10px 14px!important; background:#eef2ff!important; color:#3730a3; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; }
+    .cmp-value-cell { min-width:210px; line-height:1.4; color:#334155; }
+    .cmp-standout { background:#ecfdf5!important; box-shadow:inset 0 0 0 1px #a7f3d0; color:#065f46; font-weight:700; }
+    .cmp-standout::after { content:' DESTACA'; display:inline-block; margin-left:6px; padding:2px 5px; border-radius:5px; background:#d1fae5; color:#047857; font-size:8px; letter-spacing:.06em; vertical-align:middle; }
+
+    .winner-card { position:relative; border-radius:28px; padding:clamp(24px,4vw,42px)!important; background:radial-gradient(circle at 88% 20%,rgba(34,211,238,.25),transparent 23%),linear-gradient(125deg,#101a35,#293b84 60%,#4338ca); box-shadow:0 25px 60px rgba(37,50,110,.25); }
+    .winner-card::before { content:'VEREDICTO COMERCIAL'; display:inline-flex; padding:6px 10px; border-radius:99px; background:rgba(255,255,255,.12); font-size:9px; font-weight:800; letter-spacing:.13em; color:#bfdbfe; margin-bottom:10px; }
+    #winnerText { font-family:'Syne',sans-serif; font-size:clamp(1.25rem,3vw,2rem); letter-spacing:-.035em; }
+    #winnerReasons { display:grid; gap:7px; list-style:none; padding-left:0; }
+    #winnerReasons li { padding:9px 11px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.08); border-radius:10px; }
+
+    .trust-footer { padding:27px 0 10px; color:#7c879d; font-size:11px; text-align:center; }
+    .trust-footer strong { color:#475569; }
+    .version-stamp { display:inline-flex; margin-top:8px; padding:4px 8px; border-radius:7px; background:#e9edf5; color:#64748b; font-family:monospace; font-size:9px; }
+
+    @media (max-width: 800px) {
+      .journey-strip { grid-template-columns:1fr; width:88%; }
+      .journey-step { padding:11px 14px; }
+      .summary-grid { grid-template-columns:1fr; }
+      .summary-head { align-items:start; flex-direction:column; }
+      .selection-help { display:none; }
+      .compare-actions { position:sticky; bottom:10px; z-index:20; padding:10px; margin:14px -5px -5px; background:rgba(255,255,255,.94); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:16px; box-shadow:0 12px 30px rgba(15,23,42,.16); }
+      .btn-compare-main { flex:1; }
+      .hero-shell { border-radius:22px; }
+      .hero-copy { line-height:1.5; }
+      .proof-pill { width:100%; }
+      .cmp-table thead th:first-child, .cmp-table tbody td:first-child { min-width:145px; max-width:145px; white-space:normal!important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
+    }
   </style>
 </head>
 <body>
@@ -605,9 +774,10 @@
 <!-- ═══════════════ HEADER ═══════════════ -->
 <header class="site-header">
   <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-    <h1 class="text-lg sm:text-2xl" style="font-family:'Syne',sans-serif;font-weight:800;letter-spacing:-.5px">
-      📱 <span style="color:var(--indigo)">COMPARITY</span> <span style="color:var(--amber);font-size:.8em">· Recomendador</span>
-    </h1>
+    <div class="brand-lockup" aria-label="Comparity, comparador inteligente de equipos">
+      <div class="brand-mark">C</div>
+      <div><div class="brand-name">COMPARITY</div><div class="brand-sub">Decide con claridad</div></div>
+    </div>
     <div class="flex items-center gap-2">
       <!-- Estado (no flota, no tiene fila propia: es un texto chico más aquí) -->
       <span id="statusBadge" class="status-badge" title="Estado de la carga de datos">
@@ -616,7 +786,7 @@
       </span>
       <label class="cursor-pointer">
         <input id="fileInput" type="file" accept=".xlsx,.xls" class="hidden" />
-        <span class="btn-primary" style="display:inline-block">📂 Cargar Excel</span>
+        <span class="btn-primary" style="display:inline-block">📂 Cargar base</span>
       </label>
       <button id="btnClear" class="btn-ghost" title="Borrar datos en caché">🗑 Caché</button>
     </div>
@@ -626,11 +796,34 @@
 <!-- ═══════════════ MAIN ═══════════════ -->
 <main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
 
-  <!-- Selección de equipos -->
-  <section class="bg-white border border-[--border] rounded-2xl p-5 shadow-sm">
-    <h2 class="text-base font-bold mb-4" style="font-family:'Syne',sans-serif">Selecciona hasta 3 equipos</h2>
+  <!-- Presentación: explica el valor antes de mostrar controles -->
+  <section class="hero-shell">
+    <span class="hero-eyebrow"><span class="hero-dot"></span> Asistente de venta y elección</span>
+    <h1 class="hero-title">Compara claro.<br><span class="hero-accent">Recomienda mejor.</span></h1>
+    <p class="hero-copy">Convierte especificaciones técnicas en argumentos claros. Elige hasta tres equipos, descubre sus diferencias y encuentra la alternativa que mejor encaja con lo que el cliente realmente necesita.</p>
+    <div class="hero-proof">
+      <span class="proof-pill"><span class="proof-icon">✓</span> Datos conectados a tu catálogo</span>
+      <span class="proof-pill"><span class="proof-icon">✓</span> Explicaciones en lenguaje sencillo</span>
+      <span class="proof-pill"><span class="proof-icon">✓</span> Comparación técnica y comercial</span>
+    </div>
+  </section>
+  <div class="journey-strip" aria-label="Cómo usar el comparador">
+    <div class="journey-step"><span class="journey-number">01</span><div><div class="journey-title">Elige los equipos</div><div class="journey-copy">Busca por nombre o filtra el catálogo.</div></div></div>
+    <div class="journey-step"><span class="journey-number">02</span><div><div class="journey-title">Mira lo importante</div><div class="journey-copy">Capacidad, pantalla, cámara y autonomía.</div></div></div>
+    <div class="journey-step"><span class="journey-number">03</span><div><div class="journey-title">Explica y recomienda</div><div class="journey-copy">Toca cada dato para entender cómo venderlo.</div></div></div>
+  </div>
 
-    <div class="flex flex-wrap items-end gap-3 mb-4 pb-4 border-b border-[--border]">
+  <!-- Selección de equipos -->
+  <section class="compare-studio">
+    <div>
+      <div class="section-kicker">Arma tu comparación</div>
+      <h2 class="section-title">¿Qué equipos quiere evaluar el cliente?</h2>
+      <p class="section-copy">Puedes comparar uno, dos o tres modelos. Usa los filtros solamente cuando quieras reducir las opciones.</p>
+    </div>
+
+    <div class="filter-drawer">
+      <div class="filter-title"><span>⌁</span> Filtros rápidos del catálogo</div>
+      <div class="flex flex-wrap items-end gap-3">
       <div>
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Precio mín.</label>
         <input id="filtroPrecioMin" type="number" min="0" step="10" placeholder="S/ 0" class="ac-input" style="width:100px" />
@@ -645,24 +838,25 @@
       </div>
       <button id="btnLimpiarFiltros" class="btn-ghost whitespace-nowrap">✕ Limpiar filtros</button>
       <span id="filtroContador" class="text-xs text-slate-500 ml-auto"></span>
-    </div>
+      </div>
 
-    <div class="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b border-[--border]">
+    <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-[--border]">
       <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide mr-1">Marca:</span>
       <div id="filtroMarcaChips" class="flex flex-wrap gap-2"></div>
     </div>
+    </div>
 
-    <div class="grid sm:grid-cols-3 gap-4 mb-4">
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Equipo 1</label>
+    <div class="grid sm:grid-cols-3 gap-4 mt-5">
+      <div class="slot-card">
+        <div class="slot-head"><span class="slot-number">1</span><label class="slot-label">Primer equipo</label></div>
         <div class="ac-wrap" id="wrap1"></div>
       </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Equipo 2</label>
+      <div class="slot-card">
+        <div class="slot-head"><span class="slot-number">2</span><label class="slot-label">Segundo equipo</label></div>
         <div class="ac-wrap" id="wrap2"></div>
       </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Equipo 3</label>
+      <div class="slot-card">
+        <div class="slot-head"><span class="slot-number">3</span><label class="slot-label">Tercer equipo</label></div>
         <div class="ac-wrap" id="wrap3"></div>
       </div>
     </div>
@@ -678,20 +872,34 @@
         </div>
       </div>
     </div>
-    <div class="flex gap-2 pt-2 border-t border-[--border]">
-      <button id="btnComparar" class="btn-primary">⚡ Comparar</button>
+    <div class="compare-actions">
+      <button id="btnComparar" class="btn-primary btn-compare-main">Comparar equipos →</button>
       <button id="btnReset" class="btn-ghost">↺ Limpiar</button>
+      <span class="selection-help">Consejo: toca cualquier especificación<br>para explicársela al cliente.</span>
     </div>
   </section>
 
+  <!-- Resumen comercial inmediato -->
+  <section id="quickSummary" class="quick-summary hidden">
+    <div class="summary-head">
+      <div><div class="section-kicker">Lectura rápida</div><h2 class="section-title">Lo esencial, antes de entrar al detalle</h2><p class="section-copy">Una vista pensada para conversar con el cliente, no para leer una ficha técnica.</p></div>
+      <a href="#tblWrap" class="btn-ghost" style="text-decoration:none">Ver todas las especificaciones ↓</a>
+    </div>
+    <div id="quickSummaryGrid" class="summary-grid"></div>
+  </section>
+
   <!-- Visores 3D -->
-  <section id="cards3D" class="grid sm:grid-cols-3 gap-5"></section>
+  <section id="visualSection" class="hidden">
+    <div class="summary-head"><div><div class="section-kicker">Exploración visual</div><h2 class="section-title">Conócelos desde todos los ángulos</h2><p class="section-copy">Gira cada modelo y revisa su diseño antes de tomar una decisión.</p></div></div>
+    <div id="cards3D" class="grid sm:grid-cols-3 gap-5"></div>
+  </section>
 
   <!-- Tabla comparativa -->
   <section id="tblWrap" class="hidden bg-white border border-[--border] rounded-2xl overflow-hidden shadow-sm">
-    <div class="px-5 py-4" style="background:linear-gradient(90deg,#1d4ed8,#6d28d9)">
-      <h2 class="text-lg text-white" style="font-family:'Syne',sans-serif">Comparativa Detallada</h2>
-      <p class="text-xs text-blue-200 mt-0.5">Haz clic en cualquier especificación para ver su explicación</p>
+    <div class="table-banner">
+      <div class="section-kicker" style="color:#7dd3fc">Comparación completa</div>
+      <h2 class="text-xl text-white mt-1" style="font-family:'Syne',sans-serif">Cada diferencia, puesta en contexto</h2>
+      <p class="text-xs text-blue-200 mt-1">Los datos subrayados se pueden tocar para abrir una explicación comercial clara.</p>
     </div>
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm cmp-table">
@@ -710,15 +918,20 @@
 
   <!-- Recomendador -->
   <section id="winnerSection" class="winner-card p-6 hidden">
-    <h3 class="text-xl mb-1" style="font-family:'Syne',sans-serif">🏆 Recomendador</h3>
+    <h3 class="text-xl mb-1" style="font-family:'Syne',sans-serif">La recomendación más equilibrada</h3>
     <p id="winnerText" class="text-lg font-semibold mt-2"></p>
     <ul id="winnerReasons" class="mt-3 text-sm list-disc pl-5 space-y-0.5 opacity-90"></ul>
     <div class="mt-4 bg-white/15 rounded-xl p-4 text-sm">
-      <div class="font-semibold mb-2" style="font-family:'Syne',sans-serif">Ranking (puntajes /100):</div>
+      <div class="font-semibold mb-2" style="font-family:'Syne',sans-serif">Cómo queda la comparación:</div>
       <ol id="rankList" class="list-decimal pl-5 space-y-2"></ol>
       <p class="text-xs mt-3 opacity-75">CPU 25% · Cámara 18% · Pantalla 10% · RAM 12% · Almacenamiento 7% · Batería/Carga 12% · Resistencia 6% · Bluetooth 4% · Precio 6%</p>
     </div>
   </section>
+
+  <footer class="trust-footer">
+    <p><strong>COMPARITY</strong> ayuda a interpretar datos; la recomendación final debe considerar necesidades, presupuesto y disponibilidad real.</p>
+    <span class="version-stamp">V5 · experiencia-comercial · 2026-09-13</span>
+  </footer>
 
 </main>
 
@@ -1341,6 +1554,85 @@ function nombreConEtiqueta(n) {
   return escapeHtml(n) + (esDescontinuado(n) ? ' <span class="descontinuado-tag">DESCONTINUADO</span>' : '');
 }
 
+const FIELD_GROUPS = {
+  contado:'Compra', cuota:'Compra',
+  pantalla:'Experiencia visual', peso:'Experiencia visual', resistencia:'Experiencia visual', refresco:'Experiencia visual',
+  procesador:'Rendimiento y memoria', antutu:'Rendimiento y memoria', ram:'Rendimiento y memoria', rom:'Rendimiento y memoria', ampliable:'Rendimiento y memoria',
+  camSistema:'Fotografía y video', ois:'Fotografía y video', video:'Fotografía y video', camFrontal:'Fotografía y video',
+  bateria:'Autonomía y carga', carga:'Autonomía y carga', inalambrica:'Autonomía y carga',
+  bt:'Conectividad y seguridad', nfc:'Conectividad y seguridad', huella:'Conectividad y seguridad',
+  fechaLanzamiento:'Vida útil', updates:'Vida útil'
+};
+
+function compactSpec(v, max = 58) {
+  const s = String(v || 'No publicado').replace(/\s+/g, ' ').trim();
+  return s.length > max ? s.slice(0, max - 1).trim() + '…' : s;
+}
+
+function argumentoComercial(p) {
+  const at = parseAnTuTu(p.antutu) || 0;
+  const bat = numFromText(p.bateria) || 0;
+  const cam = numFromText(p.camSistema) || 0;
+  const hzv = hz(p.refresco) || 0;
+  if (at >= 1200000) return 'Buen candidato para quien prioriza potencia, multitarea y aplicaciones exigentes.';
+  if (cam >= 100 && hasOIS(p.ois)) return 'Una opción atractiva para quien valora fotografía con buen detalle y estabilización.';
+  if (bat >= 6000) return 'Destaca para clientes que buscan pasar más tiempo lejos del cargador.';
+  if (/IP6[789]/i.test(String(p.resistencia || ''))) return 'Aporta un margen adicional de tranquilidad frente a accidentes cotidianos.';
+  if (hzv >= 120) return 'Su pantalla fluida favorece redes sociales, navegación y contenido en movimiento.';
+  return 'Una propuesta equilibrada para revisar junto con el presupuesto y el uso del cliente.';
+}
+
+function renderQuickSummary(names) {
+  const section = document.getElementById('quickSummary');
+  const grid = document.getElementById('quickSummaryGrid');
+  const visual = document.getElementById('visualSection');
+  if (!section || !grid) return;
+  const phones = names.map(byName).filter(Boolean);
+  if (!phones.length) {
+    section.classList.add('hidden');
+    visual?.classList.add('hidden');
+    grid.innerHTML = '';
+    return;
+  }
+  grid.innerHTML = phones.map((p, i) => {
+    const precio = money(precioEfectivo(p));
+    const metrics = [
+      ['Pantalla', p.pantalla], ['Rendimiento', p.procesador],
+      ['RAM', p.ram], ['Almacenamiento', p.rom],
+      ['Cámaras', p.camSistema], ['Batería', p.bateria]
+    ];
+    return `<article class="summary-card">
+      <div class="summary-top">
+        <div class="summary-index">Opción ${i + 1}</div>
+        <h3 class="summary-name">${nombreConEtiqueta(p.nombre)}</h3>
+        <span class="summary-price">${precio ? `Precio referencial: ${precio}` : 'Precio no publicado'}</span>
+      </div>
+      <div class="summary-body">
+        <div class="summary-metrics">${metrics.map(([label,value]) => `<div class="summary-metric" title="${escapeHtml(String(value || 'No publicado'))}"><div class="summary-metric-label">${label}</div><div class="summary-metric-value">${escapeHtml(compactSpec(value))}</div></div>`).join('')}</div>
+        <div class="summary-tip"><strong>Para recomendar:</strong> ${argumentoComercial(p)}</div>
+      </div>
+    </article>`;
+  }).join('');
+  section.classList.remove('hidden');
+  const hay3D = phones.some(p => p.link3D && p.link3D.trim());
+  visual?.classList.toggle('hidden', !hay3D);
+}
+
+function resaltarDatosComparables(tb, names) {
+  if (names.length < 2) return;
+  const extract = { antutu:parseAnTuTu, refresco:hz, ram:numFromText, rom:numFromText, bateria:numFromText, carga:numFromText };
+  Object.entries(extract).forEach(([key, fn]) => {
+    const row = tb.querySelector(`tr[data-field="${key}"]`);
+    if (!row) return;
+    const cells = Array.from(row.querySelectorAll('td')).slice(1, names.length + 1);
+    const vals = names.map(n => fn((byName(n) || {})[key]));
+    const valid = vals.filter(v => Number.isFinite(v));
+    if (valid.length < 2 || Math.max(...valid) === Math.min(...valid)) return;
+    const best = Math.max(...valid);
+    vals.forEach((v, i) => { if (v === best) { cells[i]?.classList.add('cmp-standout'); cells[i]?.setAttribute('title', 'Este dato destaca dentro de los equipos seleccionados'); } });
+  });
+}
+
 function renderTable() {
   const names = selections.filter(Boolean);
   [0, 1, 2].forEach(i => {
@@ -1354,12 +1646,23 @@ function renderTable() {
   pintarFilasComerciales(tb, names);
   pintarFilaSKU(tb, names);
 
+  let lastGroup = '';
   FIELDS.forEach(field => {
     const has = names.some(n => { const v = (byName(n) || {})[field.k]; return v != null && String(v).trim() !== ''; });
     if (!has) return;
 
+    const group = FIELD_GROUPS[field.k] || 'Otras características';
+    if (group !== lastGroup) {
+      const groupRow = document.createElement('tr');
+      groupRow.className = 'spec-group-row';
+      groupRow.innerHTML = `<td colspan="4">${escapeHtml(group)}</td>`;
+      tb.appendChild(groupRow);
+      lastGroup = group;
+    }
+
     const tipo = getTipoFromLabel(field.label);
     const tr = document.createElement('tr');
+    tr.dataset.field = field.k;
 
     // Label cell
     const tdLabel = document.createElement('td');
@@ -1376,7 +1679,7 @@ function renderTable() {
     // Value cells
     names.forEach(n => {
       const td = document.createElement('td');
-      td.className = 'p-3 text-center';
+      td.className = 'p-3 text-center cmp-value-cell';
       let v = (byName(n) || {})[field.k];
       if (!v) { td.textContent = '—'; tr.appendChild(td); return; }
       if (field.k === 'antutu') v = formatAnTuTu(v);
@@ -1507,6 +1810,8 @@ function renderTable() {
     }
     tb.appendChild(tr);
   });
+
+  resaltarDatosComparables(tb, names);
 
   document.getElementById('tblWrap').classList.toggle('hidden', !names.length);
 }
@@ -2783,7 +3088,9 @@ function rawScore(p) {
     cam: .4*(numFromText(p.camSistema)||0)/200 + .2*(numFromText(p.camFrontal)||0)/32 + .4*(hasOIS(p.ois)?1:0),
     screen: (hz(p.refresco)||60)>=120?1:(hz(p.refresco)||60)>=90?.75:.5,
     ram: Math.max(0,Math.min(1,((numFromText(p.ram)||0)-2)/10)),
-    storage: /UFS/i.test(String(p.rom||''))?(/3\.1|3\.0/i.test(p.rom)?1:/2\.2/i.test(p.rom)?.85:/2\.1/i.test(p.rom)?.75:.7):(/eMMC/i.test(p.rom)?.55:.65),
+    storage: /UFS/i.test(String(p.rom||''))
+      ? (/4\.[01]/i.test(p.rom)?1:/3\.[01]/i.test(p.rom)?.93:/2\.2/i.test(p.rom)?.84:/2\.1/i.test(p.rom)?.76:.7)
+      : (/NVMe/i.test(String(p.rom||''))?.95:/eMMC/i.test(String(p.rom||''))?.55:.65),
     battery: .65*Math.max(0,Math.min(1,((numFromText(p.bateria)||0)-4500)/2200))+.35*Math.max(0,Math.min(1,(numFromText(p.carga)||0)/66)),
     resist: waterScore(p.resistencia),
     bt: (v=>v>=5.4?1:v>=5.3?.9:v>=5.1?.75:v>=5.0?.7:.6)(btVer(p.bt)),
@@ -2805,7 +3112,7 @@ function runRecommender(names) {
     return { name: p.nombre, p, parts, score: total + bonus, bonus, price: precioEfectivo(p)||0 };
   }).sort((a,b) => b.score - a.score);
   const top = scored[0];
-  document.getElementById('winnerText').textContent = `🏆 Ganador: ${top.name}${top.bonus>0?' (bono misma gama)':''}`;
+  document.getElementById('winnerText').textContent = `Recomendación sugerida: ${top.name}${top.bonus>0?' · comparación en la misma gama':''}`;
   const avg = k => scored.slice(1).reduce((s,r)=>s+r.parts[k],0)/Math.max(1,scored.length-1);
   const reasons = [];
   if (top.parts.price>=.7) reasons.push(`💰 Mejor relación precio (${money(precioEfectivo(top.p)) || 's/d'})`);
@@ -2834,13 +3141,17 @@ function runRecommender(names) {
 // ─────────────────────────────────────────
 function update() {
   const names = selections.filter(Boolean);
+  renderQuickSummary(names);
   renderCards3D(names);
   renderTable();
   runRecommender(names);
 }
 
 // Botones
-document.getElementById('btnComparar').addEventListener('click', update);
+document.getElementById('btnComparar').addEventListener('click', () => {
+  update();
+  if (selections.some(Boolean)) setTimeout(() => document.getElementById('quickSummary')?.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+});
 document.getElementById('btnReset').addEventListener('click', () => {
   selections.fill(null);
   rebuildAllAC();
