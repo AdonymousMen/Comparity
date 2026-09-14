@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <!-- COMPARITY V11.2 2026-09-13 · PUNTAJE EXPLICADO -->
-  <meta name="comparity-build" content="2026-09-13-v11.3-precios-visibles" />
+  <meta name="comparity-build" content="2026-09-14-v11.4-cache-precios" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -4139,10 +4139,18 @@ function engancharControlesComerciales() {
 // ─────────────────────────────────────────
 // CARGA PRINCIPAL
 // ─────────────────────────────────────────
-const CACHE_KEY = 'comparity_sheet_v14';
+// Cambiar la versión evita reutilizar cachés antiguas que solo guardaban
+// características e imágenes, pero no la pestaña de precios.
+const CACHE_KEY = 'comparity_sheet_v15';
 
-const guardarCache = p => { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), ...p })); } catch {} };
 const leerCache = () => { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch { return null; } };
+const guardarCache = p => {
+  try {
+    const anterior = leerCache() || {};
+    const disponibles = Object.fromEntries(Object.entries(p).filter(([, valor]) => valor != null));
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ...anterior, ...disponibles, t: Date.now() }));
+  } catch {}
+};
 
 function reconstruir(Acar, Aimg) {
   DATA = mergeCarImg(buildFromCaracteristicas(Acar), buildFromImagen(Aimg || []));
@@ -4154,20 +4162,26 @@ function reconstruir(Acar, Aimg) {
 async function cargarDesdeSheet() {
   const [Acar, Aimg] = await Promise.all([leerHoja('caracteristicas'), leerHoja('imagen')]);
   reconstruir(Acar, Aimg);
-  // En paralelo: son independientes entre sí y así el tiempo total de carga
-  // no se acumula uno detrás de otro.
-  await Promise.all([cargarDescontinuados(), cargarVigentes(), cargarSku()]);
-
-  let nPrecios = 0, avisoPrecios = '';
+  let nPrecios = 0, avisoPrecios = '', Aprecios = null;
   try {
     await cargarEquivalencias();
-    PRECIOS = armarPrecios(await leerHoja('precios'));
+    // La lista siempre se solicita a Google con cache:'no-store'. También se
+    // guarda una copia local para que el precio aparezca desde el primer
+    // render de la próxima visita mientras llega la actualización en línea.
+    Aprecios = await leerHoja('precios');
+    PRECIOS = armarPrecios(Aprecios);
     nPrecios = DATA.filter(p => precioEfectivo(p) != null).length;
+    // Repinta de inmediato: no espera las pestañas opcionales para mostrar
+    // precios en equipos que el usuario ya hubiera seleccionado.
+    rebuildAllAC(); update();
   } catch (err) {
     avisoPrecios = err.message;
     console.warn('Precios no disponibles:', err.message);
   }
-  guardarCache({ Acar, Aimg });
+
+  // Las pestañas opcionales se completan después; no deben retrasar el precio.
+  await Promise.all([cargarDescontinuados(), cargarVigentes(), cargarSku()]);
+  guardarCache({ Acar, Aimg, Aprecios });
   return { con3D: DATA.filter(d => d.link3D).length, nPrecios, avisoPrecios };
 }
 
@@ -4292,13 +4306,15 @@ document.addEventListener('scroll', e => {
   pintarControlesComerciales();
 
   const cache = leerCache();
-  const fresca = cache && (Date.now() - (cache.t || 0)) < CONFIG.ttlMinutos * 60000;
   if (cache?.Acar?.length) {
     reconstruir(cache.Acar, cache.Aimg);
-    setStatus(`Mostrando lo guardado · ${DATA.length} equipos`, 'info');
+    if (cache.Aprecios?.length) {
+      try { PRECIOS = armarPrecios(cache.Aprecios); } catch { PRECIOS = null; }
+    }
+    const preciosGuardados = DATA.filter(p => precioEfectivo(p) != null).length;
+    setStatus(`Mostrando lo guardado · ${DATA.length} equipos · ${preciosGuardados} con precio · actualizando…`, 'info');
     rebuildAllAC(); update();
   }
-  if (fresca && PRECIOS) return;
 
   try {
     const r = CONFIG.sheetId ? await cargarDesdeSheet() : await cargarDesdeXlsx();
