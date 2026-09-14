@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <!-- COMPARITY V11.2 2026-09-13 · PUNTAJE EXPLICADO -->
-  <meta name="comparity-build" content="2026-09-14-v11.4-cache-precios" />
+  <meta name="comparity-build" content="2026-09-14-v11.5-tabla-interactiva" />
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-31ND3754TF"></script>
 <script>
@@ -606,33 +606,47 @@
     .cmp-table tbody tr.hidden-row { display: none; }
 
     .spec-group-row td {
-      padding: 11px 14px !important; background: var(--brand-soft) !important;
-      color: var(--brand-deep); font-size: 12px !important; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .1em; border-bottom: 1px solid var(--brand-line);
+      padding: 13px 14px 8px !important; background: var(--card) !important;
+      color: var(--ink-3); font-size: 11.5px !important; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .09em;
+      border-top: 7px solid var(--paper); border-bottom: 1px solid var(--line);
     }
-    .spec-group-row td > span { display: inline-flex; align-items: center; gap: 9px; }
+    .spec-group-row:first-child td { border-top-width: 0; }
+    .spec-group-row td > span { display: inline-flex; align-items: center; gap: 8px; }
+    .spec-group-row .i { color: var(--ink-3); }
 
     .spec-label { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; color: var(--ink); font-weight: 600; position: relative; transition: color .15s; }
     .spec-label .i { color: var(--brand); flex: none; }
-    .spec-label::before {
-      content: ''; position: absolute; left: 0; right: 0; bottom: -2px; height: 1.5px;
-      background: var(--brand); opacity: 0; transform: scaleX(.4); transform-origin: left;
-      transition: opacity .18s, transform .18s var(--ease);
-    }
     .spec-label:hover { color: var(--brand); }
-    .spec-label:hover::before { opacity: .35; transform: scaleX(1); }
 
     .val-clickable {
-      cursor: pointer; color: var(--brand); font-weight: 600;
-      border-bottom: 1.5px dotted var(--brand-line); padding-bottom: 1px;
-      transition: color .15s, border-color .15s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+      position: relative; cursor: pointer; color: var(--brand); font-weight: 600;
+      padding: 2px 3px; border-radius: 6px;
+      transition: color .15s, background .15s;
     }
-    .val-clickable:hover { color: var(--brand-deep); border-bottom-color: var(--brand); border-bottom-style: solid; }
+    .val-clickable::after, .spec-label[data-click-hint]::after {
+      content: 'ⓘ'; color: var(--ink-3); font-size: 11px; font-weight: 700; line-height: 1;
+      opacity: .7; transition: color .15s, opacity .15s;
+    }
+    .val-clickable:hover, .spec-label[data-click-hint]:hover { color: var(--brand-deep); background: var(--brand-soft); }
+    .val-clickable:hover::after, .spec-label[data-click-hint]:hover::after { color: var(--brand); opacity: 1; }
+    .val-clickable[data-click-hint]::before, .spec-label[data-click-hint]::before {
+      content: attr(data-click-hint); position: absolute; z-index: 20; left: 50%; bottom: calc(100% + 8px);
+      transform: translate(-50%, 3px); width: max-content; max-width: 190px; padding: 6px 9px;
+      border-radius: 7px; background: var(--ink); color: #fff; box-shadow: var(--sh-2);
+      font-size: 11px; font-weight: 600; line-height: 1.25; letter-spacing: 0; text-transform: none;
+      opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s var(--ease);
+    }
+    .val-clickable[data-click-hint]:hover::before, .spec-label[data-click-hint]:hover::before,
+    .val-clickable[data-click-hint]:focus-visible::before, .spec-label[data-click-hint]:focus-visible::before {
+      opacity: 1; transform: translate(-50%, 0);
+    }
 
     .spec-plain { display: inline-flex; align-items: center; gap: 9px; }
     .spec-plain .i { color: var(--ink-3); flex: none; }
     .cmp-value-cell { min-width: 190px; line-height: 1.45; }
-    .cmp-standout { background: var(--win-soft) !important; color: #075B3E !important; font-weight: 700; box-shadow: inset 0 0 0 1px var(--win-line); position: relative; }
+    .cmp-standout { background: #F7FBF9 !important; color: #075B3E !important; font-weight: 700; box-shadow: inset 3px 0 0 var(--win-line); position: relative; }
     .cmp-standout::before {
       content: ''; display: inline-block; width: 15px; height: 15px; margin-right: 7px; vertical-align: -3px;
       background: var(--win);
@@ -936,13 +950,6 @@
 <!-- ═══════════════ MAIN ═══════════════ -->
 <main class="page-main" id="top">
 
-  <!-- Guía breve: la herramienta comienza aquí, sin una portada intermedia -->
-  <div class="journey-strip" aria-label="Cómo usar COMPARITY">
-    <div class="journey-step"><span class="journey-number">1</span><div><div class="journey-title">Elige</div><div class="journey-copy">Hasta tres equipos</div></div></div>
-    <div class="journey-step"><span class="journey-number">2</span><div><div class="journey-title">Compara</div><div class="journey-copy">Toca cada dato</div></div></div>
-    <div class="journey-step"><span class="journey-number">3</span><div><div class="journey-title">Recomienda</div><div class="journey-copy">Cierra con el Pulso</div></div></div>
-  </div>
-
   <!-- ── Selección ── -->
   <section id="compareStudio" class="compare-studio">
     <div class="studio-head">
@@ -1059,7 +1066,7 @@
   <section id="tblWrap" class="hidden">
     <div class="table-banner">
       <span class="section-kicker"><svg class="i" aria-hidden="true"><use href="#i-layers"/></svg> Comparación completa</span>
-      <p><svg class="i" aria-hidden="true"><use href="#i-touch"/></svg> Toca los datos subrayados para ver una explicación clara y útil.</p>
+      <p><svg class="i" aria-hidden="true"><use href="#i-touch"/></svg> Los datos con el ícono ⓘ se pueden tocar para ver qué significan.</p>
     </div>
     <div class="table-toolbar">
       <label class="diff-switch">
@@ -1716,7 +1723,7 @@ function pintarFilasComerciales(tb, names) {
   if (!precios.some(v => v != null)) return;
 
   const tr = document.createElement('tr');
-  tr.style.background = 'var(--indigo-pale)';
+  tr.dataset.comparable = 'precio';
   const td = document.createElement('td');
   td.innerHTML = `<span class="spec-plain">${svgIcon('price')}${PRECIOS?.fechaLista
     ? `Precio de lista · ${escapeHtml(PRECIOS.fechaLista)}`
@@ -1881,7 +1888,7 @@ function renderTable() {
     const tdLabel = document.createElement('td');
     const ico = field.ic ? svgIcon(field.ic) : '';
     if (tipo) {
-      tdLabel.innerHTML = `<span class="spec-label" tabindex="0" role="button" aria-label="Ver explicación de ${escapeHtml(field.label)}">${ico}${escapeHtml(field.label)}</span>`;
+      tdLabel.innerHTML = `<span class="spec-label" tabindex="0" role="button" data-click-hint="Haz clic para ver qué significa" title="Haz clic para ver qué significa" aria-label="Ver explicación de ${escapeHtml(field.label)}">${ico}${escapeHtml(field.label)}</span>`;
       tdLabel.querySelector('.spec-label').addEventListener('click', () => abrirExplicacion(tipo, field.label));
       tdLabel.querySelector('.spec-label').addEventListener('keydown', e => { if (e.key === 'Enter') abrirExplicacion(tipo, field.label); });
     } else {
@@ -2024,6 +2031,11 @@ function renderTable() {
     tb.appendChild(tr);
   });
 
+  tb.querySelectorAll('.val-clickable').forEach(el => {
+    el.dataset.clickHint = 'Haz clic para ver qué significa';
+    el.title = 'Haz clic para ver qué significa';
+    el.setAttribute('aria-label', `Ver explicación: ${el.textContent.trim()}`);
+  });
   resaltarDatosComparables(tb, names);
   marcarFilasIguales(names);
   aplicarFiltroDiferencias();
@@ -3928,6 +3940,7 @@ function pintarFilaSKU(tb, names) {
   const tr = document.createElement('tr');
   const tdLabel = document.createElement('td');
   tr.classList.add('seller-only');
+  tr.dataset.comparable = 'sku';
   tdLabel.innerHTML = `<span class="spec-plain">${svgIcon('grid')}SKU (punto de venta)</span>`;
   tr.appendChild(tdLabel);
 
@@ -4359,10 +4372,12 @@ function marcarFilasIguales(names = selections.filter(Boolean)) {
     // "—", "-", "no", "n/a" y vacío significan lo mismo: no lo tiene.
     return /^(-+|—+|no|n\/a|na|sin dato|no publicado|)$/.test(s) ? '∅' : s;
   };
-  tb.querySelectorAll('tr[data-field]').forEach(tr => {
-    const k = tr.dataset.field;
-    const vals = names.map(n => plano((byName(n) || {})[k]));
-    const iguales = names.length > 1 && vals.every(v => v === vals[0]);
+  // Compara el contenido que el usuario realmente ve. Así también funcionan
+  // precio y SKU, y no afectan espacios o formatos internos del Sheet.
+  tb.querySelectorAll('tr[data-field], tr[data-comparable]').forEach(tr => {
+    const celdas = Array.from(tr.children).slice(1, names.length + 1);
+    const vals = celdas.map(td => plano(td.textContent));
+    const iguales = names.length > 1 && vals.length === names.length && vals.every(v => v === vals[0]);
     tr.dataset.same = iguales ? '1' : '0';
     total++; if (!iguales) distintas++;
   });
@@ -4379,7 +4394,7 @@ function aplicarFiltroDiferencias() {
   if (!tb) return;
   const activo = !!document.getElementById('soloDiferencias')?.checked;
   const enModoCliente = document.body.classList.contains('modo-cliente');
-  tb.querySelectorAll('tr[data-field]').forEach(tr => {
+  tb.querySelectorAll('tr[data-field], tr[data-comparable]').forEach(tr => {
     tr.classList.toggle('hidden-row', activo && tr.dataset.same === '1');
   });
   // Un título de grupo sin filas debajo es ruido: se esconde también.
@@ -4393,7 +4408,10 @@ function aplicarFiltroDiferencias() {
   });
   cerrar();
 }
-document.getElementById('soloDiferencias')?.addEventListener('change', aplicarFiltroDiferencias);
+document.getElementById('soloDiferencias')?.addEventListener('change', () => {
+  marcarFilasIguales();
+  aplicarFiltroDiferencias();
+});
 
 // ── Puntajes que suben en lugar de aparecer de golpe ──
 function animarPuntajes() {
