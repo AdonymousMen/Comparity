@@ -1022,8 +1022,8 @@
             <svg class="i" aria-hidden="true"><use href="#i-upload"/></svg> Subir .xlsm de Entel
             <input id="entelInput" type="file" accept=".xlsm,.xlsx,.xls" class="hidden" />
           </label>
-          <button id="btnExportCSV" class="btn-ghost hidden" type="button" title="Descarga el CSV para pegarlo en la pestaña RENO CONT del Sheet">
-            <svg class="i" aria-hidden="true"><use href="#i-download"/></svg> CSV para RENO CONT
+          <button id="btnExportCSV" class="btn-ghost hidden" type="button" title="Descarga un solo CSV con el precio al contado y las cuotas para cargarlo en RENO">
+            <svg class="i" aria-hidden="true"><use href="#i-download"/></svg> CSV contado + cuotas
           </button>
         </div>
       </div>
@@ -1739,6 +1739,29 @@ function pintarFilasComerciales(tb, names) {
   for (let i = names.length; i < 3; i++) tr.appendChild(document.createElement('td'));
   tb.appendChild(tr);
 
+  if (datos.some(d => d.cuota1 != null || d.cuotaRegular != null || d.cuotaInicial > 0)) {
+    const f = document.createElement('tr');
+    f.dataset.comparable = 'financiamiento';
+    const fl = document.createElement('td');
+    fl.innerHTML = `<span class="spec-plain">${svgIcon('calendar')}Financiamiento</span>`;
+    f.appendChild(fl);
+    datos.forEach(d => {
+      const c = document.createElement('td');
+      c.className = 'p-3 text-center';
+      const partes = [];
+      if (d.cuotaInicial > 0) partes.push(`Inicial ${moneyCuota(d.cuotaInicial)}`);
+      if (d.cuota1 != null) partes.push(`1.ª cuota ${moneyCuota(d.cuota1)}`);
+      if (d.cuotaRegular != null) {
+        const n = d.numeroCuotas || 12;
+        partes.push(n > 1 ? `cuotas 2–${n}: ${moneyCuota(d.cuotaRegular)}/mes` : `${moneyCuota(d.cuotaRegular)}/mes`);
+      }
+      c.textContent = partes.join(' · ') || '—';
+      f.appendChild(c);
+    });
+    for (let i = names.length; i < 3; i++) f.appendChild(document.createElement('td'));
+    tb.appendChild(f);
+  }
+
   if (datos.some(d => d.gama)) {
     const g = document.createElement('tr');
     const gl = document.createElement('td');
@@ -1760,7 +1783,7 @@ function pintarFilasComerciales(tb, names) {
     const w = document.createElement('tr');
     w.classList.add('seller-only');
     w.innerHTML = `<td colspan="4" style="background:var(--warm-soft);color:var(--warm);font-size:13px">
-      Sin precio en RENO CONT: ${escapeHtml(sinCruce.join(', '))}</td>`;
+      Sin precio en RENO: ${escapeHtml(sinCruce.join(', '))}</td>`;
     tb.appendChild(w);
   }
 }
@@ -3528,7 +3551,7 @@ const CONFIG = {
   hojas: {
     caracteristicas: 'Caracteristicas',
     imagen:          'Imagen',
-    precios:         'RENO CONT',     // renovación · oferta contado regular
+    precios:         'RENO',          // renovación · contado y financiamiento
     equivalencias:   'EQUIVALENCIAS', // opcional: si existe, pisa la tabla de abajo
     descontinuados:  'DESCONTINUADOS', // opcional: una columna EQUIPO, uno por fila
     vigentes:        'VIGENTES',       // opcional: excepciones que NO se marcan en rojo
@@ -3539,7 +3562,8 @@ const CONFIG = {
   publicado: { base: '', gid: { caracteristicas: '', imagen: '', precios: '', equivalencias: '', descontinuados: '', vigentes: '', sku: '' } },
   ttlMinutos: 10,
   fallbackXlsx: 'COMP.xlsx',
-  hojaEntel: /RENOVACION.*CONTADO.*OFERTA/i
+  hojaEntel: /RENOVACION.*CONTADO.*OFERTA/i,
+  hojaFinanciamiento: /RENOVACION_OTF/i
 };
 
 const gvizUrl = hoja =>
@@ -3555,6 +3579,7 @@ const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 const num = v => { const n = parseFloat(String(v ?? '').replace(/[^\d.,-]/g,'').replace(',', '.')); return isNaN(n) ? null : n; };
 const money = v => v == null ? null : 'S/ ' + Number(v).toLocaleString('es-PE', { maximumFractionDigits: 0 });
+const moneyCuota = v => v == null ? null : 'S/ ' + Number(v).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const norm = s => deaccent(String(s ?? '')).toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
 
 function fechaListaLegible(valor) {
@@ -3635,7 +3660,7 @@ function ubicarEncabezado(A, etiqueta) {
 }
 
 // Cruce entre el nombre del equipo en Caracteristicas y el de la columna MODELO
-// de la pestaña RENO CONT. Si agregas un equipo, añade aquí su línea.
+// de la pestaña RENO. Si agregas un equipo, añade aquí su línea.
 // Una pestaña llamada EQUIVALENCIAS en el Sheet (EQUIPO | MODELO) pisa esta tabla.
 const EQUIVALENCIAS = {
   "HONOR 400": "Honor 400 512GB 5G",
@@ -3725,7 +3750,7 @@ const EQUIVALENCIAS = {
   "Zte Blade A55": "Zte Blade A55",
 };
 // ─────────────────────────────────────────
-// PRECIOS — pestaña RENO CONT de tu Sheet
+// PRECIOS — pestaña RENO de tu Sheet
 // ─────────────────────────────────────────
 let PRECIOS = null;       // { filas: Map(MODELO -> {precio, gama}) }
 let MAPA = { ...EQUIVALENCIAS };
@@ -3734,13 +3759,23 @@ let MAPA = { ...EQUIVALENCIAS };
 function armarPrecios(A) {
   const enc = ubicarEncabezado(A, 'MODELO');
   if (!enc) throw new Error('no encontré la columna MODELO');
+  const cabeceras = (A[enc.fila] || []).map(v => norm(clean(v)));
+  const columna = (...nombres) => cabeceras.findIndex(h => nombres.includes(h));
+  const cInicial = columna('CUOTA INICIAL');
+  const cCuota1 = columna('CUOTA 1');
+  const cCuotaRegular = columna('CUOTA 2 A LA 12', 'CUOTA 2 A 12');
+  const cNroCuotas = columna('NUMERO DE CUOTAS', 'NRO DE CUOTAS');
   const filas = new Map();
   for (let r = enc.fila + 1; r < A.length; r++) {
     const modelo = clean(A[r]?.[enc.col]);
     if (!modelo) continue;
     filas.set(modelo, {
       precio: num(A[r][enc.col + 1]),          // primera banda de plan
-      gama:   clean(A[r][Math.max(0, enc.col - 2)])
+      gama: clean(A[r][Math.max(0, enc.col - 2)]),
+      cuotaInicial: cInicial >= 0 ? num(A[r][cInicial]) : null,
+      cuota1: cCuota1 >= 0 ? num(A[r][cCuota1]) : null,
+      cuotaRegular: cCuotaRegular >= 0 ? num(A[r][cCuotaRegular]) : null,
+      numeroCuotas: cNroCuotas >= 0 ? num(A[r][cNroCuotas]) : null
     });
   }
   if (!filas.size) throw new Error('no encontré filas de modelos');
@@ -3767,7 +3802,7 @@ async function cargarEquivalencias() {
 
 // ─────────────────────────────────────────
 // DESCONTINUADOS — equipos que ya no vende Entel (sin precio activo en
-// RENO CONT, o que la marca dejó de fabricar), MÁS equipos que superan
+// RENO, o que la marca dejó de fabricar), MÁS equipos que superan
 // cierta antigüedad desde su lanzamiento (columna "FECHA DE LANZAMIENTO"
 // de Caracteristicas, formato "Mes Año" en español). Se marcan en rojo
 // en los selectores, la tarjeta 3D y la comparativa, pero SIN quitarlos
@@ -3883,31 +3918,34 @@ function skuDe(nombre) { return SKU_MAP_NORM[norm(nombre)] || null; }
 async function cargarSku() {
   try {
     const A = await leerHojaConReintento('sku');
-    let filaEnc = -1, colEquipo = -1, colSku = -1, colDetalle = -1;
-    for (let r = 0; r < Math.min(A.length, 10); r++) {
-      const fila = A[r] || [];
-      for (let c = 0; c < fila.length; c++) {
-        const h = norm(clean(fila[c]));
-        if (h === 'EQUIPO') { filaEnc = r; colEquipo = c; }
-        if (h === 'SKU') colSku = c;
-        if (h.startsWith('DETALLE') || h.startsWith('DESCRIPCION')) colDetalle = c;
-      }
-      if (filaEnc >= 0 && colSku >= 0) break;
+    if (aplicarSkuDesdeFilas(A)) guardarCache({ ASku: A });
+  } catch { /* se conserva el último catálogo guardado si falla la red */ }
+}
+
+function aplicarSkuDesdeFilas(A) {
+  let filaEnc = -1, colEquipo = -1, colSku = -1, colDetalle = -1;
+  for (let r = 0; r < Math.min(A.length, 10); r++) {
+    const fila = A[r] || [];
+    for (let c = 0; c < fila.length; c++) {
+      const h = norm(clean(fila[c]));
+      if (h === 'EQUIPO') { filaEnc = r; colEquipo = c; }
+      if (h === 'SKU') colSku = c;
+      if (h.startsWith('DETALLE') || h.startsWith('DESCRIPCION')) colDetalle = c;
     }
-    if (filaEnc < 0 || colEquipo < 0 || colSku < 0) return; // pestaña opcional o mal formada
-    const extra = [];
-    for (let r = filaEnc + 1; r < A.length; r++) {
-      const fila = A[r] || [];
-      const equipo = clean(fila[colEquipo]);
-      const sku = clean(fila[colSku]);
-      const detalle = colDetalle >= 0 ? clean(fila[colDetalle]) : '';
-      if (equipo && sku) extra.push({ equipo, sku, detalle: detalle || sku });
-    }
-    if (extra.length) {
-      SKU_MAP_NORM = buildSkuMap([...SKU_RAW_BASE, ...extra]);
-      console.info(`SKU del Sheet: ${extra.length} filas adicionales`);
-    }
-  } catch { /* la pestaña es opcional */ }
+    if (filaEnc >= 0 && colSku >= 0) break;
+  }
+  if (filaEnc < 0 || colEquipo < 0 || colSku < 0) return false;
+  const extra = [];
+  for (let r = filaEnc + 1; r < A.length; r++) {
+    const fila = A[r] || [];
+    const equipo = clean(fila[colEquipo]);
+    const sku = clean(fila[colSku]);
+    const detalle = colDetalle >= 0 ? clean(fila[colDetalle]) : '';
+    if (equipo && sku) extra.push({ equipo, sku, detalle: detalle || sku });
+  }
+  SKU_MAP_NORM = buildSkuMap([...SKU_RAW_BASE, ...extra]);
+  if (extra.length) console.info(`SKU del Sheet: ${extra.length} filas`);
+  return true;
 }
 
 
@@ -4017,7 +4055,7 @@ function modeloEntelFijo(nombre) {
 // ("NEO5" -> "NEO","5") para tolerar diferencias de espacios/mayúsculas,
 // y exige que todas las palabras de un lado estén contenidas en el otro.
 // Así un equipo nuevo que agregues a "Caracteristicas" cruza su precio
-// solo con que su nombre coincida razonablemente con el de "RENO CONT",
+// solo con que su nombre coincida razonablemente con el de "RENO",
 // sin tener que tocar código ni la tabla EQUIVALENCIAS.
 // ─────────────────────────────────────────
 const ALIAS_TOKEN = { gxy: 'galaxy' };
@@ -4066,7 +4104,11 @@ function comercial(p) {
   const fila = PRECIOS.filas.get(modelo) ||
                [...PRECIOS.filas.entries()].find(([k]) => norm(k) === norm(modelo))?.[1];
   if (!fila) return { estado: 'SIN-PRECIO', modeloEntel: modelo };
-  return { precio: fila.precio, gama: fila.gama, modeloEntel: modelo, estado: 'OK' };
+  return {
+    precio: fila.precio, gama: fila.gama, modeloEntel: modelo, estado: 'OK',
+    cuotaInicial: fila.cuotaInicial, cuota1: fila.cuota1,
+    cuotaRegular: fila.cuotaRegular, numeroCuotas: fila.numeroCuotas
+  };
 }
 
 // Prioriza la lista comercial de Entel; si un nombre no cruza, conserva como
@@ -4083,16 +4125,39 @@ function parseEntel(wb, nombreArchivo = '') {
   const enc = ubicarEncabezado(A, 'MODELO');
   if (!enc) throw new Error(`la hoja "${hoja}" no tiene una fila de encabezado con MODELO`);
 
-  const bandas = (A[enc.fila] || []).slice(enc.col + 1).map(clean).filter(Boolean).map(String);
+  const encabezadosPrecio = (A[enc.fila] || []).slice(enc.col + 1).map(clean).filter(Boolean).map(String);
+  const bandas = encabezadosPrecio.filter(h => !/^(CUOTA INICIAL|CUOTA 1|CUOTA 2 A LA 12|CUOTA 2 A 12|NUMERO DE CUOTAS|NRO DE CUOTAS)$/i.test(norm(h)));
+  const hojaFin = wb.SheetNames.find(n => CONFIG.hojaFinanciamiento.test(deaccent(String(n))));
+  if (!hojaFin) throw new Error('no encontré la hoja de renovación en cuotas');
+  const AF = XLSX.utils.sheet_to_json(wb.Sheets[hojaFin], { header: 1, defval: '', blankrows: false });
+  const ef = ubicarEncabezado(AF, 'MODELO');
+  if (!ef) throw new Error(`la hoja "${hojaFin}" no tiene una fila de encabezado con MODELO`);
+  const cabF = (AF[ef.fila] || []).map(v => norm(clean(v)));
+  const colF = (...nombres) => cabF.findIndex(h => nombres.includes(h));
+  const cfInicial = colF('CUOTA INICIAL');
+  const cfCuota1 = colF('CUOTA 1');
+  const cfRegular = colF('CUOTA 2 A LA 12', 'CUOTA 2 A 12');
+  const cfNro = colF('NUMERO DE CUOTAS', 'NRO DE CUOTAS');
+  if (cfCuota1 < 0 && cfRegular < 0) throw new Error(`no encontré los importes de cuotas en "${hojaFin}"`);
+  const financiamiento = new Map();
+  for (let r = ef.fila + 1; r < AF.length; r++) {
+    const modelo = clean(AF[r]?.[ef.col]);
+    if (!modelo) continue;
+    financiamiento.set(norm(modelo), [
+      cfInicial >= 0 ? AF[r][cfInicial] : '', cfCuota1 >= 0 ? AF[r][cfCuota1] : '',
+      cfRegular >= 0 ? AF[r][cfRegular] : '', cfNro >= 0 ? AF[r][cfNro] : ''
+    ]);
+  }
   const filas = [];
   for (let r = enc.fila + 1; r < A.length; r++) {
     const modelo = clean(A[r][enc.col]);
     if (!modelo) continue;
     filas.push([clean(A[r][enc.col - 2]), clean(A[r][enc.col - 1]), modelo,
-                ...bandas.map((_, k) => A[r][enc.col + 1 + k])]);
+                ...bandas.map((_, k) => A[r][enc.col + 1 + k]),
+                ...(financiamiento.get(norm(modelo)) || ['', '', '', ''])]);
   }
   if (!filas.length) throw new Error('no encontré filas de modelos debajo del encabezado');
-  return { hoja, bandas, filas, fechaLista: detectarFechaLista(A, [nombreArchivo, hoja]) };
+  return { hoja, bandas, filas, fechaLista: detectarFechaLista(A, [nombreArchivo, hoja]), hojaFin, financiamiento: financiamiento.size };
 }
 
 function descargarCSV(nombre, filas) {
@@ -4112,7 +4177,12 @@ let ULTIMO_ENTEL = null;
 
 function aplicarEntel(parsed) {
   const filas = new Map();
-  parsed.filas.forEach(f => filas.set(f[2], { precio: num(f[3]), gama: f[0] }));
+  const baseCuotas = 3 + parsed.bandas.length;
+  parsed.filas.forEach(f => filas.set(f[2], {
+    precio: num(f[3]), gama: f[0],
+    cuotaInicial: num(f[baseCuotas]), cuota1: num(f[baseCuotas + 1]),
+    cuotaRegular: num(f[baseCuotas + 2]), numeroCuotas: num(f[baseCuotas + 3])
+  }));
   PRECIOS = { filas, fechaLista: parsed.fechaLista || '' };
   ULTIMO_ENTEL = parsed;
   document.getElementById('btnExportCSV')?.classList.remove('hidden');
@@ -4136,7 +4206,7 @@ function engancharControlesComerciales() {
       update();
       const con = DATA.filter(p => precioEfectivo(p) != null).length;
       setStatus(`Precios de Entel cargados${parsed.fechaLista ? ` · lista del ${parsed.fechaLista}` : ''} · hoja "${escapeHtml(parsed.hoja)}" · ${parsed.filas.length} modelos · ` +
-                `${con} de tus ${DATA.length} equipos con precio. Descarga el CSV y pégalo en RENO CONT para que lo vean todos.`, 'ok');
+                `${con} de tus ${DATA.length} equipos con precio. El CSV incluye contado y cuotas; pégalo en RENO para que lo vea el equipo.`, 'ok');
     } catch (err) {
       setStatus(`No pude leer el archivo de Entel: ${escapeHtml(err.message)}`, 'warn');
     } finally { e.target.value = ''; }
@@ -4144,8 +4214,8 @@ function engancharControlesComerciales() {
 
   document.getElementById('btnExportCSV')?.addEventListener('click', () => {
     if (!ULTIMO_ENTEL) return;
-    descargarCSV('RENO_CONT.csv',
-      [['GAMA', 'TÁCTICA', 'MODELO', ...ULTIMO_ENTEL.bandas], ...ULTIMO_ENTEL.filas]);
+    descargarCSV('RENO.csv',
+      [['GAMA', 'TÁCTICA', 'MODELO', ...ULTIMO_ENTEL.bandas, 'CUOTA INICIAL', 'CUOTA 1', 'CUOTA 2 A LA 12', 'NÚMERO DE CUOTAS'], ...ULTIMO_ENTEL.filas]);
   });
 }
 
@@ -4154,7 +4224,7 @@ function engancharControlesComerciales() {
 // ─────────────────────────────────────────
 // Cambiar la versión evita reutilizar cachés antiguas que solo guardaban
 // características e imágenes, pero no la pestaña de precios.
-const CACHE_KEY = 'comparity_sheet_v15';
+const CACHE_KEY = 'comparity_sheet_v16';
 
 const leerCache = () => { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch { return null; } };
 const guardarCache = p => {
@@ -4321,6 +4391,7 @@ document.addEventListener('scroll', e => {
   const cache = leerCache();
   if (cache?.Acar?.length) {
     reconstruir(cache.Acar, cache.Aimg);
+    if (cache.ASku?.length) aplicarSkuDesdeFilas(cache.ASku);
     if (cache.Aprecios?.length) {
       try { PRECIOS = armarPrecios(cache.Aprecios); } catch { PRECIOS = null; }
     }
@@ -4334,7 +4405,7 @@ document.addEventListener('scroll', e => {
     rebuildAllAC(); update();
     setStatus(
       `${DATA.length} equipos · ${r.con3D} con visor 3D · ` +
-      (r.nPrecios ? `${r.nPrecios} con precio` : `sin precios (${escapeHtml(r.avisoPrecios || 'revisa RENO CONT')})`) +
+      (r.nPrecios ? `${r.nPrecios} con precio` : `sin precios (${escapeHtml(r.avisoPrecios || 'revisa RENO')})`) +
       ` · ${new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`,
       r.nPrecios ? 'ok' : 'warn');
   } catch (err) {
