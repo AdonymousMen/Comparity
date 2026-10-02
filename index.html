@@ -1720,24 +1720,25 @@ function pintarFilasComerciales(tb, names) {
   if (!names.length) return;
   const datos = names.map(n => comercial(byName(n) || {}));
   const precios = names.map(n => precioEfectivo(byName(n) || {}));
-  if (!precios.some(v => v != null)) return;
-
-  const tr = document.createElement('tr');
-  tr.dataset.comparable = 'precio';
-  const td = document.createElement('td');
-  td.innerHTML = `<span class="spec-plain">${svgIcon('price')}${PRECIOS?.fechaLista
-    ? `Precio de lista · ${escapeHtml(PRECIOS.fechaLista)}`
-    : 'Precio de lista'}</span>`;
-  tr.appendChild(td);
-  precios.forEach(precio => {
-    const c = document.createElement('td');
-    c.className = 'p-3 text-center font-bold';
-    c.style.color = 'var(--indigo)';
-    c.textContent = money(precio) || '—';
-    tr.appendChild(c);
-  });
-  for (let i = names.length; i < 3; i++) tr.appendChild(document.createElement('td'));
-  tb.appendChild(tr);
+  const hayPrecios = precios.some(v => v != null);
+  if (hayPrecios) {
+    const tr = document.createElement('tr');
+    tr.dataset.comparable = 'precio';
+    const td = document.createElement('td');
+    td.innerHTML = `<span class="spec-plain">${svgIcon('price')}${PRECIOS?.fechaLista
+      ? `Precio de lista · ${escapeHtml(PRECIOS.fechaLista)}`
+      : 'Precio de lista'}</span>`;
+    tr.appendChild(td);
+    precios.forEach(precio => {
+      const c = document.createElement('td');
+      c.className = 'p-3 text-center font-bold';
+      c.style.color = 'var(--indigo)';
+      c.textContent = money(precio) || '—';
+      tr.appendChild(c);
+    });
+    for (let i = names.length; i < 3; i++) tr.appendChild(document.createElement('td'));
+    tb.appendChild(tr);
+  }
 
   if (datos.some(d => d.cuota1 != null || d.cuotaRegular != null || d.cuotaInicial > 0)) {
     const f = document.createElement('tr');
@@ -1755,7 +1756,7 @@ function pintarFilasComerciales(tb, names) {
         const n = d.numeroCuotas || 12;
         partes.push(n > 1 ? `cuotas 2–${n}: ${moneyCuota(d.cuotaRegular)}/mes` : `${moneyCuota(d.cuotaRegular)}/mes`);
       }
-      c.textContent = partes.join(' · ') || '—';
+      c.textContent = partes.join(' · ') || 'Financiamiento no disponible';
       f.appendChild(c);
     });
     for (let i = names.length; i < 3; i++) f.appendChild(document.createElement('td'));
@@ -1824,8 +1825,9 @@ function renderQuickSummary(names) {
     const precioTexto = textoPrecioLista(precioEfectivo(p));
     const variantesSku = typeof skuDe === 'function' ? skuDe(p.nombre) : null;
     const basesSku = variantesSku?.length ? [...new Set(variantesSku.map(v => v.base))] : [];
+    const coloresSku = variantesSku?.length ? [...new Set(variantesSku.map(v => v.color).filter(Boolean))] : [];
     const skuHtml = basesSku.length
-      ? `<button type="button" class="summary-sku seller-only" onclick="mostrarSkuEquipo(decodeURIComponent('${encodeURIComponent(p.nombre)}'))" title="Ver variantes y colores">${svgIcon('grid')}${escapeHtml(basesSku[0])}${variantesSku.length > 1 ? ` · ${variantesSku.length} colores` : ''}</button>`
+      ? `<button type="button" class="summary-sku seller-only" onclick="mostrarSkuEquipo(decodeURIComponent('${encodeURIComponent(p.nombre)}'))" title="Ver SKU por color">${svgIcon('grid')}${escapeHtml(basesSku[0])}${coloresSku.length > 1 ? ` · ${coloresSku.length} colores` : ''}</button>`
       : '';
     const metrics = [
       ['Pantalla', p.pantalla, 'phone'], ['Procesador', p.procesador, 'cpu'],
@@ -1879,7 +1881,10 @@ function renderTable() {
   actualizarBarraFlotante(names);
   const tb = document.getElementById('tbody');
   tb.innerHTML = '';
-  const hayInfoComercial = names.some(n => precioEfectivo(byName(n) || {}) != null || skuDe(n));
+  const hayInfoComercial = names.some(n => {
+    const info = comercial(byName(n) || {});
+    return precioEfectivo(byName(n) || {}) != null || info.cuota1 != null || info.cuotaRegular != null || skuDe(n);
+  });
   if (hayInfoComercial) {
     const groupRow = document.createElement('tr');
     groupRow.className = 'spec-group-row';
@@ -3897,23 +3902,71 @@ function skuBaseTruncado(sku) {
   return m ? sku.slice(0, m.index + m[0].length) : sku;
 }
 
-function buildSkuMap(lista) {
-  // Dedupea por código de SKU (case/espacio-insensible): si el Sheet repite un
-  // SKU que ya está en el respaldo, la entrada que venga DESPUÉS en la lista
-  // gana -- por eso el Sheet siempre se concatena al final.
-  const porCodigo = new Map();
-  lista.forEach(item => { if (item.equipo && item.sku) porCodigo.set(norm(item.sku), item); });
-  const map = {};
-  porCodigo.forEach(item => {
-    const key = norm(item.equipo);
-    if (!map[key]) map[key] = [];
-    map[key].push({ sku: item.sku, base: skuBaseTruncado(item.sku), detalle: item.detalle || item.sku });
-  });
-  return map;
+function skuClaveEquipo(texto) {
+  return norm(String(texto || '').replace(/\+/g, ' PLUS ')
+    .replace(/^APPLE\s+/i, '')
+    .replace(/^MOTOROLA\s+MOTO\b/i, 'MOTOROLA'))
+    .replace(/\bMOTO\b/g, ' ')
+    .replace(/\s+/g, ' ').trim();
 }
 
-let SKU_MAP_NORM = buildSkuMap(SKU_RAW_BASE);
-function skuDe(nombre) { return SKU_MAP_NORM[norm(nombre)] || null; }
+function skuAtributosEquipo(texto) {
+  const clave = skuClaveEquipo(texto);
+  return {
+    clave,
+    base: clave.replace(/\b\d+(?:GB|TB)\b/g, ' ').replace(/\b(?:4G|5G|LTE)\b/g, ' ').replace(/\s+/g, ' ').trim(),
+    capacidades: clave.match(/\b\d+(?:GB|TB)\b/g) || [],
+    redes: clave.match(/\b(?:4G|5G|LTE)\b/g) || []
+  };
+}
+
+function colorDesdeDetalle(detalle, equipo) {
+  const tokens = norm(String(detalle || '').replace(/\+/g, ' PLUS ')).split(' ').filter(Boolean);
+  const quitar = skuClaveEquipo(equipo).split(' ').filter(Boolean);
+  ['APPLE', 'MOTO', '4G', '5G', 'LTE'].forEach(t => quitar.push(t));
+  const fuera = new Set();
+  quitar.forEach(t => { const i = tokens.indexOf(t); if (i >= 0) fuera.add(i); });
+  const color = tokens.filter((_, i) => !fuera.has(i) && !/^\d+(?:GB|TB)$/.test(tokens[i])).join(' ').trim();
+  return color ? color.toLowerCase().replace(/\b\p{L}/gu, c => c.toUpperCase()) : '';
+}
+
+function buildSkuMap(lista) {
+  const grupos = new Map();
+  const vistos = new Set();
+  lista.forEach(item => {
+    if (!item.equipo || !item.sku) return;
+    const detalle = item.detalle || item.sku;
+    // Los bundles tienen otro SKU comercial; el selector de colores debe
+    // presentar solo las variantes del teléfono.
+    if (/^\s*PACK\b/i.test(detalle) || /^PK[A-Z0-9]/i.test(item.sku)) return;
+    const attrs = skuAtributosEquipo(item.equipo);
+    const dedupe = `${attrs.clave}|${norm(item.sku)}`;
+    if (vistos.has(dedupe)) return;
+    vistos.add(dedupe);
+    if (!grupos.has(attrs.clave)) grupos.set(attrs.clave, { ...attrs, equipo: item.equipo, variantes: [] });
+    grupos.get(attrs.clave).variantes.push({
+      sku: item.sku, base: skuBaseTruncado(item.sku), detalle,
+      color: colorDesdeDetalle(detalle, item.equipo)
+    });
+  });
+  return [...grupos.values()];
+}
+
+let SKU_GRUPOS = buildSkuMap(SKU_RAW_BASE);
+function skuDe(nombre) {
+  const query = skuAtributosEquipo(nombre);
+  const exacto = SKU_GRUPOS.find(g => g.clave === query.clave);
+  if (exacto) return exacto.variantes;
+  // Permite diferencias seguras de marca escrita (Apple/iPhone, Moto/Motorola)
+  // y una capacidad/red omitida, pero nunca cruza capacidades o redes explícitas distintas.
+  const candidatos = SKU_GRUPOS.filter(g => {
+    if (g.base !== query.base) return false;
+    if (query.capacidades.length && g.capacidades.length && query.capacidades.join('|') !== g.capacidades.join('|')) return false;
+    if (query.redes.length && g.redes.length && !query.redes.some(r => g.redes.includes(r))) return false;
+    return true;
+  });
+  return candidatos.length === 1 ? candidatos[0].variantes : null;
+}
 
 async function cargarSku() {
   try {
@@ -3943,31 +3996,34 @@ function aplicarSkuDesdeFilas(A) {
     const detalle = colDetalle >= 0 ? clean(fila[colDetalle]) : '';
     if (equipo && sku) extra.push({ equipo, sku, detalle: detalle || sku });
   }
-  SKU_MAP_NORM = buildSkuMap([...SKU_RAW_BASE, ...extra]);
+  SKU_GRUPOS = buildSkuMap([...SKU_RAW_BASE, ...extra]);
   if (extra.length) console.info(`SKU del Sheet: ${extra.length} filas`);
   return true;
 }
 
 
 function mostrarSkuEquipo(nombre) {
-  const variantes = skuDe(nombre);
-  if (!variantes || !variantes.length) return;
+  const registradas = skuDe(nombre);
+  if (!registradas || !registradas.length) return;
+  const variantes = [...registradas].sort((a, b) => (a.color || '').localeCompare(b.color || '', 'es'));
   const modal = document.getElementById('modalExplicacion');
   const tituloEl = document.getElementById('modalTitulo');
   const contenidoEl = document.getElementById('modalContenido');
 
+  const colores = [...new Set(variantes.map(v => v.color).filter(Boolean))];
   const filas = variantes.map(v => `
     <div class="rounded-xl mb-3 overflow-hidden border border-slate-200">
-      <div class="px-4 py-2 bg-slate-50">
-        <p class="font-mono font-bold text-sm" style="color:var(--indigo)">${escapeHtml(v.sku)}</p>
+      <div class="px-4 py-2 bg-slate-50 flex items-center justify-between gap-3">
+        <strong class="text-sm text-slate-800">${escapeHtml(v.color || 'Color no indicado')}</strong>
+        <span class="text-xs text-slate-500">Color</span>
       </div>
-      <div class="px-4 py-2 bg-white"><p class="text-sm text-slate-700">${escapeHtml(v.detalle)}</p></div>
+      <div class="px-4 py-2 bg-white"><p class="font-mono font-bold text-sm" style="color:var(--indigo)">${escapeHtml(v.sku)}</p></div>
     </div>`).join('');
 
   contenidoEl.innerHTML = `
-    <p class="mb-4 text-sm text-slate-600">Este equipo tiene ${variantes.length} variante${variantes.length > 1 ? 's' : ''} de color en tu punto de venta. Cada una usa un SKU distinto (el color va al final del código):</p>
+    <p class="mb-4 text-sm text-slate-600">${variantes.length} SKU disponible${variantes.length === 1 ? '' : 's'}${colores.length ? ` en ${colores.length} color${colores.length === 1 ? '' : 'es'}` : ''} para este equipo:</p>
     ${filas}`;
-  tituloEl.innerHTML = `SKU: ${escapeHtml(nombre)}`;
+  tituloEl.innerHTML = `Colores y SKU · ${escapeHtml(nombre)}`;
   modal.classList.remove('hidden');
 }
 
@@ -3992,13 +4048,13 @@ function pintarFilaSKU(tb, names) {
       return;
     }
     const basesUnicas = [...new Set(variantes.map(v => v.base))];
+    const coloresUnicos = [...new Set(variantes.map(v => v.color).filter(Boolean))];
     const span = document.createElement('span');
     span.className = 'val-clickable font-mono text-xs';
     span.tabIndex = 0;
     span.setAttribute('role', 'button');
-    span.textContent = variantes.length > 1
-      ? `${basesUnicas[0]}${basesUnicas.length > 1 ? '…' : ''} (${variantes.length} colores)`
-      : basesUnicas[0];
+    span.textContent = `${basesUnicas[0]}${basesUnicas.length > 1 ? '…' : ''}` +
+      (coloresUnicos.length > 1 ? ` (${coloresUnicos.length} colores)` : variantes.length > 1 ? ` (${variantes.length} SKU)` : '');
     span.addEventListener('click', e => { e.stopPropagation(); mostrarSkuEquipo(n); });
     span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarSkuEquipo(n); });
     td.appendChild(span);
@@ -4224,7 +4280,7 @@ function engancharControlesComerciales() {
 // ─────────────────────────────────────────
 // Cambiar la versión evita reutilizar cachés antiguas que solo guardaban
 // características e imágenes, pero no la pestaña de precios.
-const CACHE_KEY = 'comparity_sheet_v16';
+const CACHE_KEY = 'comparity_sheet_v17';
 
 const leerCache = () => { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch { return null; } };
 const guardarCache = p => {
