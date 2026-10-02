@@ -509,6 +509,14 @@
       background: var(--brand-soft); color: var(--brand-deep);
       border: 1px solid var(--brand-line); font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums;
     }
+    .summary-financing {
+      display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; padding: 9px 11px;
+      border: 1px solid #BFE8D7; border-radius: 12px; background: #F0FBF6; color: #17634A;
+      font-size: 12px; line-height: 1.4; font-variant-numeric: tabular-nums;
+    }
+    .summary-financing .i { width: 15px; height: 15px; flex: none; margin-top: 1px; color: #16805D; }
+    .summary-financing strong { display: block; color: #145A43; font-size: 12px; }
+    .summary-financing span { display: block; }
     .summary-sku {
       display: inline-flex; align-items: center; gap: 6px;
       border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px;
@@ -1823,11 +1831,20 @@ function renderQuickSummary(names) {
   }
   grid.innerHTML = phones.map((p, i) => {
     const precioTexto = textoPrecioLista(precioEfectivo(p));
+    const fin = comercial(p);
+    const financeParts = [];
+    if (fin.cuotaInicial > 0) financeParts.push(`Inicial ${moneyCuota(fin.cuotaInicial)}`);
+    if (fin.cuota1 != null) financeParts.push(`1.ª cuota ${moneyCuota(fin.cuota1)}`);
+    if (fin.cuotaRegular != null) financeParts.push(`cuotas 2–${fin.numeroCuotas || 12}: ${moneyCuota(fin.cuotaRegular)}/mes`);
+    const financeHtml = financeParts.length
+      ? `<div class="summary-financing">${svgIcon('calendar')}<div><strong>Financiamiento Entel</strong><span>${escapeHtml(financeParts.join(' · '))}</span></div></div>`
+      : '';
     const variantesSku = typeof skuDe === 'function' ? skuDe(p.nombre) : null;
     const basesSku = variantesSku?.length ? [...new Set(variantesSku.map(v => v.base))] : [];
-    const coloresSku = variantesSku?.length ? [...new Set(variantesSku.map(v => v.color).filter(Boolean))] : [];
+    const coloresSku = variantesSku?.length ? [...new Set(variantesSku.filter(v => !v.pack).map(v => v.color).filter(Boolean))] : [];
+    const packsSku = variantesSku?.filter(v => v.pack).length || 0;
     const skuHtml = basesSku.length
-      ? `<button type="button" class="summary-sku seller-only" onclick="mostrarSkuEquipo(decodeURIComponent('${encodeURIComponent(p.nombre)}'))" title="Ver SKU por color">${svgIcon('grid')}${escapeHtml(basesSku[0])}${coloresSku.length > 1 ? ` · ${coloresSku.length} colores` : ''}</button>`
+      ? `<button type="button" class="summary-sku seller-only" onclick="mostrarSkuEquipo(decodeURIComponent('${encodeURIComponent(p.nombre)}'))" title="Ver SKU, colores y packs">${svgIcon('grid')}${escapeHtml(basesSku[0])}${coloresSku.length ? ` · ${coloresSku.length} colores` : ''}${packsSku ? ` · ${packsSku} packs` : ''}</button>`
       : '';
     const metrics = [
       ['Pantalla', p.pantalla, 'phone'], ['Procesador', p.procesador, 'cpu'],
@@ -1839,6 +1856,7 @@ function renderQuickSummary(names) {
         <div class="summary-index">${svgIcon('phone')}Opción ${i + 1}</div>
         <h3 class="summary-name">${nombreConEtiqueta(p.nombre)}</h3>
         <div class="summary-meta-row"><span class="summary-price">${svgIcon('price')}${precioTexto}</span>${skuHtml}</div>
+        ${financeHtml}
       </div>
       <div class="summary-body">
         <div class="summary-metrics">${metrics.map(([label,value,ic]) => `<div class="summary-metric" title="${escapeHtml(String(value || 'No publicado'))}"><div class="summary-metric-label">${svgIcon(ic)}${label}</div><div class="summary-metric-value">${escapeHtml(compactSpec(value))}</div></div>`).join('')}</div>
@@ -3936,9 +3954,8 @@ function buildSkuMap(lista) {
   lista.forEach(item => {
     if (!item.equipo || !item.sku) return;
     const detalle = item.detalle || item.sku;
-    // Los bundles tienen otro SKU comercial; el selector de colores debe
-    // presentar solo las variantes del teléfono.
-    if (/^\s*PACK\b/i.test(detalle) || /^PK[A-Z0-9]/i.test(item.sku)) return;
+    // Los packs también son presentaciones comerciales y conservan su propio SKU.
+    const pack = /^\s*PACK\b/i.test(detalle) || /^PK[A-Z0-9]/i.test(item.sku);
     const attrs = skuAtributosEquipo(item.equipo);
     const dedupe = `${attrs.clave}|${norm(item.sku)}`;
     if (vistos.has(dedupe)) return;
@@ -3946,7 +3963,7 @@ function buildSkuMap(lista) {
     if (!grupos.has(attrs.clave)) grupos.set(attrs.clave, { ...attrs, equipo: item.equipo, variantes: [] });
     grupos.get(attrs.clave).variantes.push({
       sku: item.sku, base: skuBaseTruncado(item.sku), detalle,
-      color: colorDesdeDetalle(detalle, item.equipo)
+      color: pack ? '' : colorDesdeDetalle(detalle, item.equipo), pack
     });
   });
   return [...grupos.values()];
@@ -4005,25 +4022,26 @@ function aplicarSkuDesdeFilas(A) {
 function mostrarSkuEquipo(nombre) {
   const registradas = skuDe(nombre);
   if (!registradas || !registradas.length) return;
-  const variantes = [...registradas].sort((a, b) => (a.color || '').localeCompare(b.color || '', 'es'));
+  const variantes = [...registradas].sort((a, b) => Number(a.pack) - Number(b.pack) || (a.color || '').localeCompare(b.color || '', 'es'));
   const modal = document.getElementById('modalExplicacion');
   const tituloEl = document.getElementById('modalTitulo');
   const contenidoEl = document.getElementById('modalContenido');
 
-  const colores = [...new Set(variantes.map(v => v.color).filter(Boolean))];
+  const colores = [...new Set(variantes.filter(v => !v.pack).map(v => v.color).filter(Boolean))];
+  const packs = variantes.filter(v => v.pack).length;
   const filas = variantes.map(v => `
     <div class="rounded-xl mb-3 overflow-hidden border border-slate-200">
       <div class="px-4 py-2 bg-slate-50 flex items-center justify-between gap-3">
-        <strong class="text-sm text-slate-800">${escapeHtml(v.color || 'Color no indicado')}</strong>
-        <span class="text-xs text-slate-500">Color</span>
+        <strong class="text-sm text-slate-800">${v.pack ? 'Pack' : escapeHtml(v.color || 'Color no indicado')}</strong>
+        <span class="text-xs text-slate-500">${v.pack ? 'Presentación con SKU propio' : 'Color'}</span>
       </div>
-      <div class="px-4 py-2 bg-white"><p class="font-mono font-bold text-sm" style="color:var(--indigo)">${escapeHtml(v.sku)}</p></div>
+      <div class="px-4 py-2 bg-white"><p class="font-mono font-bold text-sm" style="color:var(--indigo)">${escapeHtml(v.sku)}</p>${v.pack ? `<p class="mt-1 text-xs text-slate-600">${escapeHtml(v.detalle)}</p>` : ''}</div>
     </div>`).join('');
 
   contenidoEl.innerHTML = `
-    <p class="mb-4 text-sm text-slate-600">${variantes.length} SKU disponible${variantes.length === 1 ? '' : 's'}${colores.length ? ` en ${colores.length} color${colores.length === 1 ? '' : 'es'}` : ''} para este equipo:</p>
+    <p class="mb-4 text-sm text-slate-600">${variantes.length} SKU disponible${variantes.length === 1 ? '' : 's'}${colores.length ? ` en ${colores.length} color${colores.length === 1 ? '' : 'es'}` : ''}${packs ? `, incluidos ${packs} pack${packs === 1 ? '' : 's'}` : ''} para este equipo:</p>
     ${filas}`;
-  tituloEl.innerHTML = `Colores y SKU · ${escapeHtml(nombre)}`;
+  tituloEl.innerHTML = `SKU, colores y packs · ${escapeHtml(nombre)}`;
   modal.classList.remove('hidden');
 }
 
@@ -4048,13 +4066,14 @@ function pintarFilaSKU(tb, names) {
       return;
     }
     const basesUnicas = [...new Set(variantes.map(v => v.base))];
-    const coloresUnicos = [...new Set(variantes.map(v => v.color).filter(Boolean))];
+    const coloresUnicos = [...new Set(variantes.filter(v => !v.pack).map(v => v.color).filter(Boolean))];
+    const packsUnicos = variantes.filter(v => v.pack).length;
     const span = document.createElement('span');
     span.className = 'val-clickable font-mono text-xs';
     span.tabIndex = 0;
     span.setAttribute('role', 'button');
     span.textContent = `${basesUnicas[0]}${basesUnicas.length > 1 ? '…' : ''}` +
-      (coloresUnicos.length > 1 ? ` (${coloresUnicos.length} colores)` : variantes.length > 1 ? ` (${variantes.length} SKU)` : '');
+      (coloresUnicos.length || packsUnicos ? ` (${[coloresUnicos.length ? `${coloresUnicos.length} colores` : '', packsUnicos ? `${packsUnicos} packs` : ''].filter(Boolean).join(' · ')})` : variantes.length > 1 ? ` (${variantes.length} SKU)` : '');
     span.addEventListener('click', e => { e.stopPropagation(); mostrarSkuEquipo(n); });
     span.addEventListener('keydown', e => { if (e.key === 'Enter') mostrarSkuEquipo(n); });
     td.appendChild(span);
